@@ -79,16 +79,16 @@ export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Help Center</h1>
-          <p className="text-lg text-gray-600 mb-8">Find answers to common questions</p>
+          <h1 className="text-4xl font-bold text-foreground mb-4">Help Center</h1>
+          <p className="text-lg text-muted-foreground mb-8">Find answers to common questions</p>
 
           {/* Search */}
           <div className="max-w-2xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Search for help..."
               className="pl-12 h-12"
@@ -102,12 +102,12 @@ export default function HelpPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="font-semibold mb-2">Contact Support</h3>
-              <p className="text-sm text-gray-600 mb-4">Get help from our support team</p>
-              <Button variant="outline" size="sm" className="bg-transparent">
+              <p className="text-sm text-muted-foreground mb-4">Get help from our support team</p>
+              <Button variant="outline" size="sm">
                 Send Message
               </Button>
             </CardContent>
@@ -115,12 +115,12 @@ export default function HelpPage() {
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Book className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Book className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold mb-2">User Guide</h3>
-              <p className="text-sm text-gray-600 mb-4">Learn how to use WorkerDir</p>
-              <Button variant="outline" size="sm" className="bg-transparent">
+              <p className="text-sm text-muted-foreground mb-4">Learn how to use WorkerDir</p>
+              <Button variant="outline" size="sm">
                 View Guide
               </Button>
             </CardContent>
@@ -128,12 +128,12 @@ export default function HelpPage() {
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="font-semibold mb-2">Safety & Trust</h3>
-              <p className="text-sm text-gray-600 mb-4">Learn about our safety measures</p>
-              <Button variant="outline" size="sm" className="bg-transparent">
+              <p className="text-sm text-muted-foreground mb-4">Learn about our safety measures</p>
+              <Button variant="outline" size="sm">
                 Learn More
               </Button>
             </CardContent>
@@ -146,8 +146,8 @@ export default function HelpPage() {
             <Card key={category.id}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <category.icon className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <category.icon className="w-5 h-5 text-primary" />
                   </div>
                   {category.title}
                 </CardTitle>
@@ -157,7 +157,7 @@ export default function HelpPage() {
                   {category.questions.map((item, index) => (
                     <AccordionItem key={index} value={`item-${index}`}>
                       <AccordionTrigger className="text-left">{item.q}</AccordionTrigger>
-                      <AccordionContent className="text-gray-600 leading-relaxed">{item.a}</AccordionContent>
+                      <AccordionContent className="text-muted-foreground leading-relaxed">{item.a}</AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>
@@ -167,10 +167,10 @@ export default function HelpPage() {
         </div>
 
         {/* Still Need Help */}
-        <Card className="mt-12 bg-blue-50 border-blue-200">
+        <Card className="mt-12 bg-primary/5 border-primary/20">
           <CardContent className="p-8 text-center">
             <h3 className="text-2xl font-bold mb-2">Still need help?</h3>
-            <p className="text-gray-600 mb-6">Our support team is here to assist you</p>
+            <p className="text-muted-foreground mb-6">Our support team is here to assist you</p>
             <Button size="lg">Contact Support</Button>
           </CardContent>
         </Card>
