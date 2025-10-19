@@ -21,7 +21,9 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -29,7 +31,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export function Navigation() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [_isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const creditsBalance = 120;
@@ -77,45 +78,44 @@ export function Navigation() {
     <nav className="border-b bg-background sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Logo />
+          {/* Logo and main navigation */}
+          <div className="flex items-center gap-6">
+            <Logo />
+            <div className="hidden lg:flex items-center gap-4">
+              <Link
+                href="/search"
+                className="text-muted-foreground hover:text-foreground font-medium"
+              >
+                Find Workers
+              </Link>
+              <Link
+                href="/become-worker"
+                className="text-muted-foreground hover:text-foreground font-medium"
+              >
+                Become a Worker
+              </Link>
+            </div>
+          </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link
-              href="/search"
-              className="text-muted-foreground hover:text-foreground font-medium"
-            >
-              Find Workers
-            </Link>
-            <Link
-              href="/become-worker"
-              className="text-muted-foreground hover:text-foreground font-medium"
-            >
-              Become a Worker
-            </Link>
-
-            <ThemeToggle />
-
+          <div className="hidden lg:flex items-center gap-2">
             {isLoggedIn ? (
               <>
-                <Link href="/messages">
-                  <Button variant="ghost" size="icon">
-                    <MessageSquare className="w-5 h-5" />
-                  </Button>
-                </Link>
-
                 <Link href="/credits">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 bg-transparent"
-                  >
+                  <Button variant="ghost" className="gap-2">
                     <CreditCard className="w-4 h-4" />
                     <span className="font-semibold">{creditsBalance}</span>
                     <span className="text-muted-foreground">credits</span>
                   </Button>
                 </Link>
+
+                <Button asChild variant="ghost" size="icon">
+                  <Link href="/messages">
+                    <MessageSquare className="w-5 h-5" />
+                  </Link>
+                </Button>
+
+                <ThemeToggle />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -133,51 +133,57 @@ export function Navigation() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user?.user_metadata?.first_name}{" "}
+                          {user?.user_metadata?.last_name}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">
+                          <User />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard">
+                          <LayoutDashboard />
+                          Worker Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/bookings">
+                          <Calendar />
+                          My Bookings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/credits">
+                          <CreditCard />
+                          Credits
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/profile" className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        My Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/dashboard"
-                        className="flex items-center gap-2"
-                      >
-                        <LayoutDashboard className="w-4 h-4" />
-                        Worker Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/bookings"
-                        className="flex items-center gap-2"
-                      >
-                        <Calendar className="w-4 h-4" />
-                        My Bookings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/credits" className="flex items-center gap-2">
-                        <CreditCard className="w-4 h-4" />
-                        Credits
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/settings"
-                        className="flex items-center gap-2"
-                      >
-                        <Settings className="w-4 h-4" />
+                      <Link href="/settings">
+                        <Settings />
                         Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      className="text-red-600"
+                      variant="destructive"
                       onClick={handleLogout}
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut />
                       Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -185,113 +191,100 @@ export function Navigation() {
               </>
             ) : (
               <>
-                <Button variant="ghost" asChild>
+                <ThemeToggle />
+                <Button variant="outline" asChild>
                   <Link href="/login">Login</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
                 </Button>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <Menu className="w-6 h-6" />
-          </Button>
-        </div>
+          {/* Mobile Navigation */}
+          <div className="lg:hidden flex items-center gap-2">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="w-6 h-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Browse Section */}
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/search">Find Workers</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/become-worker">Become a Worker</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t">
-            <div className="flex flex-col gap-2">
-              <div className="px-4 py-2 flex items-center gap-2">
-                <span className="text-muted-foreground">Theme</span>
-                <ThemeToggle />
-              </div>
-              <Link
-                href="/search"
-                className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-              >
-                Find Workers
-              </Link>
-              <Link
-                href="/become-worker"
-                className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-              >
-                Become a Worker
-              </Link>
-              {isLoggedIn ? (
-                <>
-                  <Link
-                    href="/credits"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded flex items-center gap-2"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>{creditsBalance} credits</span>
-                  </Link>
-                  <Link
-                    href="/messages"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-                  >
-                    Messages
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-                  >
-                    My Profile
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-                  >
-                    Worker Dashboard
-                  </Link>
-                  <Link
-                    href="/bookings"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-                  >
-                    My Bookings
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="px-4 py-2 text-red-600 hover:bg-accent rounded text-left"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded text-center"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
+                {isLoggedIn ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    {/* Account Section */}
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem asChild>
+                        <Link href="/credits">
+                          <CreditCard />
+                          {creditsBalance} credits
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/messages">
+                          <MessageSquare />
+                          Messages
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">
+                          <User />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard">
+                          <LayoutDashboard />
+                          Worker Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/bookings">
+                          <Calendar />
+                          My Bookings
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    {/* Settings Section */}
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings">
+                        <Settings />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {/* Logout Section */}
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={handleLogout}
+                    >
+                      <LogOut />
+                      Logout
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/login">Login</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );
