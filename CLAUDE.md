@@ -189,3 +189,4 @@ When working with database operations, always use the appropriate Supabase clien
 - Server Components are the default; explicitly mark Client Components
 - The project includes Vercel Analytics integration
 - Forms should use controlled components pattern with proper TypeScript types
+- On this project, we always use Bun as our official package manager. We will never use NPM.
