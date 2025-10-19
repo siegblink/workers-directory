@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "biome check .",
+    "format:write": "biome check --write .",
+    "format:check": "biome check --diagnostic-level=error .",
+    "format:unsafe": "biome check --write --unsafe ."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -64,6 +68,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.2.6",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/react": "^18",
