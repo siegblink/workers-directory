@@ -1,63 +1,76 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  Calendar,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Settings,
+  User,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, User, MessageSquare, Calendar, CreditCard, Settings, LogOut, LayoutDashboard } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
-import { ThemeToggle } from "@/components/theme-toggle"
+} from "@/components/ui/dropdown-menu";
+import { createClient } from "@/lib/supabase/client";
 
 export function Navigation() {
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
-  const creditsBalance = 120
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [_isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const creditsBalance = 120;
 
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = createClient();
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-    })
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+      setUser(session?.user ?? null);
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push("/")
-    router.refresh()
-  }
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   const getUserInitials = () => {
-    if (!user) return "U"
-    const firstName = user.user_metadata?.first_name || ""
-    const lastName = user.user_metadata?.last_name || ""
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"
-  }
+    if (!user) return "U";
+    const firstName = user.user_metadata?.first_name || "";
+    const lastName = user.user_metadata?.last_name || "";
+    return (
+      `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() ||
+      user.email?.charAt(0).toUpperCase() ||
+      "U"
+    );
+  };
 
-  const isLoggedIn = !!user
+  const isLoggedIn = !!user;
 
   return (
     <nav className="border-b bg-background sticky top-0 z-50">
@@ -73,10 +86,16 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/search" className="text-muted-foreground hover:text-foreground font-medium">
+            <Link
+              href="/search"
+              className="text-muted-foreground hover:text-foreground font-medium"
+            >
               Find Workers
             </Link>
-            <Link href="/become-worker" className="text-muted-foreground hover:text-foreground font-medium">
+            <Link
+              href="/become-worker"
+              className="text-muted-foreground hover:text-foreground font-medium"
+            >
               Become a Worker
             </Link>
 
@@ -91,7 +110,11 @@ export function Navigation() {
                 </Link>
 
                 <Link href="/credits">
-                  <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 bg-transparent"
+                  >
                     <CreditCard className="w-4 h-4" />
                     <span className="font-semibold">{creditsBalance}</span>
                     <span className="text-muted-foreground">credits</span>
@@ -100,9 +123,15 @@ export function Navigation() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Button
+                      variant="ghost"
+                      className="relative h-10 w-10 rounded-full"
+                    >
                       <Avatar>
-                        <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+                        <AvatarImage
+                          src="/placeholder.svg?height=40&width=40"
+                          alt="User"
+                        />
                         <AvatarFallback>{getUserInitials()}</AvatarFallback>
                       </Avatar>
                     </Button>
@@ -115,13 +144,19 @@ export function Navigation() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="flex items-center gap-2">
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2"
+                      >
                         <LayoutDashboard className="w-4 h-4" />
                         Worker Dashboard
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/bookings" className="flex items-center gap-2">
+                      <Link
+                        href="/bookings"
+                        className="flex items-center gap-2"
+                      >
                         <Calendar className="w-4 h-4" />
                         My Bookings
                       </Link>
@@ -133,13 +168,19 @@ export function Navigation() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/settings" className="flex items-center gap-2">
+                      <Link
+                        href="/settings"
+                        className="flex items-center gap-2"
+                      >
                         <Settings className="w-4 h-4" />
                         Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={handleLogout}
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </DropdownMenuItem>
@@ -159,7 +200,12 @@ export function Navigation() {
           </div>
 
           {/* Mobile Menu Button */}
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
             <Menu className="w-6 h-6" />
           </Button>
         </div>
@@ -172,10 +218,16 @@ export function Navigation() {
                 <span className="text-muted-foreground">Theme</span>
                 <ThemeToggle />
               </div>
-              <Link href="/search" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+              <Link
+                href="/search"
+                className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+              >
                 Find Workers
               </Link>
-              <Link href="/become-worker" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+              <Link
+                href="/become-worker"
+                className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+              >
                 Become a Worker
               </Link>
               {isLoggedIn ? (
@@ -187,28 +239,50 @@ export function Navigation() {
                     <CreditCard className="w-4 h-4" />
                     <span>{creditsBalance} credits</span>
                   </Link>
-                  <Link href="/messages" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+                  <Link
+                    href="/messages"
+                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+                  >
                     Messages
                   </Link>
-                  <Link href="/profile" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+                  <Link
+                    href="/profile"
+                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+                  >
                     My Profile
                   </Link>
-                  <Link href="/dashboard" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+                  <Link
+                    href="/dashboard"
+                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+                  >
                     Worker Dashboard
                   </Link>
-                  <Link href="/bookings" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+                  <Link
+                    href="/bookings"
+                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+                  >
                     My Bookings
                   </Link>
-                  <Link href="/settings" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+                  <Link
+                    href="/settings"
+                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+                  >
                     Settings
                   </Link>
-                  <button onClick={handleLogout} className="px-4 py-2 text-red-600 hover:bg-accent rounded text-left">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-4 py-2 text-red-600 hover:bg-accent rounded text-left"
+                  >
                     Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="px-4 py-2 text-muted-foreground hover:bg-accent rounded">
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 text-muted-foreground hover:bg-accent rounded"
+                  >
                     Login
                   </Link>
                   <Link
@@ -224,5 +298,5 @@ export function Navigation() {
         )}
       </div>
     </nav>
-  )
+  );
 }

@@ -1,11 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Search, MessageCircle, Book, Shield, CreditCard } from "lucide-react"
+import { Book, CreditCard, MessageCircle, Search, Shield } from "lucide-react";
+import { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const faqCategories = [
   {
@@ -73,18 +78,22 @@ const faqCategories = [
       },
     ],
   },
-]
+];
 
 export default function HelpPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Help Center</h1>
-          <p className="text-lg text-muted-foreground mb-8">Find answers to common questions</p>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            Help Center
+          </h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            Find answers to common questions
+          </p>
 
           {/* Search */}
           <div className="max-w-2xl mx-auto relative">
@@ -106,7 +115,9 @@ export default function HelpPage() {
                 <MessageCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="font-semibold mb-2">Contact Support</h3>
-              <p className="text-sm text-muted-foreground mb-4">Get help from our support team</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Get help from our support team
+              </p>
               <Button variant="outline" size="sm">
                 Send Message
               </Button>
@@ -119,7 +130,9 @@ export default function HelpPage() {
                 <Book className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold mb-2">User Guide</h3>
-              <p className="text-sm text-muted-foreground mb-4">Learn how to use WorkerDir</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Learn how to use WorkerDir
+              </p>
               <Button variant="outline" size="sm">
                 View Guide
               </Button>
@@ -132,7 +145,9 @@ export default function HelpPage() {
                 <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="font-semibold mb-2">Safety & Trust</h3>
-              <p className="text-sm text-muted-foreground mb-4">Learn about our safety measures</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Learn about our safety measures
+              </p>
               <Button variant="outline" size="sm">
                 Learn More
               </Button>
@@ -154,10 +169,14 @@ export default function HelpPage() {
               </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
-                  {category.questions.map((item, index) => (
-                    <AccordionItem key={index} value={`item-${index}`}>
-                      <AccordionTrigger className="text-left">{item.q}</AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground leading-relaxed">{item.a}</AccordionContent>
+                  {category.questions.map((item) => (
+                    <AccordionItem key={item.q} value={item.q}>
+                      <AccordionTrigger className="text-left">
+                        {item.q}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground leading-relaxed">
+                        {item.a}
+                      </AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>
@@ -170,11 +189,13 @@ export default function HelpPage() {
         <Card className="mt-12 bg-primary/5 border-primary/20">
           <CardContent className="p-8 text-center">
             <h3 className="text-2xl font-bold mb-2">Still need help?</h3>
-            <p className="text-muted-foreground mb-6">Our support team is here to assist you</p>
+            <p className="text-muted-foreground mb-6">
+              Our support team is here to assist you
+            </p>
             <Button size="lg">Contact Support</Button>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

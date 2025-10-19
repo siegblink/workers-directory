@@ -1,7 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, MapPin, Wrench, Zap, Droplet, Paintbrush } from "lucide-react"
+import { Droplet, MapPin, Paintbrush, Search, Wrench, Zap } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function HomePage() {
   return (
@@ -13,7 +13,8 @@ export default function HomePage() {
             Find Trusted Service Workers Near You
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto text-pretty">
-            Connect with verified plumbers, electricians, cleaners, and more. Book services instantly.
+            Connect with verified plumbers, electricians, cleaners, and more.
+            Book services instantly.
           </p>
 
           {/* Search Bar */}
@@ -42,13 +43,35 @@ export default function HomePage() {
       {/* Popular Services */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Popular Services</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
+            Popular Services
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Wrench, name: "Plumbing", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
-              { icon: Zap, name: "Electrical", color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" },
-              { icon: Droplet, name: "Cleaning", color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" },
-              { icon: Paintbrush, name: "Painting", color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" },
+              {
+                icon: Wrench,
+                name: "Plumbing",
+                color:
+                  "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+              },
+              {
+                icon: Zap,
+                name: "Electrical",
+                color:
+                  "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
+              },
+              {
+                icon: Droplet,
+                name: "Cleaning",
+                color:
+                  "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+              },
+              {
+                icon: Paintbrush,
+                name: "Painting",
+                color:
+                  "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+              },
             ].map((service) => (
               <Link
                 key={service.name}
@@ -58,7 +81,9 @@ export default function HomePage() {
                 <div className={`p-4 rounded-full ${service.color}`}>
                   <service.icon className="w-6 h-6" />
                 </div>
-                <span className="font-medium text-foreground">{service.name}</span>
+                <span className="font-medium text-foreground">
+                  {service.name}
+                </span>
               </Link>
             ))}
           </div>
@@ -69,12 +94,14 @@ export default function HomePage() {
       <section className="bg-blue-600 dark:bg-blue-700 text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Are You a Service Worker?</h2>
-          <p className="text-lg mb-8 text-blue-100 dark:text-blue-200">Join our platform and connect with customers in your area</p>
+          <p className="text-lg mb-8 text-blue-100 dark:text-blue-200">
+            Join our platform and connect with customers in your area
+          </p>
           <Button size="lg" variant="secondary" asChild>
             <Link href="/become-worker">Become a Worker</Link>
           </Button>
         </div>
       </section>
     </div>
-  )
+  );
 }

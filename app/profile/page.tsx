@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MapPin, Mail, Phone, Calendar, Star, Bookmark } from "lucide-react"
-import Link from "next/link"
+import { Bookmark, Calendar, Mail, MapPin, Phone, Star } from "lucide-react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const mockUser = {
   name: "Jane Doe",
@@ -15,7 +15,7 @@ const mockUser = {
   location: "New York, NY",
   joinedDate: "March 2023",
   avatar: "/placeholder.svg?height=150&width=150",
-}
+};
 
 const mockBookings = [
   {
@@ -34,7 +34,7 @@ const mockBookings = [
     status: "Upcoming",
     amount: 220,
   },
-]
+];
 
 const mockBookmarked = [
   {
@@ -53,7 +53,7 @@ const mockBookmarked = [
     hourlyRate: 50,
     avatar: "/placeholder.svg?height=60&width=60",
   },
-]
+];
 
 export default function ProfilePage() {
   return (
@@ -64,7 +64,10 @@ export default function ProfilePage() {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-6">
               <Avatar className="w-32 h-32">
-                <AvatarImage src={mockUser.avatar || "/placeholder.svg"} alt={mockUser.name} />
+                <AvatarImage
+                  src={mockUser.avatar || "/placeholder.svg"}
+                  alt={mockUser.name}
+                />
                 <AvatarFallback>
                   {mockUser.name
                     .split(" ")
@@ -76,7 +79,9 @@ export default function ProfilePage() {
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div>
-                    <h1 className="text-3xl font-bold text-foreground mb-2">{mockUser.name}</h1>
+                    <h1 className="text-3xl font-bold text-foreground mb-2">
+                      {mockUser.name}
+                    </h1>
                     <div className="space-y-2 text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4" />
@@ -122,21 +127,45 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="space-y-4">
                   {mockBookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div
+                      key={booking.id}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-foreground">{booking.worker}</h3>
-                          <Badge variant={booking.status === "Completed" ? "secondary" : "default"}>
+                          <h3 className="font-semibold text-foreground">
+                            {booking.worker}
+                          </h3>
+                          <Badge
+                            variant={
+                              booking.status === "Completed"
+                                ? "secondary"
+                                : "default"
+                            }
+                          >
                             {booking.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{booking.service}</p>
-                        <p className="text-sm text-muted-foreground">{booking.date}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {booking.service}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {booking.date}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-foreground">${booking.amount}</p>
-                        <Button variant="outline" size="sm" className="mt-2" asChild>
-                          <Link href={`/bookings/${booking.id}`}>View Details</Link>
+                        <p className="text-xl font-bold text-foreground">
+                          ${booking.amount}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          asChild
+                        >
+                          <Link href={`/bookings/${booking.id}`}>
+                            View Details
+                          </Link>
                         </Button>
                       </div>
                     </div>
@@ -155,10 +184,16 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="space-y-4">
                   {mockBookmarked.map((worker) => (
-                    <div key={worker.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div
+                      key={worker.id}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    >
                       <div className="flex items-center gap-4">
                         <Avatar className="w-16 h-16">
-                          <AvatarImage src={worker.avatar || "/placeholder.svg"} alt={worker.name} />
+                          <AvatarImage
+                            src={worker.avatar || "/placeholder.svg"}
+                            alt={worker.name}
+                          />
                           <AvatarFallback>
                             {worker.name
                               .split(" ")
@@ -167,18 +202,28 @@ export default function ProfilePage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-foreground">{worker.name}</h3>
-                          <p className="text-sm text-muted-foreground">{worker.profession}</p>
+                          <h3 className="font-semibold text-foreground">
+                            {worker.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {worker.profession}
+                          </p>
                           <div className="flex items-center gap-2 mt-1">
                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium text-foreground">{worker.rating}</span>
-                            <span className="text-sm text-muted-foreground">• ${worker.hourlyRate}/hr</span>
+                            <span className="text-sm font-medium text-foreground">
+                              {worker.rating}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              • ${worker.hourlyRate}/hr
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/worker/${worker.id}`}>View Profile</Link>
+                          <Link href={`/worker/${worker.id}`}>
+                            View Profile
+                          </Link>
                         </Button>
                         <Button variant="ghost" size="icon">
                           <Bookmark className="w-5 h-5 fill-current" />
@@ -193,5 +238,5 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

@@ -1,14 +1,26 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
-import { Search, Send, Paperclip, MoreVertical, Phone, Video } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  MoreVertical,
+  Paperclip,
+  Phone,
+  Search,
+  Send,
+  Video,
+} from "lucide-react";
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const mockConversations = [
   {
@@ -41,7 +53,7 @@ const mockConversations = [
     unread: 1,
     isOnline: true,
   },
-]
+];
 
 const mockMessages = [
   {
@@ -79,19 +91,21 @@ const mockMessages = [
     timestamp: "Just now",
     isOwn: false,
   },
-]
+];
 
 export default function MessagesPage() {
-  const [selectedConversation, setSelectedConversation] = useState(mockConversations[0])
-  const [messageText, setMessageText] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
+  const [selectedConversation, setSelectedConversation] = useState(
+    mockConversations[0],
+  );
+  const [messageText, setMessageText] = useState("");
+  const [isTyping, _setIsTyping] = useState(false);
 
   const handleSendMessage = () => {
     if (messageText.trim()) {
       // Handle send message
-      setMessageText("")
+      setMessageText("");
     }
-  }
+  };
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-background">
@@ -101,7 +115,9 @@ export default function MessagesPage() {
           <div className="w-full md:w-96 bg-card border-r border-border flex flex-col">
             {/* Search Header */}
             <div className="p-4 border-b border-border">
-              <h2 className="text-xl font-bold mb-4 text-foreground">Messages</h2>
+              <h2 className="text-xl font-bold mb-4 text-foreground">
+                Messages
+              </h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search conversations..." className="pl-9" />
@@ -113,15 +129,21 @@ export default function MessagesPage() {
               <div className="divide-y">
                 {mockConversations.map((conversation) => (
                   <button
+                    type="button"
                     key={conversation.id}
                     onClick={() => setSelectedConversation(conversation)}
                     className={`w-full p-4 flex gap-3 hover:bg-accent transition-colors ${
-                      selectedConversation.id === conversation.id ? "bg-accent" : ""
+                      selectedConversation.id === conversation.id
+                        ? "bg-accent"
+                        : ""
                     }`}
                   >
                     <div className="relative">
                       <Avatar>
-                        <AvatarImage src={conversation.avatar || "/placeholder.svg"} alt={conversation.name} />
+                        <AvatarImage
+                          src={conversation.avatar || "/placeholder.svg"}
+                          alt={conversation.name}
+                        />
                         <AvatarFallback>
                           {conversation.name
                             .split(" ")
@@ -136,11 +158,19 @@ export default function MessagesPage() {
 
                     <div className="flex-1 text-left min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-sm truncate text-foreground">{conversation.name}</h3>
-                        <span className="text-xs text-muted-foreground">{conversation.timestamp}</span>
+                        <h3 className="font-semibold text-sm truncate text-foreground">
+                          {conversation.name}
+                        </h3>
+                        <span className="text-xs text-muted-foreground">
+                          {conversation.timestamp}
+                        </span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-1">{conversation.profession}</p>
-                      <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {conversation.profession}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {conversation.lastMessage}
+                      </p>
                     </div>
 
                     {conversation.unread > 0 && (
@@ -177,9 +207,12 @@ export default function MessagesPage() {
                   )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">{selectedConversation.name}</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {selectedConversation.name}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    {selectedConversation.isOnline ? "Online" : "Offline"} • {selectedConversation.profession}
+                    {selectedConversation.isOnline ? "Online" : "Offline"} •{" "}
+                    {selectedConversation.profession}
                   </p>
                 </div>
               </div>
@@ -200,7 +233,9 @@ export default function MessagesPage() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem>View Profile</DropdownMenuItem>
                     <DropdownMenuItem>Mute Conversation</DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">Delete Conversation</DropdownMenuItem>
+                    <DropdownMenuItem className="text-red-600">
+                      Delete Conversation
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -210,16 +245,27 @@ export default function MessagesPage() {
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
                 {mockMessages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] ${message.isOwn ? "order-2" : "order-1"}`}>
+                  <div
+                    key={message.id}
+                    className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[70%] ${message.isOwn ? "order-2" : "order-1"}`}
+                    >
                       <Card
                         className={`p-3 ${
-                          message.isOwn ? "bg-blue-600 dark:bg-blue-700 text-white" : "bg-secondary text-foreground"
+                          message.isOwn
+                            ? "bg-blue-600 dark:bg-blue-700 text-white"
+                            : "bg-secondary text-foreground"
                         } shadow-none border-0`}
                       >
-                        <p className="text-sm leading-relaxed">{message.text}</p>
+                        <p className="text-sm leading-relaxed">
+                          {message.text}
+                        </p>
                       </Card>
-                      <p className={`text-xs text-muted-foreground mt-1 ${message.isOwn ? "text-right" : "text-left"}`}>
+                      <p
+                        className={`text-xs text-muted-foreground mt-1 ${message.isOwn ? "text-right" : "text-left"}`}
+                      >
                         {message.timestamp}
                       </p>
                     </div>
@@ -253,13 +299,16 @@ export default function MessagesPage() {
                   onChange={(e) => setMessageText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSendMessage()
+                      e.preventDefault();
+                      handleSendMessage();
                     }
                   }}
                   className="flex-1"
                 />
-                <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!messageText.trim()}
+                >
                   <Send className="w-5 h-5" />
                 </Button>
               </div>
@@ -268,10 +317,12 @@ export default function MessagesPage() {
 
           {/* Mobile: Show message when no conversation selected */}
           <div className="md:hidden flex-1 flex items-center justify-center bg-background">
-            <p className="text-muted-foreground">Select a conversation to start messaging</p>
+            <p className="text-muted-foreground">
+              Select a conversation to start messaging
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

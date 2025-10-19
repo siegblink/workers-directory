@@ -1,6 +1,12 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function SignupSuccessPage() {
   return (
@@ -8,12 +14,15 @@ export default function SignupSuccessPage() {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Thank you for signing up!</CardTitle>
+            <CardTitle className="text-2xl">
+              Thank you for signing up!
+            </CardTitle>
             <CardDescription>Check your email to confirm</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              You've successfully signed up. Please check your email to confirm your account before signing in.
+              You've successfully signed up. Please check your email to confirm
+              your account before signing in.
             </p>
             <Button asChild className="w-full">
               <Link href="/login">Go to Login</Link>
@@ -22,5 +31,5 @@ export default function SignupSuccessPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

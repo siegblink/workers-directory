@@ -1,12 +1,22 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DollarSign, Calendar, Star, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, Crown } from "lucide-react"
-import Link from "next/link"
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Crown,
+  DollarSign,
+  Star,
+  TrendingUp,
+  XCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const mockStats = {
   totalEarnings: 12450,
@@ -17,7 +27,7 @@ const mockStats = {
   totalReviews: 127,
   responseRate: 98,
   completionRate: 96,
-}
+};
 
 const mockPendingRequests = [
   {
@@ -48,7 +58,7 @@ const mockPendingRequests = [
     amount: 180,
     status: "pending",
   },
-]
+];
 
 const mockUpcomingJobs = [
   {
@@ -65,7 +75,7 @@ const mockUpcomingJobs = [
     amount: 135,
     status: "confirmed",
   },
-]
+];
 
 export default function WorkerDashboardPage() {
   return (
@@ -73,8 +83,12 @@ export default function WorkerDashboardPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Worker Dashboard</h1>
-          <p className="text-muted-foreground">Manage your bookings and track your performance</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Worker Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your bookings and track your performance
+          </p>
         </div>
 
         {/* Promotion Banner */}
@@ -86,13 +100,19 @@ export default function WorkerDashboardPage() {
                   <Crown className="w-6 h-6 text-yellow-900 dark:text-yellow-100" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-1 text-foreground">Boost Your Profile</h3>
+                  <h3 className="font-semibold text-lg mb-1 text-foreground">
+                    Boost Your Profile
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    Get featured at the top of search results and get 3x more bookings
+                    Get featured at the top of search results and get 3x more
+                    bookings
                   </p>
                 </div>
               </div>
-              <Button className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800" asChild>
+              <Button
+                className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800"
+                asChild
+              >
                 <Link href="/dashboard/promote">Promote Now</Link>
               </Button>
             </div>
@@ -103,11 +123,15 @@ export default function WorkerDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Earnings</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Earnings
+              </CardTitle>
               <DollarSign className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">${mockStats.totalEarnings.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-foreground">
+                ${mockStats.totalEarnings.toLocaleString()}
+              </div>
               <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 mt-1">
                 <TrendingUp className="w-3 h-3" />
                 +${mockStats.thisMonth} this month
@@ -117,34 +141,52 @@ export default function WorkerDashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Requests</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pending Requests
+              </CardTitle>
               <AlertCircle className="w-4 h-4 text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{mockStats.pendingBookings}</div>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting your response</p>
+              <div className="text-2xl font-bold text-foreground">
+                {mockStats.pendingBookings}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Awaiting your response
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Completed Jobs</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Completed Jobs
+              </CardTitle>
               <CheckCircle2 className="w-4 h-4 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{mockStats.completedJobs}</div>
-              <p className="text-xs text-muted-foreground mt-1">{mockStats.completionRate}% completion rate</p>
+              <div className="text-2xl font-bold text-foreground">
+                {mockStats.completedJobs}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {mockStats.completionRate}% completion rate
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Average Rating</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Average Rating
+              </CardTitle>
               <Star className="w-4 h-4 text-yellow-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{mockStats.averageRating}</div>
-              <p className="text-xs text-muted-foreground mt-1">{mockStats.totalReviews} reviews</p>
+              <div className="text-2xl font-bold text-foreground">
+                {mockStats.averageRating}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {mockStats.totalReviews} reviews
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -185,8 +227,12 @@ export default function WorkerDashboardPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-lg text-foreground">{request.customer.name}</h3>
-                          <p className="text-sm text-muted-foreground">{request.service}</p>
+                          <h3 className="font-semibold text-lg text-foreground">
+                            {request.customer.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {request.service}
+                          </p>
                           <Badge variant="secondary" className="mt-2">
                             New Request
                           </Badge>
@@ -204,17 +250,25 @@ export default function WorkerDashboardPage() {
                           <Clock className="w-4 h-4 text-muted-foreground" />
                           <span>{request.duration} hours</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">{request.location}</div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {request.location}
+                        </div>
                       </div>
 
                       <div className="flex flex-col items-end justify-between gap-4">
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground mb-1">Estimated Earnings</p>
-                          <p className="text-2xl font-bold text-foreground">${request.amount}</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Estimated Earnings
+                          </p>
+                          <p className="text-2xl font-bold text-foreground">
+                            ${request.amount}
+                          </p>
                         </div>
 
                         <div className="flex flex-col gap-2 w-full md:w-auto">
-                          <Button className="bg-green-600 hover:bg-green-700">Accept</Button>
+                          <Button className="bg-green-600 hover:bg-green-700">
+                            Accept
+                          </Button>
                           <Button variant="outline" className="bg-transparent">
                             <XCircle className="w-4 h-4 mr-2" />
                             Decline
@@ -230,8 +284,13 @@ export default function WorkerDashboardPage() {
                 <Card>
                   <CardContent className="p-12 text-center">
                     <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2 text-foreground">No Pending Requests</h3>
-                    <p className="text-muted-foreground">You're all caught up! New booking requests will appear here.</p>
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">
+                      No Pending Requests
+                    </h3>
+                    <p className="text-muted-foreground">
+                      You're all caught up! New booking requests will appear
+                      here.
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -247,7 +306,10 @@ export default function WorkerDashboardPage() {
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="flex items-start gap-4">
                         <Avatar className="w-16 h-16">
-                          <AvatarImage src={job.customer.avatar || "/placeholder.svg"} alt={job.customer.name} />
+                          <AvatarImage
+                            src={job.customer.avatar || "/placeholder.svg"}
+                            alt={job.customer.name}
+                          />
                           <AvatarFallback>
                             {job.customer.name
                               .split(" ")
@@ -256,9 +318,15 @@ export default function WorkerDashboardPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-lg text-foreground">{job.customer.name}</h3>
-                          <p className="text-sm text-muted-foreground">{job.service}</p>
-                          <Badge className="mt-2 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Confirmed</Badge>
+                          <h3 className="font-semibold text-lg text-foreground">
+                            {job.customer.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {job.service}
+                          </p>
+                          <Badge className="mt-2 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            Confirmed
+                          </Badge>
                         </div>
                       </div>
 
@@ -273,20 +341,31 @@ export default function WorkerDashboardPage() {
                           <Clock className="w-4 h-4 text-muted-foreground" />
                           <span>{job.duration} hours</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">{job.location}</div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {job.location}
+                        </div>
                       </div>
 
                       <div className="flex flex-col items-end justify-between gap-4">
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground mb-1">Earnings</p>
-                          <p className="text-2xl font-bold text-foreground">${job.amount}</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Earnings
+                          </p>
+                          <p className="text-2xl font-bold text-foreground">
+                            ${job.amount}
+                          </p>
                         </div>
 
                         <div className="flex flex-col gap-2 w-full md:w-auto">
                           <Button variant="outline" asChild>
-                            <Link href={`/bookings/${job.id}`}>View Details</Link>
+                            <Link href={`/bookings/${job.id}`}>
+                              View Details
+                            </Link>
                           </Button>
-                          <Button variant="outline" className="text-red-600 hover:text-red-700 bg-transparent">
+                          <Button
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700 bg-transparent"
+                          >
                             Cancel Job
                           </Button>
                         </div>
@@ -309,8 +388,12 @@ export default function WorkerDashboardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Response Rate</span>
-                        <span className="text-sm font-bold">{mockStats.responseRate}%</span>
+                        <span className="text-sm font-medium">
+                          Response Rate
+                        </span>
+                        <span className="text-sm font-bold">
+                          {mockStats.responseRate}%
+                        </span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div
@@ -318,13 +401,19 @@ export default function WorkerDashboardPage() {
                           style={{ width: `${mockStats.responseRate}%` }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">Excellent response time</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Excellent response time
+                      </p>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Completion Rate</span>
-                        <span className="text-sm font-bold">{mockStats.completionRate}%</span>
+                        <span className="text-sm font-medium">
+                          Completion Rate
+                        </span>
+                        <span className="text-sm font-bold">
+                          {mockStats.completionRate}%
+                        </span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div
@@ -332,31 +421,52 @@ export default function WorkerDashboardPage() {
                           style={{ width: `${mockStats.completionRate}%` }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">Great job completion rate</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Great job completion rate
+                      </p>
                     </div>
                   </div>
 
                   <div className="pt-6 border-t">
-                    <h4 className="font-semibold mb-4 text-foreground">Recent Reviews</h4>
+                    <h4 className="font-semibold mb-4 text-foreground">
+                      Recent Reviews
+                    </h4>
                     <div className="space-y-4">
                       {[
-                        { author: "Sarah M.", rating: 5, comment: "Excellent service! Very professional." },
-                        { author: "Mike R.", rating: 4, comment: "Good work, would hire again." },
-                      ].map((review, index) => (
-                        <div key={index} className="flex gap-3">
+                        {
+                          author: "Sarah M.",
+                          rating: 5,
+                          comment: "Excellent service! Very professional.",
+                        },
+                        {
+                          author: "Mike R.",
+                          rating: 4,
+                          comment: "Good work, would hire again.",
+                        },
+                      ].map((review) => (
+                        <div key={review.author} className="flex gap-3">
                           <Avatar>
                             <AvatarFallback>{review.author[0]}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm text-foreground">{review.author}</span>
+                              <span className="font-medium text-sm text-foreground">
+                                {review.author}
+                              </span>
                               <div className="flex">
-                                {Array.from({ length: review.rating }).map((_, i) => (
-                                  <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                ))}
+                                {Array.from({ length: review.rating }).map(
+                                  (_, i) => (
+                                    <Star
+                                      key={`${review.author}-star-${i}`}
+                                      className="w-3 h-3 fill-yellow-400 text-yellow-400"
+                                    />
+                                  ),
+                                )}
                               </div>
                             </div>
-                            <p className="text-sm text-muted-foreground">{review.comment}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {review.comment}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -369,5 +479,5 @@ export default function WorkerDashboardPage() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

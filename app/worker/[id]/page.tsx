@@ -1,14 +1,23 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, MapPin, Bookmark, MessageSquare, Calendar, Shield, Clock, DollarSign } from "lucide-react"
-import Image from "next/image"
-import { BookingModal } from "@/components/booking-modal"
+import {
+  Bookmark,
+  Calendar,
+  Clock,
+  DollarSign,
+  MapPin,
+  MessageSquare,
+  Shield,
+  Star,
+} from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { BookingModal } from "@/components/booking-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const mockWorker = {
   id: 1,
@@ -25,7 +34,13 @@ const mockWorker = {
   completedJobs: 342,
   responseTime: "Within 1 hour",
   bio: "Professional plumber with over 15 years of experience. Specialized in residential and commercial plumbing, emergency repairs, and installations. Licensed and insured.",
-  skills: ["Emergency Repairs", "Pipe Installation", "Drain Cleaning", "Water Heater", "Leak Detection"],
+  skills: [
+    "Emergency Repairs",
+    "Pipe Installation",
+    "Drain Cleaning",
+    "Water Heater",
+    "Leak Detection",
+  ],
   availability: {
     monday: "9:00 AM - 6:00 PM",
     tuesday: "9:00 AM - 6:00 PM",
@@ -35,7 +50,7 @@ const mockWorker = {
     saturday: "10:00 AM - 4:00 PM",
     sunday: "Closed",
   },
-}
+};
 
 const mockReviews = [
   {
@@ -43,7 +58,8 @@ const mockReviews = [
     author: "Sarah M.",
     rating: 5,
     date: "2 days ago",
-    comment: "Excellent service! Fixed my leaking pipe quickly and professionally. Highly recommended!",
+    comment:
+      "Excellent service! Fixed my leaking pipe quickly and professionally. Highly recommended!",
     avatar: "/placeholder.svg?height=40&width=40",
   },
   {
@@ -51,7 +67,8 @@ const mockReviews = [
     author: "Mike R.",
     rating: 4,
     date: "1 week ago",
-    comment: "Good work, arrived on time and got the job done. Would hire again.",
+    comment:
+      "Good work, arrived on time and got the job done. Would hire again.",
     avatar: "/placeholder.svg?height=40&width=40",
   },
   {
@@ -59,21 +76,22 @@ const mockReviews = [
     author: "Emily T.",
     rating: 5,
     date: "2 weeks ago",
-    comment: "Very knowledgeable and explained everything clearly. Fair pricing too!",
+    comment:
+      "Very knowledgeable and explained everything clearly. Fair pricing too!",
     avatar: "/placeholder.svg?height=40&width=40",
   },
-]
+];
 
 const mockPortfolio = [
   { id: 1, image: "/plumbing-work-1.png", title: "Kitchen Sink Installation" },
   { id: 2, image: "/plumbing-work-2.png", title: "Bathroom Renovation" },
   { id: 3, image: "/plumbing-work-3.png", title: "Water Heater Replacement" },
   { id: 4, image: "/plumbing-work-4.png", title: "Pipe Repair" },
-]
+];
 
 export default function WorkerProfilePage() {
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [bookingModalOpen, setBookingModalOpen] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,7 +102,10 @@ export default function WorkerProfilePage() {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="relative">
                 <Avatar className="w-32 h-32">
-                  <AvatarImage src={mockWorker.avatar || "/placeholder.svg"} alt={mockWorker.name} />
+                  <AvatarImage
+                    src={mockWorker.avatar || "/placeholder.svg"}
+                    alt={mockWorker.name}
+                  />
                   <AvatarFallback>
                     {mockWorker.name
                       .split(" ")
@@ -101,7 +122,9 @@ export default function WorkerProfilePage() {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <h1 className="text-3xl font-bold text-gray-900">{mockWorker.name}</h1>
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        {mockWorker.name}
+                      </h1>
                       {mockWorker.verified && (
                         <Badge className="bg-blue-600">
                           <Shield className="w-3 h-3 mr-1" />
@@ -109,13 +132,19 @@ export default function WorkerProfilePage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-lg text-gray-600 mb-3">{mockWorker.profession}</p>
+                    <p className="text-lg text-gray-600 mb-3">
+                      {mockWorker.profession}
+                    </p>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{mockWorker.rating}</span>
-                        <span className="text-gray-600">({mockWorker.reviews} reviews)</span>
+                        <span className="font-semibold">
+                          {mockWorker.rating}
+                        </span>
+                        <span className="text-gray-600">
+                          ({mockWorker.reviews} reviews)
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-600">
                         <MapPin className="w-4 h-4" />
@@ -148,7 +177,9 @@ export default function WorkerProfilePage() {
                       onClick={() => setIsBookmarked(!isBookmarked)}
                       className="w-full md:w-auto"
                     >
-                      <Bookmark className={`w-4 h-4 mr-2 ${isBookmarked ? "fill-current" : ""}`} />
+                      <Bookmark
+                        className={`w-4 h-4 mr-2 ${isBookmarked ? "fill-current" : ""}`}
+                      />
                       {isBookmarked ? "Saved" : "Save"}
                     </Button>
                   </div>
@@ -161,21 +192,27 @@ export default function WorkerProfilePage() {
                       <DollarSign className="w-4 h-4" />
                       <span className="text-sm">Hourly Rate</span>
                     </div>
-                    <p className="text-2xl font-bold">${mockWorker.hourlyRate}</p>
+                    <p className="text-2xl font-bold">
+                      ${mockWorker.hourlyRate}
+                    </p>
                   </div>
                   <div>
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <Calendar className="w-4 h-4" />
                       <span className="text-sm">Jobs Completed</span>
                     </div>
-                    <p className="text-2xl font-bold">{mockWorker.completedJobs}</p>
+                    <p className="text-2xl font-bold">
+                      {mockWorker.completedJobs}
+                    </p>
                   </div>
                   <div>
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm">Response Time</span>
                     </div>
-                    <p className="text-lg font-bold">{mockWorker.responseTime}</p>
+                    <p className="text-lg font-bold">
+                      {mockWorker.responseTime}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -187,7 +224,9 @@ export default function WorkerProfilePage() {
         <Tabs defaultValue="about" className="space-y-6">
           <TabsList className="w-full justify-start">
             <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({mockWorker.reviews})</TabsTrigger>
+            <TabsTrigger value="reviews">
+              Reviews ({mockWorker.reviews})
+            </TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
             <TabsTrigger value="availability">Availability</TabsTrigger>
           </TabsList>
@@ -197,7 +236,9 @@ export default function WorkerProfilePage() {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4">About Me</h3>
-                <p className="text-gray-700 leading-relaxed mb-6">{mockWorker.bio}</p>
+                <p className="text-gray-700 leading-relaxed mb-6">
+                  {mockWorker.bio}
+                </p>
 
                 <h4 className="font-semibold mb-3">Skills & Expertise</h4>
                 <div className="flex flex-wrap gap-2">
@@ -219,32 +260,51 @@ export default function WorkerProfilePage() {
                   <h3 className="text-xl font-semibold">Customer Reviews</h3>
                   <div className="flex items-center gap-2">
                     <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-                    <span className="text-2xl font-bold">{mockWorker.rating}</span>
-                    <span className="text-gray-600">({mockWorker.reviews} reviews)</span>
+                    <span className="text-2xl font-bold">
+                      {mockWorker.rating}
+                    </span>
+                    <span className="text-gray-600">
+                      ({mockWorker.reviews} reviews)
+                    </span>
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   {mockReviews.map((review) => (
-                    <div key={review.id} className="border-b last:border-0 pb-6 last:pb-0">
+                    <div
+                      key={review.id}
+                      className="border-b last:border-0 pb-6 last:pb-0"
+                    >
                       <div className="flex gap-4">
                         <Avatar>
-                          <AvatarImage src={review.avatar || "/placeholder.svg"} alt={review.author} />
+                          <AvatarImage
+                            src={review.avatar || "/placeholder.svg"}
+                            alt={review.author}
+                          />
                           <AvatarFallback>{review.author[0]}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
                             <div>
                               <p className="font-semibold">{review.author}</p>
-                              <p className="text-sm text-gray-600">{review.date}</p>
+                              <p className="text-sm text-gray-600">
+                                {review.date}
+                              </p>
                             </div>
                             <div className="flex items-center gap-1">
-                              {Array.from({ length: review.rating }).map((_, i) => (
-                                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              ))}
+                              {Array.from({ length: review.rating }).map(
+                                (_, i) => (
+                                  <Star
+                                    key={`${review.id}-star-${i}`}
+                                    className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                                  />
+                                ),
+                              )}
                             </div>
                           </div>
-                          <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                          <p className="text-gray-700 leading-relaxed">
+                            {review.comment}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -261,7 +321,10 @@ export default function WorkerProfilePage() {
                 <h3 className="text-xl font-semibold mb-6">Work Portfolio</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {mockPortfolio.map((item) => (
-                    <div key={item.id} className="relative group overflow-hidden rounded-lg">
+                    <div
+                      key={item.id}
+                      className="relative group overflow-hidden rounded-lg"
+                    >
                       <Image
                         src={item.image || "/placeholder.svg"}
                         alt={item.title}
@@ -283,14 +346,29 @@ export default function WorkerProfilePage() {
           <TabsContent value="availability">
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-6">Weekly Availability</h3>
+                <h3 className="text-xl font-semibold mb-6">
+                  Weekly Availability
+                </h3>
                 <div className="space-y-3">
-                  {Object.entries(mockWorker.availability).map(([day, hours]) => (
-                    <div key={day} className="flex items-center justify-between py-3 border-b last:border-0">
-                      <span className="font-medium capitalize">{day}</span>
-                      <span className={hours === "Closed" ? "text-gray-400" : "text-gray-700"}>{hours}</span>
-                    </div>
-                  ))}
+                  {Object.entries(mockWorker.availability).map(
+                    ([day, hours]) => (
+                      <div
+                        key={day}
+                        className="flex items-center justify-between py-3 border-b last:border-0"
+                      >
+                        <span className="font-medium capitalize">{day}</span>
+                        <span
+                          className={
+                            hours === "Closed"
+                              ? "text-gray-400"
+                              : "text-gray-700"
+                          }
+                        >
+                          {hours}
+                        </span>
+                      </div>
+                    ),
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -307,5 +385,5 @@ export default function WorkerProfilePage() {
         hourlyRate={mockWorker.hourlyRate}
       />
     </div>
-  )
+  );
 }

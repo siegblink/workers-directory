@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react"
+import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -15,7 +15,8 @@ export function Footer() {
               <span className="font-bold text-xl text-white">WorkerDir</span>
             </div>
             <p className="text-sm leading-relaxed">
-              Connecting trusted service workers with customers for all your home and business needs.
+              Connecting trusted service workers with customers for all your
+              home and business needs.
             </p>
           </div>
 
@@ -24,22 +25,34 @@ export function Footer() {
             <h3 className="font-semibold text-white mb-4">For Customers</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/search" className="hover:text-white transition-colors">
+                <Link
+                  href="/search"
+                  className="hover:text-white transition-colors"
+                >
                   Find Workers
                 </Link>
               </li>
               <li>
-                <Link href="/bookings" className="hover:text-white transition-colors">
+                <Link
+                  href="/bookings"
+                  className="hover:text-white transition-colors"
+                >
                   My Bookings
                 </Link>
               </li>
               <li>
-                <Link href="/credits" className="hover:text-white transition-colors">
+                <Link
+                  href="/credits"
+                  className="hover:text-white transition-colors"
+                >
                   Buy Credits
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-white transition-colors">
+                <Link
+                  href="/help"
+                  className="hover:text-white transition-colors"
+                >
                   Help Center
                 </Link>
               </li>
@@ -51,22 +64,34 @@ export function Footer() {
             <h3 className="font-semibold text-white mb-4">For Workers</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/become-worker" className="hover:text-white transition-colors">
+                <Link
+                  href="/become-worker"
+                  className="hover:text-white transition-colors"
+                >
                   Become a Worker
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="hover:text-white transition-colors">
+                <Link
+                  href="/dashboard"
+                  className="hover:text-white transition-colors"
+                >
                   Worker Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/promote" className="hover:text-white transition-colors">
+                <Link
+                  href="/dashboard/promote"
+                  className="hover:text-white transition-colors"
+                >
                   Promote Profile
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-white transition-colors">
+                <Link
+                  href="/help"
+                  className="hover:text-white transition-colors"
+                >
                   Worker Resources
                 </Link>
               </li>
@@ -78,22 +103,34 @@ export function Footer() {
             <h3 className="font-semibold text-white mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="hover:text-white transition-colors">
+                <Link
+                  href="/about"
+                  className="hover:text-white transition-colors"
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-white transition-colors">
+                <Link
+                  href="/help"
+                  className="hover:text-white transition-colors"
+                >
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link
+                  href="/terms"
+                  className="hover:text-white transition-colors"
+                >
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white transition-colors">
+                <Link
+                  href="/privacy"
+                  className="hover:text-white transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
@@ -107,21 +144,33 @@ export function Footer() {
 
           {/* Social Links */}
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-white transition-colors">
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               <Facebook className="w-5 h-5" />
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               <Twitter className="w-5 h-5" />
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               <Instagram className="w-5 h-5" />
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
+            </button>
+            <button
+              type="button"
+              className="hover:text-white transition-colors"
+            >
               <Linkedin className="w-5 h-5" />
-            </a>
+            </button>
           </div>
         </div>
       </div>
     </footer>
-  )
+  );
 }

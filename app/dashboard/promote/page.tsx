@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Crown, TrendingUp, Users, Star, ArrowLeft, Check } from "lucide-react"
+import { ArrowLeft, Check, Crown, Star, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const promotionPlans = [
   {
@@ -52,10 +52,10 @@ const promotionPlans = [
       "Homepage featured section",
     ],
   },
-]
+];
 
 export default function PromoteProfilePage() {
-  const [selectedPlan, setSelectedPlan] = useState("pro")
+  const [selectedPlan, setSelectedPlan] = useState("pro");
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,9 +74,12 @@ export default function PromoteProfilePage() {
           <div className="w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Crown className="w-8 h-8 text-yellow-900 dark:text-yellow-950" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-4">Boost Your Profile</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            Boost Your Profile
+          </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Get featured at the top of search results and increase your visibility to potential customers
+            Get featured at the top of search results and increase your
+            visibility to potential customers
           </p>
         </div>
 
@@ -88,7 +91,9 @@ export default function PromoteProfilePage() {
                 <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="font-semibold mb-2">3x More Views</h3>
-              <p className="text-sm text-muted-foreground">Get up to 3 times more profile views from potential customers</p>
+              <p className="text-sm text-muted-foreground">
+                Get up to 3 times more profile views from potential customers
+              </p>
             </CardContent>
           </Card>
 
@@ -98,7 +103,9 @@ export default function PromoteProfilePage() {
                 <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold mb-2">More Bookings</h3>
-              <p className="text-sm text-muted-foreground">Increased visibility leads to more booking requests</p>
+              <p className="text-sm text-muted-foreground">
+                Increased visibility leads to more booking requests
+              </p>
             </CardContent>
           </Card>
 
@@ -108,26 +115,34 @@ export default function PromoteProfilePage() {
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="font-semibold mb-2">Stand Out</h3>
-              <p className="text-sm text-muted-foreground">Featured badge makes your profile more trustworthy</p>
+              <p className="text-sm text-muted-foreground">
+                Featured badge makes your profile more trustworthy
+              </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Pricing Plans */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-center mb-8">Choose Your Plan</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">
+            Choose Your Plan
+          </h2>
           <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {promotionPlans.map((plan) => (
                 <Card
                   key={plan.id}
                   className={`relative cursor-pointer transition-all ${
-                    selectedPlan === plan.id ? "ring-2 ring-primary shadow-lg" : "hover:shadow-md"
+                    selectedPlan === plan.id
+                      ? "ring-2 ring-primary shadow-lg"
+                      : "hover:shadow-md"
                   }`}
                   onClick={() => setSelectedPlan(plan.id)}
                 >
                   {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">Most Popular</Badge>
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                      Most Popular
+                    </Badge>
                   )}
                   <CardHeader>
                     <div className="flex items-center justify-between mb-2">
@@ -136,14 +151,21 @@ export default function PromoteProfilePage() {
                     </div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold">${plan.price}</span>
-                      <span className="text-muted-foreground">/ {plan.duration}</span>
+                      <span className="text-muted-foreground">
+                        / {plan.duration}
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">or {plan.credits} credits</p>
+                    <p className="text-sm text-muted-foreground">
+                      or {plan.credits} credits
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-3">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
+                      {plan.features.map((feature) => (
+                        <li
+                          key={feature}
+                          className="flex items-start gap-2 text-sm"
+                        >
                           <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
                           <span>{feature}</span>
                         </li>
@@ -161,9 +183,12 @@ export default function PromoteProfilePage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-lg mb-1">Ready to boost your profile?</h3>
+                <h3 className="font-semibold text-lg mb-1">
+                  Ready to boost your profile?
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Selected: {promotionPlans.find((p) => p.id === selectedPlan)?.name} - $
+                  Selected:{" "}
+                  {promotionPlans.find((p) => p.id === selectedPlan)?.name} - $
                   {promotionPlans.find((p) => p.id === selectedPlan)?.price}
                 </p>
               </div>
@@ -171,7 +196,10 @@ export default function PromoteProfilePage() {
                 <Button variant="outline" asChild>
                   <Link href="/dashboard">Cancel</Link>
                 </Button>
-                <Button size="lg" className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white">
+                <Button
+                  size="lg"
+                  className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white"
+                >
                   Activate Boost
                 </Button>
               </div>
@@ -180,5 +208,5 @@ export default function PromoteProfilePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
