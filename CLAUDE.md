@@ -190,3 +190,5 @@ When working with database operations, always use the appropriate Supabase clien
 - The project includes Vercel Analytics integration
 - Forms should use controlled components pattern with proper TypeScript types
 - On this project, we always use Bun as our official package manager. We will never use NPM.
+- After doing a change, avoid running `bun run lint`, instead, always use `bun format:write` to catch any potential type and lint errors.
+- When building a form, always use the newest shadcn best practices by using the newly introduced components: Field, InputGroup, Item, Spinner, etc. The guideline is accessible through this link: https://ui.shadcn.com/docs/forms/react-hook-form
