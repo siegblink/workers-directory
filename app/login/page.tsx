@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Logo } from "@/components/logo";
+import { AuthLayout } from "@/components/auth-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,6 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { GridPattern } from "@/components/ui/grid-pattern";
 import {
   InputGroup,
   InputGroupAddon,
@@ -76,162 +75,135 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Image/Branding */}
-      <div className="hidden lg:flex flex-1 relative items-center justify-center p-12">
-        <GridPattern
-          width={60}
-          height={60}
-          className="absolute inset-0 h-full w-full fill-muted/20 stroke-muted-foreground/10"
-        />
-
-        {/* Logo */}
-        <div className="absolute top-8 left-8">
-          <Logo />
-        </div>
-
-        <div className="max-w-md relative z-10">
-          <h2 className="text-4xl font-bold mb-4 text-balance">
-            Connect with Trusted Professionals
-          </h2>
-          <p className="text-lg text-muted-foreground text-pretty">
-            Access thousands of verified service workers ready to help with your
-            home and business needs.
-          </p>
-        </div>
-      </div>
-
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold">Sign in</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel>Email Address</FieldLabel>
-                      <InputGroup>
-                        <InputGroupInput
-                          type="email"
-                          placeholder="you@example.com"
-                          {...field}
-                          disabled={form.formState.isSubmitting}
-                          aria-invalid={!!fieldState.error}
-                        />
-                      </InputGroup>
-                      <FieldError>{fieldState.error?.message}</FieldError>
-                    </Field>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel>Password</FieldLabel>
-                      <InputGroup>
-                        <InputGroupInput
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Enter your password"
-                          {...field}
-                          disabled={form.formState.isSubmitting}
-                          aria-invalid={!!fieldState.error}
-                        />
-                        <InputGroupAddon align="inline-end">
-                          <InputGroupButton
-                            onClick={() => setShowPassword(!showPassword)}
-                            disabled={form.formState.isSubmitting}
-                            size="icon-sm"
-                            tabIndex={-1}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </InputGroupButton>
-                        </InputGroupAddon>
-                      </InputGroup>
-                      <FieldError>{fieldState.error?.message}</FieldError>
-                    </Field>
-                  )}
-                />
-
-                <div className="flex items-center justify-between">
-                  <FormField
-                    control={form.control}
-                    name="rememberMe"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={form.formState.isSubmitting}
-                          />
-                        </FormControl>
-                        <FormLabel className="text-sm font-normal cursor-pointer">
-                          Remember me
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-primary hover:underline"
-                    tabIndex={-1}
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
+    <AuthLayout
+      title="Connect with Trusted Professionals"
+      description="Access thousands of verified service workers ready to help with your home and business needs."
+    >
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-3xl font-bold">Sign in</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Email Address</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        type="email"
+                        placeholder="you@example.com"
+                        {...field}
+                        disabled={form.formState.isSubmitting}
+                        aria-invalid={!!fieldState.error}
+                      />
+                    </InputGroup>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
                 )}
+              />
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {form.formState.isSubmitting ? (
-                    <>
-                      <Spinner className="mr-2" />
-                      Logging in...
-                    </>
-                  ) : (
-                    "Login"
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Password</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        {...field}
+                        disabled={form.formState.isSubmitting}
+                        aria-invalid={!!fieldState.error}
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={form.formState.isSubmitting}
+                          size="icon-sm"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+
+              <div className="flex items-center justify-between">
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal cursor-pointer">
+                        Remember me
+                      </FormLabel>
+                    </FormItem>
                   )}
-                </Button>
-              </form>
-            </Form>
+                />
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                  tabIndex={-1}
+                >
+                  Forgot password?
+                </Link>
+              </div>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-primary hover:underline font-medium"
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={form.formState.isSubmitting}
               >
-                Sign up
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Spinner className="mr-2" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="text-primary hover:underline font-medium"
+            >
+              Sign up
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </AuthLayout>
   );
 }

@@ -6,13 +6,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Logo } from "@/components/logo";
+import { AuthLayout } from "@/components/auth-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Form, FormField } from "@/components/ui/form";
-import { GridPattern } from "@/components/ui/grid-pattern";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
@@ -57,115 +56,91 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Image/Branding */}
-      <div className="hidden lg:flex flex-1 relative items-center justify-center p-12">
-        <GridPattern
-          width={60}
-          height={60}
-          className="absolute inset-0 h-full w-full fill-muted/20 stroke-muted-foreground/10"
-        />
-
-        {/* Logo */}
-        <div className="absolute top-8 left-8">
-          <Logo />
-        </div>
-
-        <div className="max-w-md relative z-10">
-          <h2 className="text-4xl font-bold mb-4 text-balance">
-            Reset Your Password
-          </h2>
-          <p className="text-lg text-muted-foreground text-pretty">
-            No worries! Enter your email and we'll send you instructions to
-            reset your password.
-          </p>
-        </div>
-      </div>
-
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-md">
-          {!emailSent ? (
-            <>
-              <CardHeader className="space-y-1">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2 w-fit"
+    <AuthLayout
+      title="Reset Your Password"
+      description="No worries! Enter your email and we'll send you instructions to reset your password."
+    >
+      <Card className="w-full max-w-md">
+        {!emailSent ? (
+          <>
+            <CardHeader className="space-y-1">
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2 w-fit"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to login
+              </Link>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to login
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field, fieldState }) => (
-                        <Field>
-                          <FieldLabel>Email Address</FieldLabel>
-                          <InputGroup>
-                            <InputGroupInput
-                              type="email"
-                              placeholder="you@example.com"
-                              {...field}
-                              disabled={form.formState.isSubmitting}
-                              aria-invalid={!!fieldState.error}
-                            />
-                          </InputGroup>
-                          <FieldError>{fieldState.error?.message}</FieldError>
-                        </Field>
-                      )}
-                    />
-
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel>Email Address</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
+                            type="email"
+                            placeholder="you@example.com"
+                            {...field}
+                            disabled={form.formState.isSubmitting}
+                            aria-invalid={!!fieldState.error}
+                          />
+                        </InputGroup>
+                        <FieldError>{fieldState.error?.message}</FieldError>
+                      </Field>
                     )}
+                  />
 
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      size="lg"
-                      disabled={form.formState.isSubmitting}
-                    >
-                      {form.formState.isSubmitting ? (
-                        <>
-                          <Spinner className="mr-2" />
-                          Sending...
-                        </>
-                      ) : (
-                        "Send Reset Link"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </>
-          ) : (
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="w-8 h-8 text-green-600 dark:text-green-400" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
-                <p className="text-muted-foreground mb-6 text-pretty">
-                  We've sent password reset instructions to your email address.
-                </p>
-                <Button asChild variant="outline" className="w-full" size="lg">
-                  <Link href="/login">Back to Login</Link>
-                </Button>
-              </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    size="lg"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting ? (
+                      <>
+                        <Spinner className="mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </Button>
+                </form>
+              </Form>
             </CardContent>
-          )}
-        </Card>
-      </div>
-    </div>
+          </>
+        ) : (
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
+              <p className="text-muted-foreground mb-6 text-pretty">
+                We've sent password reset instructions to your email address.
+              </p>
+              <Button asChild variant="outline" className="w-full" size="lg">
+                <Link href="/login">Back to Login</Link>
+              </Button>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+    </AuthLayout>
   );
 }
