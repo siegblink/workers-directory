@@ -2,8 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import type React from "react";
 import { Suspense } from "react";
-import { Footer } from "@/components/footer";
-import { Navigation } from "@/components/navigation";
+import { ConditionalLayout } from "@/components/conditional-layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -67,9 +66,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={<div>Loading...</div>}>
-            <Navigation />
-            <main>{children}</main>
-            <Footer />
+            <ConditionalLayout>{children}</ConditionalLayout>
           </Suspense>
           <Analytics />
         </ThemeProvider>

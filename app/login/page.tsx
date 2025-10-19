@@ -9,13 +9,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -25,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { GridPattern } from "@/components/ui/grid-pattern";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
@@ -75,14 +70,38 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Form */}
+      {/* Left Side - Image/Branding */}
+      <div className="hidden lg:flex flex-1 relative items-center justify-center p-12">
+        <GridPattern
+          width={60}
+          height={60}
+          className="absolute inset-0 h-full w-full fill-muted/20 stroke-muted-foreground/10"
+        />
+
+        {/* Logo */}
+        <div className="absolute top-8 left-8 flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">W</span>
+          </div>
+          <span className="font-bold text-xl">WorkerDir</span>
+        </div>
+
+        <div className="max-w-md relative z-10">
+          <h2 className="text-4xl font-bold mb-4 text-balance">
+            Connect with Trusted Professionals
+          </h2>
+          <p className="text-lg text-muted-foreground text-pretty">
+            Access thousands of verified service workers ready to help with your
+            home and business needs.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your account
-            </CardDescription>
+            <CardTitle className="text-3xl font-bold">Sign in</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -206,19 +225,6 @@ export default function LoginPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-blue-600 to-blue-800 items-center justify-center p-12">
-        <div className="max-w-md text-white">
-          <h2 className="text-4xl font-bold mb-4 text-balance">
-            Connect with Trusted Professionals
-          </h2>
-          <p className="text-lg text-blue-100 text-pretty">
-            Access thousands of verified service workers ready to help with your
-            home and business needs.
-          </p>
-        </div>
       </div>
     </div>
   );
