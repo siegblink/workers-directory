@@ -1,26 +1,33 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { Logo } from "@/components/logo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { GridPattern } from "@/components/ui/grid-pattern";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
 
 const signupSchema = z
@@ -108,11 +115,8 @@ export default function SignupPage() {
         />
 
         {/* Logo */}
-        <div className="absolute top-8 left-8 flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">W</span>
-          </div>
-          <span className="font-bold text-xl">WorkerDir</span>
+        <div className="absolute top-8 left-8">
+          <Logo />
         </div>
 
         <div className="max-w-md relative z-10">
@@ -142,37 +146,39 @@ export default function SignupPage() {
                   <FormField
                     control={form.control}
                     name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel>First Name</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
                             type="text"
                             placeholder="John"
                             {...field}
                             disabled={form.formState.isSubmitting}
+                            aria-invalid={!!fieldState.error}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                        </InputGroup>
+                        <FieldError>{fieldState.error?.message}</FieldError>
+                      </Field>
                     )}
                   />
                   <FormField
                     control={form.control}
                     name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel>Last Name</FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
                             type="text"
                             placeholder="Doe"
                             {...field}
                             disabled={form.formState.isSubmitting}
+                            aria-invalid={!!fieldState.error}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                        </InputGroup>
+                        <FieldError>{fieldState.error?.message}</FieldError>
+                      </Field>
                     )}
                   />
                 </div>
@@ -180,95 +186,98 @@ export default function SignupPage() {
                 <FormField
                   control={form.control}
                   name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>Email Address</FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput
                           type="email"
                           placeholder="you@example.com"
                           {...field}
                           disabled={form.formState.isSubmitting}
+                          aria-invalid={!!fieldState.error}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      </InputGroup>
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </Field>
                   )}
                 />
 
                 <FormField
                   control={form.control}
                   name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Create a strong password"
-                            {...field}
-                            disabled={form.formState.isSubmitting}
-                          />
-                          <button
-                            type="button"
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>Password</FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Create a strong password"
+                          {...field}
+                          disabled={form.formState.isSubmitting}
+                          aria-invalid={!!fieldState.error}
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             disabled={form.formState.isSubmitting}
+                            size="icon-sm"
+                            tabIndex={-1}
                           >
                             {showPassword ? (
                               <EyeOff className="h-4 w-4" />
                             ) : (
                               <Eye className="h-4 w-4" />
                             )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </Field>
                   )}
                 />
 
                 <FormField
                   control={form.control}
                   name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Re-enter your password"
-                            {...field}
-                            disabled={form.formState.isSubmitting}
-                          />
-                          <button
-                            type="button"
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel>Confirm Password</FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Re-enter your password"
+                          {...field}
+                          disabled={form.formState.isSubmitting}
+                          aria-invalid={!!fieldState.error}
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
                             onClick={() =>
                               setShowConfirmPassword(!showConfirmPassword)
                             }
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             disabled={form.formState.isSubmitting}
+                            size="icon-sm"
+                            tabIndex={-1}
                           >
                             {showConfirmPassword ? (
                               <EyeOff className="h-4 w-4" />
                             ) : (
                               <Eye className="h-4 w-4" />
                             )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </Field>
                   )}
                 />
 
                 <FormField
                   control={form.control}
                   name="terms"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                  render={({ field, fieldState }) => (
+                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -282,7 +291,7 @@ export default function SignupPage() {
                           <Link
                             href="/terms"
                             className="text-primary hover:underline"
-                            tabIndex={form.formState.isSubmitting ? -1 : 0}
+                            tabIndex={-1}
                           >
                             Terms of Service
                           </Link>{" "}
@@ -290,12 +299,12 @@ export default function SignupPage() {
                           <Link
                             href="/privacy"
                             className="text-primary hover:underline"
-                            tabIndex={form.formState.isSubmitting ? -1 : 0}
+                            tabIndex={-1}
                           >
                             Privacy Policy
                           </Link>
                         </FormLabel>
-                        <FormMessage />
+                        <FieldError>{fieldState.error?.message}</FieldError>
                       </div>
                     </FormItem>
                   )}
@@ -316,7 +325,7 @@ export default function SignupPage() {
                 >
                   {form.formState.isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Spinner className="mr-2" />
                       Creating Account...
                     </>
                   ) : (

@@ -1,107 +1,170 @@
 "use client";
 
-import { ArrowLeft, Mail } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
-import type React from "react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Logo } from "@/components/logo";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Form, FormField } from "@/components/ui/form";
+import { GridPattern } from "@/components/ui/grid-pattern";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false);
-  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = async (values: ForgotPasswordFormValues) => {
     const supabase = createClient();
-    setIsLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        values.email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      );
       if (error) throw error;
       setEmailSent(true);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while sending the reset link",
+      );
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-background">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg shadow-lg p-8 border">
+    <div className="min-h-screen flex">
+      {/* Left Side - Image/Branding */}
+      <div className="hidden lg:flex flex-1 relative items-center justify-center p-12">
+        <GridPattern
+          width={60}
+          height={60}
+          className="absolute inset-0 h-full w-full fill-muted/20 stroke-muted-foreground/10"
+        />
+
+        {/* Logo */}
+        <div className="absolute top-8 left-8">
+          <Logo />
+        </div>
+
+        <div className="max-w-md relative z-10">
+          <h2 className="text-4xl font-bold mb-4 text-balance">
+            Reset Your Password
+          </h2>
+          <p className="text-lg text-muted-foreground text-pretty">
+            No worries! Enter your email and we'll send you instructions to
+            reset your password.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Card className="w-full max-w-md">
           {!emailSent ? (
             <>
-              <div className="mb-8">
+              <CardHeader className="space-y-1">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2 w-fit"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to login
                 </Link>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Forgot Password?
-                </h1>
-                <p className="text-muted-foreground">
-                  No worries, we'll send you reset instructions.
-                </p>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel>Email Address</FieldLabel>
+                          <InputGroup>
+                            <InputGroupInput
+                              type="email"
+                              placeholder="you@example.com"
+                              {...field}
+                              disabled={form.formState.isSubmitting}
+                              aria-invalid={!!fieldState.error}
+                            />
+                          </InputGroup>
+                          <FieldError>{fieldState.error?.message}</FieldError>
+                        </Field>
+                      )}
+                    />
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
 
-                {error && (
-                  <p className="text-sm text-red-500 dark:text-red-400">
-                    {error}
-                  </p>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Sending..." : "Send Reset Link"}
-                </Button>
-              </form>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      size="lg"
+                      disabled={form.formState.isSubmitting}
+                    >
+                      {form.formState.isSubmitting ? (
+                        <>
+                          <Spinner className="mr-2" />
+                          Sending...
+                        </>
+                      ) : (
+                        "Send Reset Link"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
             </>
           ) : (
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
+                <p className="text-muted-foreground mb-6 text-pretty">
+                  We've sent password reset instructions to your email address.
+                </p>
+                <Button asChild variant="outline" className="w-full" size="lg">
+                  <Link href="/login">Back to Login</Link>
+                </Button>
               </div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">
-                Check Your Email
-              </h1>
-              <p className="text-muted-foreground mb-6">
-                We've sent password reset instructions to your email address.
-              </p>
-              <Button asChild variant="outline" className="w-full">
-                <Link href="/login">Back to Login</Link>
-              </Button>
-            </div>
+            </CardContent>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );
