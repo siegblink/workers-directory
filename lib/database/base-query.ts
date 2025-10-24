@@ -128,27 +128,27 @@ export function applyPagination(
 }
 
 /**
- * Get current authenticated user ID
+ * Get current authenticated user ID from public.users table
+ * Maps auth.users.id (UUID) to public.users.id (number)
  */
 export async function getCurrentUserId(): Promise<number | null> {
   const supabase = getSupabaseClient()
-  
+
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     if (!user) return null
 
     // Get the corresponding user ID from public.users table
-    // Assuming auth.user.id matches the users table somehow
-    // You may need to adjust this based on your auth setup
+    // Using auth_id column that references auth.users.id
     const { data, error } = await supabase
       .from('users')
       .select('id')
-      .eq('id', user.id) // Adjust this based on your setup
+      .eq('auth_id', user.id) // Match UUID from auth.users
       .single()
 
     if (error || !data) {
-      console.error('Error fetching user ID:', error)
+      console.error('Error fetching user ID from public.users:', error)
       return null
     }
 

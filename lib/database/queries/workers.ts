@@ -1,23 +1,77 @@
 // =====================================================
-// Worker Queries
+// Worker Queries - Optimized Version
+// Fixes all N+1 query problems by using database views and functions
 // =====================================================
 
-import { 
-  getSupabaseClient, 
-  executeQuery, 
-  executePaginatedQuery,
-  applySorting 
+import {
+  getSupabaseClient,
+  executeQuery,
+  executePaginatedQuery
 } from '../base-query'
-import type { 
-  Worker, 
-  WorkerWithDetails, 
+import type {
+  Worker,
+  WorkerWithDetails,
   WorkerFilters,
-  ApiResponse, 
-  PaginatedResponse 
+  ApiResponse,
+  PaginatedResponse,
+  Category
 } from '../types'
 
+// =====================================================
+// HELPER FUNCTIONS
+// =====================================================
+
 /**
- * Get worker by ID
+ * Parse worker data from database view result
+ */
+function parseWorkerFromView(row: any): WorkerWithDetails {
+  return {
+    id: row.id,
+    worker_id: row.worker_id,
+    skills: row.skills,
+    status: row.status,
+    hourly_rate: row.hourly_rate,
+    location: row.location,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    availability_schedule: row.availability_schedule,
+    is_available: row.is_available,
+    created_at: row.created_at,
+    deleted_at: null,
+    user: row.user_data,
+    average_rating: parseFloat(row.average_rating) || 0,
+    total_bookings: parseInt(row.total_bookings) || 0,
+    ratings: [], // Not included in view for performance
+    categories: [] // Will be fetched separately when needed
+  }
+}
+
+/**
+ * Get categories for a worker (lightweight query)
+ */
+async function getWorkerCategories(workerId: number): Promise<Category[]> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('workers_categories')
+    .select(`
+      category:categories(*)
+    `)
+    .eq('worker_id', workerId)
+
+  if (error || !data) return []
+
+  return data
+    .map((item: any) => item.category)
+    .filter((cat: any): cat is Category => cat !== null && cat !== undefined)
+}
+
+// =====================================================
+// BASIC QUERIES
+// =====================================================
+
+/**
+ * Get worker by ID (basic info only)
  */
 export async function getWorkerById(workerId: number): Promise<ApiResponse<Worker>> {
   const supabase = getSupabaseClient()
@@ -35,62 +89,141 @@ export async function getWorkerById(workerId: number): Promise<ApiResponse<Worke
 }
 
 /**
- * Get worker with full details including user, categories, and ratings
+ * Get worker with full details using optimized view
+ * FIXED: No longer uses N+1 queries - single view query
  */
 export async function getWorkerWithDetails(workerId: number): Promise<ApiResponse<WorkerWithDetails>> {
   const supabase = getSupabaseClient()
 
   return executeQuery(async () => {
-    const { data: worker, error: workerError } = await supabase
-      .from('workers')
-      .select(`
-        *,
-        user:users!workers_user_id_fkey(*)
-      `)
+    // Use the optimized view instead of multiple queries
+    const { data, error } = await supabase
+      .from('workers_with_details')
+      .select('*')
       .eq('id', workerId)
-      .is('deleted_at', null)
       .single()
 
-    if (workerError || !worker) {
-      return { data: null, error: workerError }
+    if (error || !data) {
+      return { data: null, error }
     }
 
-    // Get categories
-    const { data: categories } = await supabase
-      .from('workers_categories')
-      .select(`
-        category:category(*)
-      `)
-      .eq('worker_id', worker.worker_id)
+    // Parse the worker data
+    const worker = parseWorkerFromView(data)
 
-    // Get ratings
-    const { data: ratings } = await supabase
-      .from('ratings')
-      .select('*')
-      .eq('worker_id', worker.worker_id)
+    // Fetch categories separately (one additional query instead of N)
+    worker.categories = await getWorkerCategories(workerId)
 
-    // Calculate average rating
-    const average_rating = ratings && ratings.length > 0
-      ? ratings.reduce((sum, r) => sum + (r.rating_value || 0), 0) / ratings.length
-      : 0
-
-    // Get total bookings
-    const { count: total_bookings } = await supabase
-      .from('bookings')
-      .select('*', { count: 'exact', head: true })
-      .eq('worker_id', workerId)
-      .eq('status', 'completed')
-
-    const result: WorkerWithDetails = {
-      ...worker,
-      categories: categories?.map(c => c.category).filter(Boolean) || [],
-      ratings: ratings || [],
-      average_rating,
-      total_bookings: total_bookings || 0,
-    }
-
-    return { data: result, error: null }
+    return { data: worker, error: null }
   })
+}
+
+// =====================================================
+// OPTIMIZED SEARCH QUERIES
+// =====================================================
+
+/**
+ * Search and filter workers using optimized database function
+ * FIXED: No more N+1 queries - single RPC call
+ */
+export async function searchWorkers(
+  filters: WorkerFilters = {}
+): Promise<PaginatedResponse<WorkerWithDetails>> {
+  const supabase = getSupabaseClient()
+
+  const page = filters.page ?? 1
+  const limit = filters.limit ?? 20
+  const offset = (page - 1) * limit
+
+  return executeQuery(async () => {
+    // Call the optimized database function
+    const { data, error } = await supabase.rpc('search_workers_optimized', {
+      search_text: filters.search || null,
+      filter_status: filters.status || null,
+      filter_is_available: filters.is_available ?? null,
+      filter_skills: filters.skills || null,
+      filter_location: filters.location || null,
+      min_hourly_rate: filters.min_hourly_rate ?? null,
+      max_hourly_rate: filters.max_hourly_rate ?? null,
+      min_rating: filters.min_rating ?? null,
+      result_limit: limit,
+      result_offset: offset
+    })
+
+    if (error || !data || data.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          total_pages: 0
+        },
+        error
+      }
+    }
+
+    // Parse all workers
+    const workers = data.map(parseWorkerFromView)
+    const totalCount = data[0]?.total_count || 0
+    const totalPages = Math.ceil(totalCount / limit)
+
+    // Apply client-side filters that can't be done in SQL
+    let filteredWorkers = workers
+
+    // Category filter (if provided)
+    if (filters.category_id || filters.category_ids) {
+      // Fetch categories for all workers in one batch
+      const workerIds = workers.map((w: WorkerWithDetails) => w.id)
+      const { data: categoriesData } = await supabase
+        .from('workers_categories')
+        .select('worker_id, category_id')
+        .in('worker_id', workerIds)
+
+      const workerCategoryMap = new Map<number, number[]>()
+      categoriesData?.forEach((wc: any) => {
+        if (!workerCategoryMap.has(wc.worker_id)) {
+          workerCategoryMap.set(wc.worker_id, [])
+        }
+        workerCategoryMap.get(wc.worker_id)!.push(wc.category_id)
+      })
+
+      if (filters.category_id) {
+        filteredWorkers = filteredWorkers.filter((w: WorkerWithDetails) =>
+          workerCategoryMap.get(w.id)?.includes(filters.category_id!)
+        )
+      } else if (filters.category_ids) {
+        filteredWorkers = filteredWorkers.filter((w: WorkerWithDetails) => {
+          const workerCats = workerCategoryMap.get(w.id) || []
+          return workerCats.some((catId: number) => filters.category_ids!.includes(catId))
+        })
+      }
+    }
+
+    // Location radius filter (if provided)
+    if (filters.latitude && filters.longitude && filters.radius) {
+      filteredWorkers = filteredWorkers.filter((worker: WorkerWithDetails) => {
+        if (!worker.latitude || !worker.longitude) return false
+        const distance = calculateDistance(
+          filters.latitude!,
+          filters.longitude!,
+          worker.latitude,
+          worker.longitude
+        )
+        return distance <= filters.radius!
+      })
+    }
+
+    return {
+      data: filteredWorkers,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        total_pages: totalPages
+      },
+      error: null
+    }
+  }) as Promise<PaginatedResponse<WorkerWithDetails>>
 }
 
 /**
@@ -115,133 +248,8 @@ function calculateDistance(
 }
 
 /**
- * Search and filter workers with advanced filtering
- */
-export async function searchWorkers(
-  filters: WorkerFilters = {}
-): Promise<PaginatedResponse<WorkerWithDetails>> {
-  const supabase = getSupabaseClient()
-
-  return executePaginatedQuery(async (from, to) => {
-    let query = supabase
-      .from('workers')
-      .select(`
-        *,
-        user:users!workers_user_id_fkey(*)
-      `, { count: 'exact' })
-      .is('deleted_at', null)
-
-    // Status filter
-    if (filters.status) {
-      query = query.eq('status', filters.status)
-    }
-
-    // Availability filter
-    if (filters.is_available !== undefined) {
-      query = query.eq('is_available', filters.is_available)
-    }
-
-    // Skills filter
-    if (filters.skills) {
-      query = query.ilike('skills', `%${filters.skills}%`)
-    }
-
-    // Price range filters
-    if (filters.min_hourly_rate !== undefined) {
-      query = query.gte('hourly_rate', filters.min_hourly_rate)
-    }
-    if (filters.max_hourly_rate !== undefined) {
-      query = query.lte('hourly_rate', filters.max_hourly_rate)
-    }
-
-    // Location text search
-    if (filters.location) {
-      query = query.ilike('location', `%${filters.location}%`)
-    }
-
-    // General search (name, skills)
-    if (filters.search) {
-      query = query.or(`
-        user.firstname.ilike.%${filters.search}%,
-        user.lastname.ilike.%${filters.search}%,
-        skills.ilike.%${filters.search}%,
-        location.ilike.%${filters.search}%
-      `)
-    }
-
-    // Apply sorting
-    query = applySorting(query, filters.sort)
-    query = query.range(from, to)
-
-    const { data, error, count } = await query
-
-    if (error || !data) {
-      return { data: [], error, count: 0 }
-    }
-
-    // Enhance with categories and ratings for each worker
-    let enhancedData = await Promise.all(
-      data.map(async (worker) => {
-        const { data: workerDetails } = await getWorkerWithDetails(worker.id)
-        return workerDetails || worker
-      })
-    )
-
-    // Apply post-query filters that can't be done in SQL
-
-    // Category filter (single or multiple)
-    if (filters.category_id) {
-      enhancedData = enhancedData.filter(worker =>
-        worker.categories?.some((cat: any) => cat.id === filters.category_id)
-      )
-    }
-    if (filters.category_ids && filters.category_ids.length > 0) {
-      enhancedData = enhancedData.filter(worker =>
-        worker.categories?.some((cat: any) => filters.category_ids!.includes(cat.id))
-      )
-    }
-
-    // Rating filters
-    if (filters.min_rating !== undefined) {
-      enhancedData = enhancedData.filter(worker =>
-        (worker.average_rating || 0) >= filters.min_rating!
-      )
-    }
-    if (filters.max_rating !== undefined) {
-      enhancedData = enhancedData.filter(worker =>
-        (worker.average_rating || 0) <= filters.max_rating!
-      )
-    }
-
-    // Location radius filter
-    if (filters.latitude && filters.longitude && filters.radius) {
-      enhancedData = enhancedData.filter(worker => {
-        if (!worker.latitude || !worker.longitude) return false
-        const distance = calculateDistance(
-          filters.latitude!,
-          filters.longitude!,
-          worker.latitude,
-          worker.longitude
-        )
-        return distance <= filters.radius!
-      })
-    }
-
-    // Availability schedule filter
-    if (filters.available_days && filters.available_days.length > 0) {
-      enhancedData = enhancedData.filter(worker => {
-        if (!worker.availability_schedule) return false
-        const schedule = worker.availability_schedule as any
-        return filters.available_days!.some(day => schedule[day] === true)
-      })
-    }
-
-    return { data: enhancedData, error: null, count }
-  }, filters)
-}
-
-/**
- * Get workers by category
+ * Get workers by category using optimized database function
+ * FIXED: No more N+1 queries - single RPC call
  */
 export async function getWorkersByCategory(
   categoryId: number,
@@ -249,92 +257,133 @@ export async function getWorkersByCategory(
 ): Promise<PaginatedResponse<WorkerWithDetails>> {
   const supabase = getSupabaseClient()
 
-  return executePaginatedQuery(async (from, to) => {
-    // First get worker IDs from workers_categories
-    const { data: workerCats } = await supabase
+  const page = filters.page ?? 1
+  const limit = filters.limit ?? 20
+  const offset = (page - 1) * limit
+
+  return executeQuery(async () => {
+    // Call the optimized database function
+    const { data, error } = await supabase.rpc('get_workers_by_category_optimized', {
+      target_category_id: categoryId,
+      filter_status: filters.status || null,
+      result_limit: limit,
+      result_offset: offset
+    })
+
+    if (error || !data || data.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          total_pages: 0
+        },
+        error
+      }
+    }
+
+    // Parse all workers
+    const workers = data.map(parseWorkerFromView)
+    const totalCount = data[0]?.total_count || 0
+    const totalPages = Math.ceil(totalCount / limit)
+
+    // Fetch categories for all workers in batch
+    const workerIds = workers.map((w: WorkerWithDetails) => w.id)
+    const { data: categoriesData } = await supabase
       .from('workers_categories')
-      .select('worker_id')
-      .eq('category_id', categoryId)
-
-    const workerIds = workerCats?.map(wc => wc.worker_id) || []
-
-    if (workerIds.length === 0) {
-      return { data: [], error: null, count: 0 }
-    }
-
-    let query = supabase
-      .from('workers')
       .select(`
-        *,
-        user:users!workers_user_id_fkey(*)
-      `, { count: 'exact' })
+        worker_id,
+        category:categories(*)
+      `)
       .in('worker_id', workerIds)
-      .is('deleted_at', null)
 
-    if (filters.status) {
-      query = query.eq('status', filters.status)
+    // Map categories to workers
+    const categoryMap = new Map<number, Category[]>()
+    categoriesData?.forEach((wc: any) => {
+      if (!categoryMap.has(wc.worker_id)) {
+        categoryMap.set(wc.worker_id, [])
+      }
+      if (wc.category) {
+        categoryMap.get(wc.worker_id)!.push(wc.category)
+      }
+    })
+
+    workers.forEach((worker: WorkerWithDetails) => {
+      worker.categories = categoryMap.get(worker.id) || []
+    })
+
+    return {
+      data: workers,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        total_pages: totalPages
+      },
+      error: null
     }
-
-    query = applySorting(query, filters.sort)
-    query = query.range(from, to)
-
-    const { data, error, count } = await query
-
-    if (error || !data) {
-      return { data: [], error, count: 0 }
-    }
-
-    const enhancedData = await Promise.all(
-      data.map(async (worker) => {
-        const { data: workerDetails } = await getWorkerWithDetails(worker.id)
-        return workerDetails || worker
-      })
-    )
-
-    return { data: enhancedData, error: null, count }
-  }, filters)
+  }) as Promise<PaginatedResponse<WorkerWithDetails>>
 }
 
 /**
- * Get top rated workers
+ * Get top rated workers using optimized database function
+ * FIXED: No more N+1 queries - single RPC call
  */
 export async function getTopRatedWorkers(
-  limit: number = 10
+  limit: number = 10,
+  minRatings: number = 1
 ): Promise<ApiResponse<WorkerWithDetails[]>> {
   const supabase = getSupabaseClient()
 
   return executeQuery(async () => {
-    // Get all workers
-    const { data: workers, error } = await supabase
-      .from('workers')
-      .select(`
-        *,
-        user:users!workers_user_id_fkey(*)
-      `)
-      .is('deleted_at', null)
-      .eq('status', 'available')
+    // Call the optimized database function
+    const { data, error } = await supabase.rpc('get_top_rated_workers', {
+      result_limit: limit,
+      min_ratings: minRatings
+    })
 
-    if (error || !workers) {
+    if (error || !data) {
       return { data: null, error }
     }
 
-    // Get details for all workers
-    const workersWithDetails = await Promise.all(
-      workers.map(async (worker) => {
-        const { data } = await getWorkerWithDetails(worker.id)
-        return data
+    // Parse all workers
+    const workers = data.map(parseWorkerFromView)
+
+    // Fetch categories for all workers in batch
+    if (workers.length > 0) {
+      const workerIds = workers.map((w: WorkerWithDetails) => w.id)
+      const { data: categoriesData } = await supabase
+        .from('workers_categories')
+        .select(`
+          worker_id,
+          category:categories(*)
+        `)
+        .in('worker_id', workerIds)
+
+      // Map categories to workers
+      const categoryMap = new Map<number, Category[]>()
+      categoriesData?.forEach((wc: any) => {
+        if (!categoryMap.has(wc.worker_id)) {
+          categoryMap.set(wc.worker_id, [])
+        }
+        if (wc.category) {
+          categoryMap.get(wc.worker_id)!.push(wc.category)
+        }
       })
-    )
 
-    // Filter out nulls and sort by rating
-    const sortedWorkers = workersWithDetails
-      .filter((w): w is WorkerWithDetails => w !== null)
-      .sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0))
-      .slice(0, limit)
+      workers.forEach((worker: WorkerWithDetails) => {
+        worker.categories = categoryMap.get(worker.id) || []
+      })
+    }
 
-    return { data: sortedWorkers, error: null }
+    return { data: workers, error: null }
   })
 }
+
+// =====================================================
+// UPDATE / CREATE OPERATIONS
+// =====================================================
 
 /**
  * Update worker status

@@ -120,37 +120,22 @@ export async function searchCategories(
 }
 
 /**
- * Get categories with worker count
+ * Get categories with worker count using optimized database function
+ * FIXED: No more N+1 queries - single RPC call
  */
 export async function getCategoriesWithWorkerCount(): Promise<ApiResponse<Array<Category & { worker_count: number }>>> {
   const supabase = getSupabaseClient()
 
   return executeQuery(async () => {
-    const { data: categories, error } = await supabase
-      .from('category')
-      .select('*')
-      .order('name', { ascending: true })
+    // Use the optimized database function
+    const { data, error } = await supabase
+      .rpc('get_categories_with_worker_count')
 
-    if (error || !categories) {
+    if (error || !data) {
       return { data: null, error }
     }
 
-    // Get worker count for each category
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const { count } = await supabase
-          .from('workers_categories')
-          .select('*', { count: 'exact', head: true })
-          .eq('category_id', category.id)
-
-        return {
-          ...category,
-          worker_count: count || 0
-        }
-      })
-    )
-
-    return { data: categoriesWithCount, error: null }
+    return { data, error: null }
   })
 }
 

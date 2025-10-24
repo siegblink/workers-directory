@@ -28,6 +28,7 @@ export type NotificationType = 'booking' | 'message' | 'payment' | 'rating' | 's
 
 export interface User {
   id: number
+  auth_id: string | null // UUID from auth.users table
   firstname: string
   lastname: string
   profile_pic_url: string | null
