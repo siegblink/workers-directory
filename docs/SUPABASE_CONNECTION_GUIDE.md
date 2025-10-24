@@ -4,6 +4,18 @@ Complete guide for connecting your WorkerDir app to Supabase (both local and pro
 
 ---
 
+## ⚠️ SECURITY WARNING
+
+**This document contains EXAMPLE values only!**
+
+- All URLs, passwords, and keys shown are **placeholders**
+- **NEVER commit real credentials** to git or documentation
+- Real credentials should **ONLY** exist in `.env.local` (gitignored)
+- Replace `your-project-ref`, `YOUR_PASSWORD`, etc. with your actual values
+- The local development keys shown are standard Supabase CLI defaults (safe to share)
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -24,7 +36,7 @@ This project supports two Supabase environments:
 
 | Environment | Purpose | URL | Data |
 |------------|---------|-----|------|
-| **Production** | Live app, real data | `https://giepserxlrweienyqgwu.supabase.co` | Real user data |
+| **Production** | Live app, real data | `https://your-project-ref.supabase.co` | Real user data |
 | **Local** | Development, testing | `http://127.0.0.1:54321` | Test data only |
 
 **Current Default**: Production
@@ -82,11 +94,12 @@ npm run dev
 Check `.env.local` file:
 
 ```bash
-# These should be UNCOMMENTED (active)
-NEXT_PUBLIC_SUPABASE_URL="https://giepserxlrweienyqgwu.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGci..."
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGci..."
-POSTGRES_URL="postgres://..."
+# ⚠️ EXAMPLE ONLY - Replace with your actual values from .env.local
+# DO NOT commit real credentials to git!
+NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key-here"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
+POSTGRES_URL="postgres://postgres.your-project:your-password@your-host.supabase.com:6543/postgres"
 ```
 
 ### Step 2: Test Connection
@@ -99,25 +112,128 @@ npm install
 npm run dev
 ```
 
-### Step 3: Access Production Dashboard
+**Verify Connection** by visiting http://localhost:3000 and checking the console for errors.
 
-- **Supabase Dashboard**: https://supabase.com/dashboard/project/giepserxlrweienyqgwu
-- **Database**: https://supabase.com/dashboard/project/giepserxlrweienyqgwu/database/tables
-- **Authentication**: https://supabase.com/dashboard/project/giepserxlrweienyqgwu/auth/users
+### Step 3: Test Database Connection
+
+Create a test API endpoint to verify you can fetch data from Supabase:
+
+**Option 1: Create Test API Route**
+
+Create `app/api/test-supabase/route.ts`:
+
+```typescript
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  try {
+    const supabase = await createClient()
+
+    // Test: Fetch categories from database
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select('*')
+      .limit(5)
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Supabase connection successful!',
+      categories,
+      count: categories?.length || 0
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Failed to connect to Supabase' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Option 2: Add to Existing Page**
+
+Or add this to any page component (e.g., `app/page.tsx`):
+
+```typescript
+import { createClient } from '@/lib/supabase/server'
+
+export default async function Home() {
+  const supabase = await createClient()
+
+  // Fetch categories to test connection
+  const { data: categories, error } = await supabase
+    .from('categories')
+    .select('*')
+    .limit(5)
+
+  return (
+    <div>
+      <h1>Supabase Connection Test</h1>
+      {error ? (
+        <p style={{ color: 'red' }}>Error: {error.message}</p>
+      ) : (
+        <div>
+          <p style={{ color: 'green' }}>✓ Connected to Supabase!</p>
+          <p>Found {categories?.length || 0} categories</p>
+          <pre>{JSON.stringify(categories, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+**Test the Connection:**
+
+1. If using API route, visit: http://localhost:3000/api/test-supabase
+2. If using page component, visit: http://localhost:3000
+
+**Expected Response:**
+```json
+{
+  "success": true,
+  "message": "Supabase connection successful!",
+  "categories": [
+    { "id": 1, "name": "Plumber", "description": "..." },
+    { "id": 2, "name": "Electrician", "description": "..." }
+  ],
+  "count": 2
+}
+```
+
+**Troubleshooting:**
+- ❌ `relation "categories" does not exist` → Run migrations or check table name
+- ❌ `Invalid API key` → Check your `.env.local` has correct keys
+- ❌ `Failed to fetch` → Verify Supabase is running (local) or URL is correct (production)
+
+### Step 4: Access Production Dashboard
+
+- **Supabase Dashboard**: https://supabase.com/dashboard/project/your-project-ref
+- **Database**: https://supabase.com/dashboard/project/your-project-ref/database/tables
+- **Authentication**: https://supabase.com/dashboard/project/your-project-ref/auth/users
 
 ### Production Environment Details
 
 ```bash
+# ⚠️ EXAMPLE - Replace with your actual project details
 # Supabase URLs
-URL: https://giepserxlrweienyqgwu.supabase.co
-API: https://giepserxlrweienyqgwu.supabase.co/rest/v1
-Auth: https://giepserxlrweienyqgwu.supabase.co/auth/v1
+URL: https://your-project-ref.supabase.co
+API: https://your-project-ref.supabase.co/rest/v1
+Auth: https://your-project-ref.supabase.co/auth/v1
 
 # Database Connection
-Host: aws-1-ap-southeast-1.pooler.supabase.com
+Host: your-region.pooler.supabase.com
 Port: 5432 (direct) / 6543 (pooler)
 Database: postgres
-User: postgres.giepserxlrweienyqgwu
+User: postgres.your-project-ref
 ```
 
 ---
@@ -175,11 +291,11 @@ service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Edit `.env.local` - comment out production, uncomment local:
 
 ```bash
-# Production (COMMENT OUT)
-# NEXT_PUBLIC_SUPABASE_URL="https://giepserxlrweienyqgwu.supabase.co"
-# NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGci..."
+# Production (COMMENT OUT when using local)
+# NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
+# NEXT_PUBLIC_SUPABASE_ANON_KEY="your-production-anon-key"
 
-# Local (UNCOMMENT)
+# Local (UNCOMMENT when using local - these are standard local dev keys)
 NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
 SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
@@ -194,7 +310,49 @@ POSTGRES_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 npm run dev
 ```
 
-### Step 6: Access Local Services
+### Step 6: Test Local Connection
+
+**Test with Supabase Studio:**
+1. Visit http://localhost:54323
+2. Navigate to "Table Editor"
+3. Check if `categories` table exists
+4. If not, you may need to run migrations or create test data
+
+**Test with API Route:**
+
+Use the same test endpoint from the Production setup (see Step 3 in Production Setup), or visit:
+- http://localhost:3000/api/test-supabase
+
+**Quick CLI Test:**
+```bash
+# Connect to local database
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+# Inside psql, run:
+SELECT * FROM categories LIMIT 5;
+
+# Exit
+\q
+```
+
+**Add Sample Categories (if table is empty):**
+```bash
+# Create seed file
+cat > supabase/seed.sql << 'EOF'
+INSERT INTO categories (name, description, icon) VALUES
+  ('Plumber', 'Professional plumbing services', 'wrench'),
+  ('Electrician', 'Electrical installation and repair', 'zap'),
+  ('Cleaner', 'Home and office cleaning services', 'sparkles'),
+  ('Carpenter', 'Woodworking and furniture services', 'hammer'),
+  ('Painter', 'Interior and exterior painting', 'palette')
+ON CONFLICT DO NOTHING;
+EOF
+
+# Apply seeds
+supabase db reset
+```
+
+### Step 7: Access Local Services
 
 - **App**: http://localhost:3000
 - **Supabase Studio**: http://localhost:54323
@@ -232,8 +390,8 @@ JWT Secret: super-secret-jwt-token-with-at-least-32-characters-long
 1. Open `.env.local`
 2. **Comment out** production lines (add `#`):
    ```bash
-   # NEXT_PUBLIC_SUPABASE_URL="https://giepserxlrweienyqgwu.supabase.co"
-   # NEXT_PUBLIC_SUPABASE_ANON_KEY="production-key..."
+   # NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
+   # NEXT_PUBLIC_SUPABASE_ANON_KEY="your-production-anon-key"
    ```
 3. **Uncomment** local lines (remove `#`):
    ```bash
@@ -298,7 +456,8 @@ Visit: http://localhost:3000/api/supabase-status
 
 ```bash
 # Pull latest schema from production
-supabase db pull --db-url "postgres://postgres.giepserxlrweienyqgwu:215QB4MejNDuLRdk@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+# ⚠️ Replace with your actual database URL from .env.local
+supabase db pull --db-url "postgres://postgres.your-project:YOUR_PASSWORD@your-region.pooler.supabase.com:5432/postgres"
 
 # Apply to local database
 supabase db reset
@@ -570,7 +729,8 @@ supabase logs                   # View logs
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
 
 # Connect to production
-psql "postgres://postgres.giepserxlrweienyqgwu:215QB4MejNDuLRdk@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+# ⚠️ Replace with your actual credentials from .env.local
+psql "postgres://postgres.your-project:YOUR_PASSWORD@your-region.pooler.supabase.com:5432/postgres"
 
 # List tables
 \dt
@@ -604,8 +764,8 @@ npm run lint                    # Run ESLint
 |---------|-------|------------|
 | App | http://localhost:3000 | https://your-app.vercel.app |
 | Supabase Studio | http://localhost:54323 | https://supabase.com/dashboard |
-| API | http://127.0.0.1:54321 | https://giepserxlrweienyqgwu.supabase.co |
-| Database | 127.0.0.1:54322 | aws-1-ap-southeast-1.pooler.supabase.com:5432 |
+| API | http://127.0.0.1:54321 | https://your-project-ref.supabase.co |
+| Database | 127.0.0.1:54322 | your-region.pooler.supabase.com:5432 |
 
 ### Switch Checklist
 
