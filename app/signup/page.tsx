@@ -5,21 +5,19 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { AuthLayout } from "@/components/auth-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -113,17 +111,18 @@ export default function SignupPage() {
           <CardTitle className="text-3xl font-bold">Sign up</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FieldGroup>
               <div className="grid grid-cols-2 gap-4">
-                <FormField
+                <Controller
                   control={form.control}
                   name="firstName"
                   render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel>First Name</FieldLabel>
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel htmlFor="firstName">First Name</FieldLabel>
                       <InputGroup>
                         <InputGroupInput
+                          id="firstName"
                           type="text"
                           placeholder="John"
                           {...field}
@@ -135,14 +134,15 @@ export default function SignupPage() {
                     </Field>
                   )}
                 />
-                <FormField
+                <Controller
                   control={form.control}
                   name="lastName"
                   render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel>Last Name</FieldLabel>
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
                       <InputGroup>
                         <InputGroupInput
+                          id="lastName"
                           type="text"
                           placeholder="Doe"
                           {...field}
@@ -156,14 +156,15 @@ export default function SignupPage() {
                 />
               </div>
 
-              <FormField
+              <Controller
                 control={form.control}
                 name="email"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Email Address</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="email">Email Address</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="email"
                         type="email"
                         placeholder="you@example.com"
                         {...field}
@@ -176,14 +177,15 @@ export default function SignupPage() {
                 )}
               />
 
-              <FormField
+              <Controller
                 control={form.control}
                 name="password"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Password</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Create a strong password"
                         {...field}
@@ -210,14 +212,17 @@ export default function SignupPage() {
                 )}
               />
 
-              <FormField
+              <Controller
                 control={form.control}
                 name="confirmPassword"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Confirm Password</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="confirmPassword">
+                      Confirm Password
+                    </FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="Re-enter your password"
                         {...field}
@@ -246,29 +251,28 @@ export default function SignupPage() {
                 )}
               />
 
-              <FormField
+              <Controller
                 control={form.control}
                 name="terms"
                 render={({ field, fieldState }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                    <FormControl>
+                  <Field data-invalid={!!fieldState.error}>
+                    <Field orientation="horizontal">
                       <Checkbox
+                        id="terms"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                         disabled={form.formState.isSubmitting}
                       />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-normal cursor-pointer leading-relaxed">
-                        I agree to the{" "}
+                      <FieldLabel htmlFor="terms">
+                        I agree to the
                         <Link
                           href="/terms"
                           className="text-primary hover:underline"
                           tabIndex={-1}
                         >
                           Terms of Service
-                        </Link>{" "}
-                        and{" "}
+                        </Link>
+                        and
                         <Link
                           href="/privacy"
                           className="text-primary hover:underline"
@@ -276,10 +280,10 @@ export default function SignupPage() {
                         >
                           Privacy Policy
                         </Link>
-                      </FormLabel>
-                      <FieldError>{fieldState.error?.message}</FieldError>
-                    </div>
-                  </FormItem>
+                      </FieldLabel>
+                    </Field>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
                 )}
               />
 
@@ -305,8 +309,8 @@ export default function SignupPage() {
                   "Create Account"
                 )}
               </Button>
-            </form>
-          </Form>
+            </FieldGroup>
+          </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}

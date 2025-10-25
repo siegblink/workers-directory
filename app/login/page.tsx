@@ -5,21 +5,19 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { AuthLayout } from "@/components/auth-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -84,16 +82,17 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-bold">Sign in</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FieldGroup>
+              <Controller
                 control={form.control}
                 name="email"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Email Address</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="email">Email Address</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="email"
                         type="email"
                         placeholder="you@example.com"
                         {...field}
@@ -106,14 +105,15 @@ export default function LoginPage() {
                 )}
               />
 
-              <FormField
+              <Controller
                 control={form.control}
                 name="password"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Password</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         {...field}
@@ -141,22 +141,19 @@ export default function LoginPage() {
               />
 
               <div className="flex items-center justify-between">
-                <FormField
+                <Controller
                   control={form.control}
                   name="rememberMe"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={form.formState.isSubmitting}
-                        />
-                      </FormControl>
-                      <FormLabel className="text-sm font-normal cursor-pointer">
-                        Remember me
-                      </FormLabel>
-                    </FormItem>
+                    <Field orientation="horizontal" className="w-fit">
+                      <Checkbox
+                        id="rememberMe"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={form.formState.isSubmitting}
+                      />
+                      <FieldLabel htmlFor="rememberMe">Remember me</FieldLabel>
+                    </Field>
                   )}
                 />
                 <Link
@@ -190,8 +187,8 @@ export default function LoginPage() {
                   "Login"
                 )}
               </Button>
-            </form>
-          </Form>
+            </FieldGroup>
+          </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}

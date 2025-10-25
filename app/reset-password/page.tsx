@@ -5,14 +5,18 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { AuthLayout } from "@/components/auth-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Form, FormField } from "@/components/ui/form";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -83,16 +87,17 @@ export default function ResetPasswordPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FieldGroup>
+              <Controller
                 control={form.control}
                 name="password"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>New Password</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="password">New Password</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Create a strong password"
                         {...field}
@@ -119,14 +124,17 @@ export default function ResetPasswordPage() {
                 )}
               />
 
-              <FormField
+              <Controller
                 control={form.control}
                 name="confirmPassword"
                 render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Confirm New Password</FieldLabel>
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="confirmPassword">
+                      Confirm New Password
+                    </FieldLabel>
                     <InputGroup>
                       <InputGroupInput
+                        id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="Re-enter your password"
                         {...field}
@@ -177,8 +185,8 @@ export default function ResetPasswordPage() {
                   "Reset Password"
                 )}
               </Button>
-            </form>
-          </Form>
+            </FieldGroup>
+          </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Remember your password?{" "}

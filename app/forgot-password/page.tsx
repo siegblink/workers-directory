@@ -4,14 +4,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { AuthLayout } from "@/components/auth-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Form, FormField } from "@/components/ui/form";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
@@ -73,19 +77,17 @@ export default function ForgotPasswordPage() {
               </Link>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <FormField
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <FieldGroup>
+                  <Controller
                     control={form.control}
                     name="email"
                     render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel>Email Address</FieldLabel>
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel htmlFor="email">Email Address</FieldLabel>
                         <InputGroup>
                           <InputGroupInput
+                            id="email"
                             type="email"
                             placeholder="you@example.com"
                             {...field}
@@ -120,8 +122,8 @@ export default function ForgotPasswordPage() {
                       "Send Reset Link"
                     )}
                   </Button>
-                </form>
-              </Form>
+                </FieldGroup>
+              </form>
             </CardContent>
           </>
         ) : (
