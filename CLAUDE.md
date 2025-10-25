@@ -215,37 +215,156 @@ Components will be added to `components/ui/` directory.
 
 ### Working with Forms
 
-All forms in this project use **React Hook Form** with **Zod** validation and follow shadcn/ui best practices.
+All forms in this project use **React Hook Form** with **Zod** validation and follow specific shadcn/ui patterns consistently used throughout the codebase.
 
-**Basic Setup:**
+#### Required Imports
 ```typescript
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import * as z from "zod"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Spinner } from "@/components/ui/spinner"
 ```
 
-**Important Guidelines:**
-- **Use controlled components pattern** with proper TypeScript types
-- **Always use the newest shadcn/ui form components**: Field, InputGroup, Item, Spinner, etc.
-- **Follow the official shadcn forms guide**: https://ui.shadcn.com/docs/forms/react-hook-form
-- Forms should have proper loading states, error handling, and validation feedback
-- Use Zod schemas for type-safe validation
+#### Form Patterns - MUST Follow These Exactly
 
-**Example:**
+**1. Use Controller Pattern (NOT register)**
+All form fields MUST use the `Controller` component from React Hook Form. Do NOT use the `register` method.
+
+**2. Form Structure**
+- Wrap all fields in `<FieldGroup>`
+- Each field must be wrapped in `<Field data-invalid={!!fieldState.error}>`
+- Use `<FieldLabel htmlFor="fieldId">` for labels
+- Use `<InputGroup>` + `<InputGroupInput>` for all text inputs
+- Use `<FieldError>` to display field-level validation errors
+- Global errors use `<Alert variant="destructive">`
+
+**3. Text Input Pattern**
 ```typescript
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-})
-
-const form = useForm<z.infer<typeof formSchema>>({
-  resolver: zodResolver(formSchema),
-  defaultValues: {
-    email: "",
-    password: "",
-  },
-})
+<Controller
+  control={form.control}
+  name="email"
+  render={({ field, fieldState }) => (
+    <Field data-invalid={!!fieldState.error}>
+      <FieldLabel htmlFor="email">Email Address</FieldLabel>
+      <InputGroup>
+        <InputGroupInput
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          {...field}
+          disabled={form.formState.isSubmitting}
+          aria-invalid={!!fieldState.error}
+        />
+      </InputGroup>
+      <FieldError>{fieldState.error?.message}</FieldError>
+    </Field>
+  )}
+/>
 ```
+
+**4. Password Input Pattern (with show/hide toggle)**
+```typescript
+const [showPassword, setShowPassword] = useState(false);
+
+<Controller
+  control={form.control}
+  name="password"
+  render={({ field, fieldState }) => (
+    <Field data-invalid={!!fieldState.error}>
+      <FieldLabel htmlFor="password">Password</FieldLabel>
+      <InputGroup>
+        <InputGroupInput
+          id="password"
+          type={showPassword ? "text" : "password"}
+          placeholder="Enter your password"
+          {...field}
+          disabled={form.formState.isSubmitting}
+          aria-invalid={!!fieldState.error}
+        />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={form.formState.isSubmitting}
+            size="icon-sm"
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+      <FieldError>{fieldState.error?.message}</FieldError>
+    </Field>
+  )}
+/>
+```
+
+**5. Checkbox Pattern (Remember Me, Terms)**
+```typescript
+<Controller
+  control={form.control}
+  name="rememberMe"
+  render={({ field }) => (
+    <Field orientation="horizontal" className="w-fit">
+      <Checkbox
+        id="rememberMe"
+        checked={field.value}
+        onCheckedChange={field.onChange}
+        disabled={form.formState.isSubmitting}
+      />
+      <FieldLabel htmlFor="rememberMe">Remember me</FieldLabel>
+    </Field>
+  )}
+/>
+```
+
+**6. Submit Button Pattern**
+```typescript
+<Button
+  type="submit"
+  className="w-full"
+  size="lg"
+  disabled={form.formState.isSubmitting}
+>
+  {form.formState.isSubmitting ? (
+    <>
+      <Spinner className="mr-2" />
+      Loading text...
+    </>
+  ) : (
+    "Normal text"
+  )}
+</Button>
+```
+
+**7. Global Error Display**
+```typescript
+{error && (
+  <Alert variant="destructive">
+    <AlertCircle className="h-4 w-4" />
+    <AlertDescription>{error}</AlertDescription>
+  </Alert>
+)}
+```
+
+#### Complete Form Example
+See `/app/login/page.tsx`, `/app/signup/page.tsx`, `/app/forgot-password/page.tsx`, or `/app/reset-password/page.tsx` for complete working examples.
+
+#### Important Requirements
+- ✅ **ALWAYS use Controller**: Never use the `register` method
+- ✅ **Disable during submission**: All inputs and buttons must be disabled when `form.formState.isSubmitting` is true
+- ✅ **Accessibility**: All inputs must have `aria-invalid={!!fieldState.error}` attribute
+- ✅ **Field validation state**: Use `data-invalid={!!fieldState.error}` on Field component
+- ✅ **Loading states**: Submit buttons must show Spinner and change text during submission
+- ✅ **Password toggles**: Use Eye/EyeOff icons with `tabIndex={-1}` on the toggle button
+- ✅ **Horizontal checkboxes**: Use `orientation="horizontal"` for inline checkbox layouts
 
 ### Theme Customization
 - Global styles: `app/globals.css`
