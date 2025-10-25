@@ -11,7 +11,7 @@ Complete guide for connecting your WorkerDir app to Supabase (both local and pro
 - All URLs, passwords, and keys shown are **placeholders**
 - **NEVER commit real credentials** to git or documentation
 - Real credentials should **ONLY** exist in `.env.local` (gitignored)
-- Replace `your-project-ref`, `YOUR_PASSWORD`, etc. with your actual values
+- Replace `[username]`, `[password]`, etc. with your actual values
 - The local development keys shown are standard Supabase CLI defaults (safe to share)
 
 ---
@@ -36,7 +36,7 @@ This project supports two Supabase environments:
 
 | Environment | Purpose | URL | Data |
 |------------|---------|-----|------|
-| **Production** | Live app, real data | `https://your-project-ref.supabase.co` | Real user data |
+| **Production** | Live app, real data | `https://project-ref.supabase.co` | Real user data |
 | **Local** | Development, testing | `http://127.0.0.1:54321` | Test data only |
 
 **Current Default**: Production
@@ -47,10 +47,11 @@ This project supports two Supabase environments:
 
 ### Required
 
+- [Bun](https://bun.com/) v1.3
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - [Supabase CLI](https://supabase.com/docs/guides/cli) installed
   ```bash
-  npm install -g supabase
+  bun add -g supabase
   ```
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for local Supabase)
 
@@ -67,7 +68,7 @@ This project supports two Supabase environments:
 Your app is already configured for production! Just run:
 
 ```bash
-npm run dev
+bun dev
 ```
 
 Visit: http://localhost:3000
@@ -82,7 +83,7 @@ supabase start
 # Edit .env.local to use local URLs
 
 # Start app
-npm run dev
+bun dev
 ```
 
 ---
@@ -96,20 +97,20 @@ Check `.env.local` file:
 ```bash
 # ⚠️ EXAMPLE ONLY - Replace with your actual values from .env.local
 # DO NOT commit real credentials to git!
-NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key-here"
-SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
-POSTGRES_URL="postgres://postgres.your-project:your-password@your-host.supabase.com:6543/postgres"
+NEXT_PUBLIC_SUPABASE_URL="https://project-ref.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="some-service-role-key"
+POSTGRES_URL="postgres://postgres.[username]:[password]@[host]:6543/postgres"
 ```
 
 ### Step 2: Test Connection
 
 ```bash
 # Install dependencies (if not done)
-npm install
+bun install
 
 # Start dev server
-npm run dev
+bun dev
 ```
 
 **Verify Connection** by visiting http://localhost:3000 and checking the console for errors.
@@ -225,9 +226,9 @@ export default async function Home() {
 ```bash
 # ⚠️ EXAMPLE - Replace with your actual project details
 # Supabase URLs
-URL: https://your-project-ref.supabase.co
-API: https://your-project-ref.supabase.co/rest/v1
-Auth: https://your-project-ref.supabase.co/auth/v1
+URL: https://project-ref.supabase.co
+API: https://project-ref.supabase.co/rest/v1
+Auth: https://project-ref.supabase.co/auth/v1
 
 # Database Connection
 Host: your-region.pooler.supabase.com
@@ -244,7 +245,7 @@ User: postgres.your-project-ref
 
 ```bash
 # Install globally
-npm install -g supabase
+bun add -g supabase
 
 # Verify installation
 supabase --version
@@ -282,8 +283,8 @@ DB URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
 Studio URL: http://127.0.0.1:54323
 Inbucket URL: http://127.0.0.1:54324
 JWT secret: super-secret-jwt-token-with-at-least-32-characters-long
-anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+anon key: some-anon-key
+service_role key: some-service-role-key
 ```
 
 ### Step 4: Configure Environment
@@ -297,9 +298,9 @@ Edit `.env.local` - comment out production, uncomment local:
 
 # Local (UNCOMMENT when using local - these are standard local dev keys)
 NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
-SUPABASE_JWT_SECRET="super-secret-jwt-token-with-at-least-32-characters-long"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="some-service-role-key"
+SUPABASE_JWT_SECRET="jwt-token-with-at-least-32-characters-long"
 POSTGRES_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 ```
 
@@ -374,9 +375,9 @@ User: postgres
 Password: postgres
 
 # Auth Keys
-Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-Service Role: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
-JWT Secret: super-secret-jwt-token-with-at-least-32-characters-long
+Anon Key: some-anon-key
+Service Role: some-service-role-key
+JWT Secret: jwt-token-with-at-least-32-characters-long
 ```
 
 ---
@@ -390,13 +391,13 @@ JWT Secret: super-secret-jwt-token-with-at-least-32-characters-long
 1. Open `.env.local`
 2. **Comment out** production lines (add `#`):
    ```bash
-   # NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
-   # NEXT_PUBLIC_SUPABASE_ANON_KEY="your-production-anon-key"
+   # NEXT_PUBLIC_SUPABASE_URL="https://project-ref.supabase.co"
+   # NEXT_PUBLIC_SUPABASE_ANON_KEY="production-anon-key"
    ```
 3. **Uncomment** local lines (remove `#`):
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="local-key..."
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="local-anon-key"
    ```
 4. **Restart** dev server:
    ```bash
@@ -457,7 +458,7 @@ Visit: http://localhost:3000/api/supabase-status
 ```bash
 # Pull latest schema from production
 # ⚠️ Replace with your actual database URL from .env.local
-supabase db pull --db-url "postgres://postgres.your-project:YOUR_PASSWORD@your-region.pooler.supabase.com:5432/postgres"
+supabase db pull --db-url "postgres://postgres.[username]:[password]@[host]:5432/postgres"
 
 # Apply to local database
 supabase db reset
@@ -730,7 +731,7 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
 
 # Connect to production
 # ⚠️ Replace with your actual credentials from .env.local
-psql "postgres://postgres.your-project:YOUR_PASSWORD@your-region.pooler.supabase.com:5432/postgres"
+psql "postgres://postgres.[user-name]:[password]@[host]:5432/postgres"
 
 # List tables
 \dt

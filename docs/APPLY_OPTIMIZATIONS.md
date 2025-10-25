@@ -198,7 +198,7 @@ supabase db reset
 ## 📞 Need Help?
 
 1. Check [DATABASE_OPTIMIZATION.md](docs/DATABASE_OPTIMIZATION.md) for details
-2. Check [QUERY_OPTIMIZATION_SUMMARY.md](QUERY_OPTIMIZATION_SUMMARY.md) for overview
+2. Check [QUERY_OPTIMIZATION_SUMMARY.md](docs/QUERY_OPTIMIZATION_SUMMARY.md) for overview
 3. Review migration file for SQL details
 
 ---

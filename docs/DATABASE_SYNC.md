@@ -7,7 +7,7 @@ Your production database schema has been pulled and applied to your local Supaba
 ## What Was Done
 
 1. **Connected to Production Database**
-   - URL: `postgres://postgres.giepserxlrweienyqgwu:215QB4MejNDuLRdk@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres`
+   - URL: `postgres://postgres.[user-name]:[password]@[host]:5432/postgres`
 
 2. **Pulled Schema**
    - Migration file created: `supabase/migrations/20251022113800_remote_schema.sql`
@@ -53,14 +53,14 @@ To switch to using your local database:
 
 2. **Comment out production URLs** (lines 2-14):
    ```bash
-   # NEXT_PUBLIC_SUPABASE_URL="https://giepserxlrweienyqgwu.supabase.co"
-   # NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGci..."
+   # NEXT_PUBLIC_SUPABASE_URL="https://[username].supabase.co"
+   # NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
    ```
 
 3. **Uncomment local URLs** (lines 20-30):
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGci..."
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
    ```
 
 4. **Restart dev server**:
@@ -86,7 +86,7 @@ To pull the latest schema changes from production in the future:
 
 ```bash
 # Pull latest schema
-supabase db pull --db-url "postgres://postgres.giepserxlrweienyqgwu:215QB4MejNDuLRdk@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+supabase db pull --db-url "postgres://postgres.[username]:[password]@[host]:5432/postgres"
 
 # Apply to local
 supabase db reset

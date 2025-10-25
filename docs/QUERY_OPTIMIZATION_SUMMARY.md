@@ -142,7 +142,7 @@ SELECT * FROM get_top_rated_workers(5, 1);
 
 - **Full Details**: [docs/DATABASE_OPTIMIZATION.md](docs/DATABASE_OPTIMIZATION.md)
 - **Connection Guide**: [docs/SUPABASE_CONNECTION_GUIDE.md](docs/SUPABASE_CONNECTION_GUIDE.md)
-- **Database Sync**: [DATABASE_SYNC.md](DATABASE_SYNC.md)
+- **Database Sync**: [docs/DATABASE_SYNC.md](DATABASE_SYNC.md)
 - **Filter Guide**: [lib/database/FILTERS.md](lib/database/FILTERS.md)
 
 ---
