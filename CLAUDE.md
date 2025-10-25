@@ -146,6 +146,27 @@ Required environment variables (should be in `.env.local`):
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
+## Security Best Practices
+
+**Never Expose Secret Credentials**
+
+- **NEVER commit secrets to the repository**: API keys, database credentials, private keys, tokens, or any sensitive data must never be committed to version control
+- **Use `.env.local` for all secrets**: All sensitive credentials should be stored in `.env.local` (which is gitignored)
+- **Keep secrets out of code**: Never hardcode credentials directly in source files
+- **Use environment variables**: Always access sensitive data through `process.env.VARIABLE_NAME`
+- **Review before committing**: Always check your changes for accidentally exposed credentials before committing
+- **Files that commonly contain secrets** (never commit these):
+  - `.env.local`
+  - `.env.development.local`
+  - `.env.production.local`
+  - Any config files with API keys or tokens
+  - Database connection strings with credentials
+
+**If credentials are accidentally exposed:**
+1. Immediately inform the team for urgent discussion
+2. Remove them from git history if already committed
+3. Update `.gitignore` to prevent future exposure
+
 ## Common Tasks
 
 ### Adding a New shadcn/ui Component
