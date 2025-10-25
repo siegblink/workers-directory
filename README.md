@@ -1,22 +1,42 @@
-# WorkerDir
+<div align="center">
 
-A modern service marketplace platform connecting customers with verified service workers. Built with Next.js 15, Supabase, and shadcn/ui.
+# Workers Directory
+
+### Your trusted marketplace for professional service workers
+
+**Connecting customers with verified plumbers, electricians, cleaners, and more.**
+
+Built with Next.js 15 · Supabase · shadcn/ui
+
+[Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#installation) • [Documentation](#project-structure)
+
+</div>
+
+---
 
 ## Overview
 
-WorkerDir is a comprehensive platform that enables customers to discover, book, and manage appointments with professional service workers including plumbers, electricians, cleaners, and more. The platform features real-time messaging, secure authentication, and an intuitive booking system.
+**Workers Directory** is a modern, full-featured service marketplace that empowers customers to discover, book, and manage appointments with professional service workers. Whether you need a plumber, electrician, cleaner, or any other service professional, Workers Directory provides a seamless experience with real-time messaging, secure authentication, and an intuitive booking system.
 
 ## Features
 
-- **Service Discovery** - Search and filter verified service workers by category, location, and ratings
+### For Customers
+- **Smart Service Discovery** - Search and filter verified service workers by category, location, and ratings
+- **Seamless Booking** - Real-time booking with calendar availability and instant confirmations
+- **Direct Messaging** - In-app messaging to communicate with service providers
+- **Review & Rate** - Share your experience and help others make informed decisions
+
+### For Service Workers
+- **Professional Dashboard** - Comprehensive dashboard to manage bookings, schedules, and earnings
+- **Profile Showcase** - Build your reputation with detailed profiles, ratings, and reviews
+- **Flexible Availability** - Set your own schedule and pricing
+- **Customer Management** - Track bookings and communicate with clients efficiently
+
+### Platform Features
 - **Secure Authentication** - Email/password authentication powered by Supabase
-- **Worker Profiles** - Detailed profiles with ratings, reviews, and service offerings
-- **Booking System** - Real-time booking with calendar availability
-- **Messaging** - In-app messaging between customers and workers
-- **Worker Dashboard** - Comprehensive dashboard for service providers to manage bookings
-- **User Profiles** - Customizable profiles for both customers and workers
-- **Dark Mode** - Full dark/light theme support
-- **Responsive Design** - Mobile-first responsive UI
+- **Dark Mode** - Beautiful dark/light theme support for comfortable viewing
+- **Responsive Design** - Seamless experience across desktop, tablet, and mobile devices
+- **Real-time Updates** - Stay informed with instant notifications and updates
 
 ## Tech Stack
 
@@ -32,11 +52,13 @@ WorkerDir is a comprehensive platform that enables customers to discover, book, 
 
 ## Prerequisites
 
-- Node.js 18+ or Bun
-- npm, yarn, pnpm, or bun
-- Supabase account
+- **Bun** (official package manager for this project)
+- Node.js 18+ (alternative)
+- Supabase account (for backend services)
 
 ## Installation
+
+### Quick Start
 
 1. **Clone the repository**
    ```bash
@@ -46,8 +68,6 @@ WorkerDir is a comprehensive platform that enables customers to discover, book, 
 
 2. **Install dependencies**
    ```bash
-   npm install
-   # or
    bun install
    ```
 
@@ -59,10 +79,10 @@ WorkerDir is a comprehensive platform that enables customers to discover, book, 
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
+   > **Note:** Never commit your `.env.local` file. It's already included in `.gitignore`.
+
 4. **Run the development server**
    ```bash
-   npm run dev
-   # or
    bun dev
    ```
 
@@ -70,12 +90,16 @@ WorkerDir is a comprehensive platform that enables customers to discover, book, 
 
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+🎉 You're all set! The app should now be running locally.
+
 ## Development Commands
 
-- `npm run dev` - Start development server
-- `npm run build` - Build production bundle
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
+```bash
+bun dev              # Start development server
+bun run build        # Build production bundle
+bun start            # Start production server
+bun format:write     # Format code and fix linting issues
+```
 
 ## Project Structure
 
@@ -164,44 +188,68 @@ Components will be automatically added to the `components/ui/` directory.
 
 ### Vercel (Recommended)
 
+**Workers Directory** is optimized for deployment on Vercel:
+
 1. Push your code to GitHub
 2. Import your repository to [Vercel](https://vercel.com/new)
-3. Configure environment variables
-4. Deploy
+3. Configure environment variables in Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Deploy with one click
+
+Vercel will automatically detect Next.js and configure the build settings.
 
 ### Manual Deployment
 
 ```bash
-npm run build
-npm start
+bun run build
+bun start
 ```
 
 The production server will start on port 3000.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes using conventional commits:
+We welcome contributions to **Workers Directory**! Here's how you can help:
+
+### Development Workflow
+
+1. **Fork the repository**
+2. **Create a feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
    ```
-   feat: add new feature
-   fix: resolve bug
-   docs: update documentation
-   style: format code
-   refactor: restructure code
-   test: add tests
-   chore: update dependencies
+3. **Make your changes** and ensure code quality
+   ```bash
+   bun format:write  # Format and lint your code
    ```
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+4. **Commit your changes** using conventional commits
+5. **Push to your fork**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+6. **Open a Pull Request** with a clear description
 
-### Commit Message Guidelines
+### Commit Message Convention
 
-- Use present tense in main commit message
-- Use past tense in commit body
-- Wrap code references in backticks in commit body
+Follow the conventional commits specification:
 
-Example:
+```
+<type>: <description>
+
+[optional body]
+```
+
+**Types:**
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `style:` - Code style/formatting changes
+- `refactor:` - Code refactoring
+- `test:` - Test additions or changes
+- `chore:` - Build process or dependency updates
+
+**Example:**
 ```
 feat: add error validation for identifier fields
 
@@ -209,10 +257,37 @@ feat: add error validation for identifier fields
 - Enhanced `TextField` rendering with error and `helperText` props
 ```
 
+**Guidelines:**
+- Use present tense in the commit message ("add" not "added")
+- Use past tense in the commit body when describing what changed
+- Wrap code references in backticks
+
 ## License
 
 This project is private and proprietary.
 
 ## Support
 
-For issues or questions, please open an issue on GitHub.
+Have questions or found a bug?
+
+- **Issues**: Open an issue on GitHub
+- **Documentation**: See [CLAUDE.md](./CLAUDE.md) for development guidelines
+- **Questions**: Check existing issues or create a new one
+
+## Acknowledgments
+
+Built with love using:
+- [Next.js](https://nextjs.org/) - The React Framework for the Web
+- [Supabase](https://supabase.com/) - Open source Firebase alternative
+- [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed components
+- [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework
+
+---
+
+<div align="center">
+
+**Workers Directory** - Connecting professionals with those who need them
+
+Made with ❤️ by the Workers Directory team
+
+</div>
