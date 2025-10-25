@@ -41,10 +41,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WorkerDir - Find Trusted Service Workers",
+  title: "Workers Directory - Home",
   description:
-    "Connect with verified plumbers, electricians, cleaners, and more",
-  generator: "v0.app",
+    "Find trusted service workers in your area. Connect with verified plumbers, electricians, cleaners, and more",
 };
 
 export default function RootLayout({
