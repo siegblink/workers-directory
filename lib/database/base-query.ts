@@ -3,43 +3,51 @@
 // Reusable database query functions with error handling
 // =====================================================
 
-import { createClient } from '@/lib/supabase/client'
-import type { 
-  ApiResponse, 
-  PaginatedResponse, 
-  PaginationOptions, 
-  SortOptions 
-} from './types'
+import type {
+  PostgrestError,
+  RealtimePostgresChangesPayload,
+} from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  PaginationOptions,
+  SortOptions,
+} from "./types";
 
 /**
  * Get Supabase client instance
  */
 export function getSupabaseClient() {
-  return createClient()
+  return createClient();
 }
 
 /**
  * Execute a query with error handling
  */
 export async function executeQuery<T>(
-  queryFn: () => Promise<{ data: T | null; error: any; count?: number | null }>
+  queryFn: () => Promise<{
+    data: T | null;
+    error: PostgrestError | null;
+    count?: number | null;
+  }>,
 ): Promise<ApiResponse<T>> {
   try {
-    const { data, error, count } = await queryFn()
-    
+    const { data, error, count } = await queryFn();
+
     if (error) {
-      console.error('Database query error:', error)
-      return { data: null, error, count: count ?? undefined }
+      console.error("Database query error:", error);
+      return { data: null, error, count: count ?? undefined };
     }
 
-    return { data, error: null, count: count ?? undefined }
+    return { data, error: null, count: count ?? undefined };
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return { 
-      data: null, 
-      error: error instanceof Error ? error : new Error('Unknown error'),
-      count: undefined
-    }
+    console.error("Unexpected error:", error);
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error("Unknown error"),
+      count: undefined,
+    };
   }
 }
 
@@ -47,19 +55,26 @@ export async function executeQuery<T>(
  * Execute a paginated query
  */
 export async function executePaginatedQuery<T>(
-  queryFn: (from: number, to: number) => Promise<{ data: T[] | null; error: any; count?: number | null }>,
-  options: PaginationOptions = {}
+  queryFn: (
+    from: number,
+    to: number,
+  ) => Promise<{
+    data: T[] | null;
+    error: PostgrestError | null;
+    count?: number | null;
+  }>,
+  options: PaginationOptions = {},
 ): Promise<PaginatedResponse<T>> {
-  const page = options.page ?? 1
-  const limit = options.limit ?? 10
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+  const page = options.page ?? 1;
+  const limit = options.limit ?? 10;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
   try {
-    const { data, error, count } = await queryFn(from, to)
-    
+    const { data, error, count } = await queryFn(from, to);
+
     if (error) {
-      console.error('Paginated query error:', error)
+      console.error("Paginated query error:", error);
       return {
         data: [],
         pagination: {
@@ -69,11 +84,11 @@ export async function executePaginatedQuery<T>(
           total_pages: 0,
         },
         error,
-      }
+      };
     }
 
-    const total = count ?? 0
-    const total_pages = Math.ceil(total / limit)
+    const total = count ?? 0;
+    const total_pages = Math.ceil(total / limit);
 
     return {
       data: data ?? [],
@@ -84,9 +99,9 @@ export async function executePaginatedQuery<T>(
         total_pages,
       },
       error: null,
-    }
+    };
   } catch (error) {
-    console.error('Unexpected pagination error:', error)
+    console.error("Unexpected pagination error:", error);
     return {
       data: [],
       pagination: {
@@ -95,36 +110,40 @@ export async function executePaginatedQuery<T>(
         total: 0,
         total_pages: 0,
       },
-      error: error instanceof Error ? error : new Error('Unknown error'),
-    }
+      error: error instanceof Error ? error : new Error("Unknown error"),
+    };
   }
 }
 
 /**
  * Apply sorting to a query
  */
-export function applySorting<T>(
-  query: any,
-  sort?: SortOptions
-) {
-  if (!sort) return query
-  
-  return query.order(sort.column, { ascending: sort.ascending ?? false })
+export function applySorting<
+  T extends {
+    order: (
+      column: string,
+      options?: { ascending?: boolean; nullsFirst?: boolean },
+    ) => T;
+  },
+>(query: T, sort?: SortOptions): T {
+  if (!sort) return query;
+
+  return query.order(sort.column, { ascending: sort.ascending ?? false });
 }
 
 /**
  * Apply pagination to a query
  */
-export function applyPagination(
-  query: any,
-  options: PaginationOptions = {}
-) {
-  const page = options.page ?? 1
-  const limit = options.limit ?? 10
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+export function applyPagination<T extends { range: (...args: unknown[]) => T }>(
+  query: T,
+  options: PaginationOptions = {},
+): T {
+  const page = options.page ?? 1;
+  const limit = options.limit ?? 10;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-  return query.range(from, to)
+  return query.range(from, to);
 }
 
 /**
@@ -132,30 +151,32 @@ export function applyPagination(
  * Maps auth.users.id (UUID) to public.users.id (number)
  */
 export async function getCurrentUserId(): Promise<number | null> {
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient();
 
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!user) return null
+    if (!user) return null;
 
     // Get the corresponding user ID from public.users table
     // Using auth_id column that references auth.users.id
     const { data, error } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_id', user.id) // Match UUID from auth.users
-      .single()
+      .from("users")
+      .select("id")
+      .eq("auth_id", user.id) // Match UUID from auth.users
+      .single();
 
     if (error || !data) {
-      console.error('Error fetching user ID from public.users:', error)
-      return null
+      console.error("Error fetching user ID from public.users:", error);
+      return null;
     }
 
-    return data.id
+    return data.id;
   } catch (error) {
-    console.error('Error getting current user:', error)
-    return null
+    console.error("Error getting current user:", error);
+    return null;
   }
 }
 
@@ -163,13 +184,15 @@ export async function getCurrentUserId(): Promise<number | null> {
  * Check if user is authenticated
  */
 export async function isAuthenticated(): Promise<boolean> {
-  const supabase = getSupabaseClient()
-  
+  const supabase = getSupabaseClient();
+
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    return !!user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return !!user;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -177,27 +200,27 @@ export async function isAuthenticated(): Promise<boolean> {
  * Format date for database queries
  */
 export function formatDateForQuery(date: Date | string): string {
-  if (typeof date === 'string') return date
-  return date.toISOString()
+  if (typeof date === "string") return date;
+  return date.toISOString();
 }
 
 /**
  * Build filter for array of values (OR condition)
  */
-export function buildInFilter(column: string, values: any[]) {
-  return values.map(value => `${column}.eq.${value}`).join(',')
+export function buildInFilter(column: string, values: unknown[]) {
+  return values.map((value) => `${column}.eq.${value}`).join(",");
 }
 
 /**
  * Safe JSON parse with fallback
  */
 export function safeJsonParse<T>(json: string | null, fallback: T): T {
-  if (!json) return fallback
-  
+  if (!json) return fallback;
+
   try {
-    return JSON.parse(json)
+    return JSON.parse(json);
   } catch {
-    return fallback
+    return fallback;
   }
 }
 
@@ -205,36 +228,36 @@ export function safeJsonParse<T>(json: string | null, fallback: T): T {
  * Calculate offset from page and limit
  */
 export function calculateOffset(page: number, limit: number): number {
-  return (page - 1) * limit
+  return (page - 1) * limit;
 }
 
 /**
  * Handle Supabase realtime subscription
  */
-export function subscribeToTable<T>(
+export function subscribeToTable<T extends Record<string, unknown>>(
   table: string,
-  callback: (payload: any) => void,
-  filter?: string
+  callback: (payload: RealtimePostgresChangesPayload<T>) => void,
+  filter?: string,
 ) {
-  const supabase = getSupabaseClient()
-  
+  const supabase = getSupabaseClient();
+
   const channel = supabase
     .channel(`${table}-changes`)
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: '*',
-        schema: 'public',
+        event: "*",
+        schema: "public",
         table: table,
         filter: filter,
       },
-      callback
+      callback,
     )
-    .subscribe()
+    .subscribe();
 
   return () => {
-    supabase.removeChannel(channel)
-  }
+    supabase.removeChannel(channel);
+  };
 }
 
 /**
@@ -242,18 +265,15 @@ export function subscribeToTable<T>(
  */
 export async function batchInsert<T>(
   table: string,
-  records: Partial<T>[]
+  records: Partial<T>[],
 ): Promise<ApiResponse<T[]>> {
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient();
 
   return executeQuery(async () => {
-    const { data, error } = await supabase
-      .from(table)
-      .insert(records)
-      .select()
+    const { data, error } = await supabase.from(table).insert(records).select();
 
-    return { data: data as T[] | null, error }
-  })
+    return { data: data as T[] | null, error };
+  });
 }
 
 /**
@@ -261,32 +281,32 @@ export async function batchInsert<T>(
  */
 export async function batchUpdate<T>(
   table: string,
-  updates: Array<{ id: number; data: Partial<T> }>
+  updates: Array<{ id: number; data: Partial<T> }>,
 ): Promise<ApiResponse<T[]>> {
-  const supabase = getSupabaseClient()
-  const results: T[] = []
-  let lastError = null
+  const supabase = getSupabaseClient();
+  const results: T[] = [];
+  let lastError = null;
 
   for (const update of updates) {
     const { data, error } = await supabase
       .from(table)
       .update(update.data)
-      .eq('id', update.id)
+      .eq("id", update.id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      lastError = error
-      console.error(`Error updating record ${update.id}:`, error)
+      lastError = error;
+      console.error(`Error updating record ${update.id}:`, error);
     } else if (data) {
-      results.push(data as T)
+      results.push(data as T);
     }
   }
 
   return {
     data: results.length > 0 ? results : null,
     error: lastError,
-  }
+  };
 }
 
 /**
@@ -294,20 +314,20 @@ export async function batchUpdate<T>(
  */
 export async function softDelete(
   table: string,
-  id: number
-): Promise<ApiResponse<any>> {
-  const supabase = getSupabaseClient()
+  id: number,
+): Promise<ApiResponse<unknown>> {
+  const supabase = getSupabaseClient();
 
   return executeQuery(async () => {
     const { data, error } = await supabase
       .from(table)
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
-    return { data, error }
-  })
+    return { data, error };
+  });
 }
 
 /**
@@ -315,31 +335,31 @@ export async function softDelete(
  */
 export async function countRecords(
   table: string,
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>,
 ): Promise<number> {
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient();
 
   try {
     let query = supabase
       .from(table)
-      .select('*', { count: 'exact', head: true })
+      .select("*", { count: "exact", head: true });
 
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
-        query = query.eq(key, value)
-      })
+        query = query.eq(key, value);
+      });
     }
 
-    const { count, error } = await query
+    const { count, error } = await query;
 
     if (error) {
-      console.error('Error counting records:', error)
-      return 0
+      console.error("Error counting records:", error);
+      return 0;
     }
 
-    return count ?? 0
+    return count ?? 0;
   } catch (error) {
-    console.error('Unexpected error counting records:', error)
-    return 0
+    console.error("Unexpected error counting records:", error);
+    return 0;
   }
 }
