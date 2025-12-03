@@ -132,7 +132,7 @@ bun format:write     # Format code and fix linting issues
     middleware.ts      - Supabase session management
   utils.ts             - Utility functions
 
-middleware.ts          - Next.js middleware for auth
+proxy.ts               - Next.js 16 proxy for auth
 ```
 
 ## Authentication

@@ -73,7 +73,7 @@ All commands use **Bun** as the official package manager:
     middleware.ts      - Supabase session management
   utils.ts             - Utility functions (cn, etc.)
 
-middleware.ts          - Next.js middleware for auth
+proxy.ts               - Next.js 16 proxy for auth
 ```
 
 ### Authentication & Protected Routes
@@ -87,10 +87,11 @@ The application uses Supabase for authentication with cookie-based session manag
 - `/settings` - User settings
 - `/profile` - User profile
 
-**Middleware Flow**:
-1. `middleware.ts` calls `updateSession()` from `lib/supabase/middleware.ts`
+**Proxy Flow**:
+1. `proxy.ts` calls `updateSession()` from `lib/supabase/middleware.ts`
 2. Session is validated via `supabase.auth.getUser()`
 3. Unauthenticated users are redirected to `/login` for protected routes
+4. Runs on Node.js runtime (Next.js 16 proxy behavior)
 
 **Client vs Server Authentication**:
 - **Client-side**: Use `createClient()` from `lib/supabase/client.ts` in Client Components
@@ -210,7 +211,7 @@ Components will be added to `components/ui/` directory.
 
 ### Creating a New Protected Page
 1. Create page under `/app/[page-name]/page.tsx`
-2. Add route to `protectedPaths` array in `lib/supabase/middleware.ts:41`
+2. Add route to `protectedPaths` array in `lib/supabase/middleware.ts:48`
 3. Implement authentication check in the page component if needed
 
 ### Working with Forms

@@ -183,7 +183,12 @@ export default function HomePage() {
                           "group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-black/20 group-hover:ring-white/20",
                       )}
                     >
-                      <directory.icon className={cn("w-8 h-8 transition-transform duration-300 group-hover:scale-105", directory.iconColor)} />
+                      <directory.icon
+                        className={cn(
+                          "w-8 h-8 transition-transform duration-300 group-hover:scale-105",
+                          directory.iconColor,
+                        )}
+                      />
                     </div>
 
                     {/* Label */}
