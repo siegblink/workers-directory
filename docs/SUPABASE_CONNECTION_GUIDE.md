@@ -1,6 +1,6 @@
 # Supabase Connection Guide
 
-Complete guide for connecting your WorkerDir app to Supabase (both local and production environments).
+Complete guide for connecting your Direktory app to Supabase (both local and production environments).
 
 ---
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Workers Directory** is a service marketplace platform built with Next.js 15, connecting customers with verified service workers (plumbers, electricians, cleaners, etc.). The application uses Supabase for authentication and backend services, and shadcn/ui for the component library.
+**Direktory** is a service marketplace platform built with Next.js 15, connecting customers with verified service workers (plumbers, electricians, cleaners, etc.). The application uses Supabase for authentication and backend services, and shadcn/ui for the component library.
 
 ## Development Commands
 

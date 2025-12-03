@@ -28,5 +28,5 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "explicit"
   },
-  "biome.lspBin": "./node_modules/@biomejs/biome/bin/biome"
+  "biome.lsp.bin": "./node_modules/@biomejs/biome/bin/biome"
 }

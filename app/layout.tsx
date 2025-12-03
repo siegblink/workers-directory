@@ -41,7 +41,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Workers Directory - Home",
+  title: "Direktory - Home",
   description:
     "Find trusted service workers in your area. Connect with verified plumbers, electricians, cleaners, and more",
 };

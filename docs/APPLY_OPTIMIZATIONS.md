@@ -9,7 +9,7 @@ Follow these steps to apply all the query optimizations to your database.
 ### Step 1: Apply Migration Locally
 
 ```bash
-cd /path/to/workers-directory
+cd /path/to/direktory
 
 # Reset local database with optimizations
 supabase db reset

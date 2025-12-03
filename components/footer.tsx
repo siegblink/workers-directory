@@ -10,9 +10,9 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">W</span>
+                <span className="text-white font-bold text-lg">D</span>
               </div>
-              <span className="font-bold text-xl text-white">WorkerDir</span>
+              <span className="font-bold text-xl text-white">Direktory</span>
             </div>
             <p className="text-sm leading-relaxed">
               Connecting trusted service workers with customers for all your
@@ -140,7 +140,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm">© 2025 WorkerDir. All rights reserved.</p>
+          <p className="text-sm">© 2025 Direktory. All rights reserved.</p>
 
           {/* Social Links */}
           <div className="flex items-center gap-4">

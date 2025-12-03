@@ -1,23 +1,12 @@
 "use client";
 
-import {
-  Bookmark,
-  Calendar,
-  Clock,
-  DollarSign,
-  MapPin,
-  MessageSquare,
-  Shield,
-  Star,
-} from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { BookingModal } from "@/components/booking-modal";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WorkerAbout } from "@/components/worker/worker-about";
+import { WorkerAvailability } from "@/components/worker/worker-availability";
+import { WorkerGallery } from "@/components/worker/worker-gallery";
+import { WorkerProfileHeader } from "@/components/worker/worker-profile-header";
+import { WorkerTestimonials } from "@/components/worker/worker-testimonials";
 
 const mockWorker = {
   id: 1,
@@ -26,13 +15,15 @@ const mockWorker = {
   rating: 4.8,
   reviews: 127,
   hourlyRate: 45,
-  location: "New York, NY",
+  location: "Cebu City, Philippines",
   avatar: "/placeholder.svg?height=200&width=200",
   isOnline: true,
   verified: true,
   joinedDate: "January 2022",
   completedJobs: 342,
   responseTime: "Within 1 hour",
+  statusEmoji: "🔧",
+  statusText: "Available for emergency repairs this week",
   bio: "Professional plumber with over 15 years of experience. Specialized in residential and commercial plumbing, emergency repairs, and installations. Licensed and insured.",
   skills: [
     "Emergency Repairs",
@@ -83,10 +74,37 @@ const mockReviews = [
 ];
 
 const mockPortfolio = [
-  { id: 1, image: "/plumbing-work-1.png", title: "Kitchen Sink Installation" },
-  { id: 2, image: "/plumbing-work-2.png", title: "Bathroom Renovation" },
-  { id: 3, image: "/plumbing-work-3.png", title: "Water Heater Replacement" },
-  { id: 4, image: "/plumbing-work-4.png", title: "Pipe Repair" },
+  {
+    id: 1,
+    image: "https://picsum.photos/id/1048/800/600",
+    title: "Kitchen Sink Installation",
+    description:
+      "Complete kitchen sink replacement including new faucet, garbage disposal, and water line connections. Modern stainless steel basin with pull-down sprayer.",
+    price: 450,
+  },
+  {
+    id: 2,
+    image: "https://picsum.photos/id/1067/800/600",
+    title: "Bathroom Renovation",
+    description:
+      "Full bathroom plumbing overhaul with new toilet installation, vanity plumbing, and shower valve replacement. Upgraded to water-efficient fixtures.",
+    price: 1200,
+  },
+  {
+    id: 3,
+    image: "https://picsum.photos/id/180/800/600",
+    title: "Water Heater Replacement",
+    description:
+      "Removed old 40-gallon tank and installed new energy-efficient tankless water heater. Includes gas line connection and venting.",
+    price: 850,
+  },
+  {
+    id: 4,
+    image: "https://picsum.photos/id/139/800/600",
+    title: "Pipe Repair",
+    description:
+      "Emergency repair of burst copper pipe in basement. Replaced damaged section and added insulation to prevent future freezing.",
+  },
 ];
 
 export default function WorkerProfilePage() {
@@ -94,286 +112,40 @@ export default function WorkerProfilePage() {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         {/* Profile Header */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="relative">
-                <Avatar className="w-32 h-32">
-                  <AvatarImage
-                    src={mockWorker.avatar || "/placeholder.svg"}
-                    alt={mockWorker.name}
-                  />
-                  <AvatarFallback>
-                    {mockWorker.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                {mockWorker.isOnline && (
-                  <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white" />
-                )}
-              </div>
+        <WorkerProfileHeader
+          worker={mockWorker}
+          isBookmarked={isBookmarked}
+          onMessage={() => {
+            // TODO: Implement message functionality
+            console.log("Message worker:", mockWorker.id);
+          }}
+          onBookNow={() => setBookingModalOpen(true)}
+          onBookmarkToggle={setIsBookmarked}
+        />
 
-              <div className="flex-1">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h1 className="text-3xl font-bold text-gray-900">
-                        {mockWorker.name}
-                      </h1>
-                      {mockWorker.verified && (
-                        <Badge className="bg-blue-600">
-                          <Shield className="w-3 h-3 mr-1" />
-                          Verified
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-lg text-gray-600 mb-3">
-                      {mockWorker.profession}
-                    </p>
+        {/* Gallery Section */}
+        <WorkerGallery
+          portfolio={mockPortfolio}
+          onBookNow={() => setBookingModalOpen(true)}
+        />
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">
-                          {mockWorker.rating}
-                        </span>
-                        <span className="text-gray-600">
-                          ({mockWorker.reviews} reviews)
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <MapPin className="w-4 h-4" />
-                        {mockWorker.location}
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <Calendar className="w-4 h-4" />
-                        Joined {mockWorker.joinedDate}
-                      </div>
-                    </div>
-                  </div>
+        {/* About Section */}
+        <WorkerAbout bio={mockWorker.bio} skills={mockWorker.skills} />
 
-                  <div className="flex flex-col gap-2">
-                    <Button size="lg" className="w-full md:w-auto">
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Message
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full md:w-auto bg-transparent"
-                      onClick={() => setBookingModalOpen(true)}
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Book Now
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="ghost"
-                      onClick={() => setIsBookmarked(!isBookmarked)}
-                      className="w-full md:w-auto"
-                    >
-                      <Bookmark
-                        className={`w-4 h-4 mr-2 ${isBookmarked ? "fill-current" : ""}`}
-                      />
-                      {isBookmarked ? "Saved" : "Save"}
-                    </Button>
-                  </div>
-                </div>
+        {/* Testimonials Section */}
+        <WorkerTestimonials
+          rating={mockWorker.rating}
+          reviewCount={mockWorker.reviews}
+          reviews={mockReviews}
+          workerId={mockWorker.id}
+          workerName={mockWorker.name}
+        />
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
-                  <div>
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <DollarSign className="w-4 h-4" />
-                      <span className="text-sm">Hourly Rate</span>
-                    </div>
-                    <p className="text-2xl font-bold">
-                      ${mockWorker.hourlyRate}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm">Jobs Completed</span>
-                    </div>
-                    <p className="text-2xl font-bold">
-                      {mockWorker.completedJobs}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">Response Time</span>
-                    </div>
-                    <p className="text-lg font-bold">
-                      {mockWorker.responseTime}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tabs */}
-        <Tabs defaultValue="about" className="space-y-6">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="reviews">
-              Reviews ({mockWorker.reviews})
-            </TabsTrigger>
-            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-            <TabsTrigger value="availability">Availability</TabsTrigger>
-          </TabsList>
-
-          {/* About Tab */}
-          <TabsContent value="about">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">About Me</h3>
-                <p className="text-gray-700 leading-relaxed mb-6">
-                  {mockWorker.bio}
-                </p>
-
-                <h4 className="font-semibold mb-3">Skills & Expertise</h4>
-                <div className="flex flex-wrap gap-2">
-                  {mockWorker.skills.map((skill) => (
-                    <Badge key={skill} variant="secondary">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Reviews Tab */}
-          <TabsContent value="reviews">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold">Customer Reviews</h3>
-                  <div className="flex items-center gap-2">
-                    <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-                    <span className="text-2xl font-bold">
-                      {mockWorker.rating}
-                    </span>
-                    <span className="text-gray-600">
-                      ({mockWorker.reviews} reviews)
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {mockReviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="border-b last:border-0 pb-6 last:pb-0"
-                    >
-                      <div className="flex gap-4">
-                        <Avatar>
-                          <AvatarImage
-                            src={review.avatar || "/placeholder.svg"}
-                            alt={review.author}
-                          />
-                          <AvatarFallback>{review.author[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <p className="font-semibold">{review.author}</p>
-                              <p className="text-sm text-gray-600">
-                                {review.date}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: review.rating }).map(
-                                (_, i) => (
-                                  <Star
-                                    key={`${review.id}-star-${i}`}
-                                    className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                                  />
-                                ),
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-gray-700 leading-relaxed">
-                            {review.comment}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Portfolio Tab */}
-          <TabsContent value="portfolio">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-6">Work Portfolio</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockPortfolio.map((item) => (
-                    <div
-                      key={item.id}
-                      className="relative group overflow-hidden rounded-lg"
-                    >
-                      <Image
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.title}
-                        width={400}
-                        height={300}
-                        className="w-full h-64 object-cover transition-transform group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                        <p className="text-white font-semibold">{item.title}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Availability Tab */}
-          <TabsContent value="availability">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-6">
-                  Weekly Availability
-                </h3>
-                <div className="space-y-3">
-                  {Object.entries(mockWorker.availability).map(
-                    ([day, hours]) => (
-                      <div
-                        key={day}
-                        className="flex items-center justify-between py-3 border-b last:border-0"
-                      >
-                        <span className="font-medium capitalize">{day}</span>
-                        <span
-                          className={
-                            hours === "Closed"
-                              ? "text-gray-400"
-                              : "text-gray-700"
-                          }
-                        >
-                          {hours}
-                        </span>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Availability Section */}
+        <WorkerAvailability availability={mockWorker.availability} />
       </div>
 
       {/* Booking Modal */}

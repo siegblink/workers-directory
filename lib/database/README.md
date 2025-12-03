@@ -1,6 +1,6 @@
 # Database Query Utilities
 
-Reusable, type-safe database query utilities for the WorkerDir platform.
+Reusable, type-safe database query utilities for the Direktory platform.
 
 ## Features
 

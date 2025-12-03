@@ -12,7 +12,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              By accessing and using WorkerDir, you accept and agree to be bound
+              By accessing and using Direktory, you accept and agree to be bound
               by the terms and provision of this agreement. If you do not agree
               to these terms, please do not use our service.
             </p>
@@ -21,7 +21,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">2. Use of Service</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              WorkerDir provides a platform connecting service workers with
+              Direktory provides a platform connecting service workers with
               customers. You agree to use the service only for lawful purposes
               and in accordance with these Terms.
             </p>
@@ -54,7 +54,7 @@ export default function TermsPage() {
               4. Payments and Credits
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Credits purchased on WorkerDir are non-refundable except as
+              Credits purchased on Direktory are non-refundable except as
               required by law. All transactions are processed securely through
               our payment partners. Workers receive payment after successful job
               completion, minus our platform fee.
@@ -78,7 +78,7 @@ export default function TermsPage() {
               6. Limitation of Liability
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              WorkerDir acts as a platform connecting workers and customers. We
+              Direktory acts as a platform connecting workers and customers. We
               are not responsible for the quality of services provided by
               workers or disputes between users. Our liability is limited to the
               amount paid for the specific transaction in question.

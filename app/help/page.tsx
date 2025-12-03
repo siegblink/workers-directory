@@ -23,7 +23,7 @@ const faqCategories = [
         a: "Click the 'Sign Up' button in the top right corner and fill out the registration form. You'll need to provide your email, create a password, and verify your email address.",
       },
       {
-        q: "Is WorkerDir free to use?",
+        q: "Is Direktory free to use?",
         a: "Creating an account and browsing workers is completely free. You only pay when you book a service using credits.",
       },
       {
@@ -65,7 +65,7 @@ const faqCategories = [
         a: "Click 'Become a Worker' in the navigation menu, fill out the application form, and complete our verification process. We'll review your application within 24-48 hours.",
       },
       {
-        q: "What percentage does WorkerDir take?",
+        q: "What percentage does Direktory take?",
         a: "We charge a 10% platform fee on completed bookings. You keep 90% of what you earn.",
       },
       {
@@ -131,7 +131,7 @@ export default function HelpPage() {
               </div>
               <h3 className="font-semibold mb-2">User Guide</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Learn how to use WorkerDir
+                Learn how to use Direktory
               </p>
               <Button variant="outline" size="sm">
                 View Guide

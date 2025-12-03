@@ -1,22 +1,26 @@
 "use client";
 
-import {
-  Bookmark,
-  Map as MapIcon,
-  MapPin,
-  Search,
-  SlidersHorizontal,
-  Star,
-} from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Briefcase, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CompactFilterPanel } from "@/components/compact-filter-panel";
+import { MarketingStats } from "@/components/marketing-stats";
+import { MoreFiltersDialog } from "@/components/more-filters-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import {
   Sheet,
   SheetContent,
@@ -24,346 +28,421 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
+import { WorkerCard } from "@/components/worker/worker-card";
 
-const mockWorkers = [
-  {
-    id: 1,
-    name: "John Smith",
-    profession: "Plumber",
-    rating: 4.8,
-    reviews: 127,
-    hourlyRate: 45,
-    location: "New York, NY",
-    distance: "2.3 miles",
-    avatar: "/placeholder.svg?height=100&width=100",
-    isOnline: true,
-    verified: true,
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    profession: "Electrician",
-    rating: 4.9,
-    reviews: 203,
-    hourlyRate: 55,
-    location: "Brooklyn, NY",
-    distance: "3.1 miles",
-    avatar: "/placeholder.svg?height=100&width=100",
-    isOnline: false,
-    verified: true,
-  },
-  {
-    id: 3,
-    name: "Mike Davis",
-    profession: "Cleaner",
-    rating: 4.7,
-    reviews: 89,
-    hourlyRate: 35,
-    location: "Queens, NY",
-    distance: "4.5 miles",
-    avatar: "/placeholder.svg?height=100&width=100",
-    isOnline: true,
-    verified: false,
-  },
+// Mock data generator
+const professions = [
+  "Plumber",
+  "Electrician",
+  "Cleaner",
+  "Painter",
+  "Carpenter",
+  "HVAC Technician",
+  "Landscaper",
+  "Handyman",
+  "Roofer",
+  "Locksmith",
 ];
 
+const locations = [
+  { city: "Capitol Site", state: "Cebu City" },
+  { city: "Lahug", state: "Cebu City" },
+  { city: "Mabolo", state: "Cebu City" },
+  { city: "Banilad", state: "Cebu City" },
+  { city: "Talamban", state: "Cebu City" },
+  { city: "IT Park", state: "Cebu City" },
+  { city: "Guadalupe", state: "Cebu City" },
+  { city: "Kasambagan", state: "Cebu City" },
+  { city: "Busay", state: "Cebu City" },
+  { city: "Cebu Business Park", state: "Cebu City" },
+];
+
+const firstNames = [
+  "John",
+  "Sarah",
+  "Michael",
+  "Emily",
+  "David",
+  "Jessica",
+  "Robert",
+  "Amanda",
+  "James",
+  "Lisa",
+  "William",
+  "Jennifer",
+  "Daniel",
+  "Maria",
+  "Thomas",
+  "Karen",
+  "Christopher",
+  "Nancy",
+  "Matthew",
+  "Linda",
+];
+
+const lastNames = [
+  "Smith",
+  "Johnson",
+  "Williams",
+  "Brown",
+  "Jones",
+  "Garcia",
+  "Miller",
+  "Davis",
+  "Rodriguez",
+  "Martinez",
+  "Anderson",
+  "Taylor",
+  "Thomas",
+  "Moore",
+  "Jackson",
+  "Martin",
+  "Lee",
+  "Thompson",
+  "White",
+  "Harris",
+];
+
+// Seeded random number generator for deterministic results
+function seededRandom(seed: number) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
+function generateMockWorkers(count: number) {
+  return Array.from({ length: count }, (_, i) => {
+    // Use index as seed for deterministic random values
+    const seed = i * 7; // Multiply by prime for better distribution
+    const profession =
+      professions[Math.floor(seededRandom(seed) * professions.length)];
+    const location =
+      locations[Math.floor(seededRandom(seed + 1) * locations.length)];
+    const firstName =
+      firstNames[Math.floor(seededRandom(seed + 2) * firstNames.length)];
+    const lastName =
+      lastNames[Math.floor(seededRandom(seed + 3) * lastNames.length)];
+    const rating = Number((3.5 + seededRandom(seed + 4) * 1.5).toFixed(1));
+    const reviews = Math.floor(seededRandom(seed + 5) * 300) + 10;
+    const hourlyRateMin = Math.floor(seededRandom(seed + 6) * 100) + 50;
+    const hourlyRateMax =
+      hourlyRateMin + Math.floor(seededRandom(seed + 13) * 50) + 20;
+    const yearsExperience = Math.floor(seededRandom(seed + 7) * 20) + 1;
+    const jobsCompleted = Math.floor(seededRandom(seed + 8) * 500) + 10;
+    const distance = (seededRandom(seed + 9) * 15 + 0.5).toFixed(1);
+    const isOnline = seededRandom(seed + 10) > 0.5;
+    const verified = seededRandom(seed + 11) > 0.3;
+
+    return {
+      id: i + 1,
+      name: `${firstName} ${lastName}`,
+      profession,
+      rating,
+      reviews,
+      hourlyRateMin,
+      hourlyRateMax,
+      location: `${location.city}, ${location.state}`,
+      distance: `${distance} km`,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${firstName}${lastName}`,
+      isOnline,
+      verified,
+      yearsExperience,
+      jobsCompleted,
+      responseTime: Math.floor(seededRandom(seed + 12) * 120) + 10, // minutes
+    };
+  });
+}
+
+// Generate 30 mock workers with deterministic seed
+const allMockWorkers = generateMockWorkers(30);
+
 export default function SearchPage() {
-  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const router = useRouter();
+  const [displayedWorkers, setDisplayedWorkers] = useState(
+    allMockWorkers.slice(0, 10),
+  );
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  const [onlineOnly, setOnlineOnly] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [distanceRange, setDistanceRange] = useState([0, 50]);
+  const [minResponseTime, setMinResponseTime] = useState(180); // minutes
+  const [minJobsCompleted, setMinJobsCompleted] = useState(0);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll logic
+  const loadMore = useCallback(() => {
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
+
+    // Simulate loading delay
+    setTimeout(() => {
+      const currentLength = displayedWorkers.length;
+      const nextWorkers = allMockWorkers.slice(
+        currentLength,
+        currentLength + 10,
+      );
+
+      if (nextWorkers.length === 0) {
+        setHasMore(false);
+      } else {
+        setDisplayedWorkers((prev) => [...prev, ...nextWorkers]);
+      }
+
+      setIsLoading(false);
+    }, 800);
+  }, [displayedWorkers.length, isLoading, hasMore]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [loadMore]);
+
+  const _handleRatingToggle = (rating: number) => {
+    setSelectedRatings((prev) =>
+      prev.includes(rating)
+        ? prev.filter((r) => r !== rating)
+        : [...prev, rating],
+    );
+  };
+
+  const clearAllFilters = () => {
+    setPriceRange([0, 1000]);
+    setSelectedServices([]);
+    setSelectedRatings([]);
+    setOnlineOnly(false);
+    setVerifiedOnly(false);
+    setDistanceRange([0, 50]);
+    setMinResponseTime(180);
+    setMinJobsCompleted(0);
+  };
+
+  const handleApplyMoreFilters = (filters: {
+    selectedServices: string[];
+    selectedRatings: number[];
+    onlineOnly: boolean;
+    verifiedOnly: boolean;
+    distanceRange: number[];
+    priceRange: number[];
+    minResponseTime: number;
+    minJobsCompleted: number;
+  }) => {
+    setSelectedServices(filters.selectedServices);
+    setSelectedRatings(filters.selectedRatings);
+    setOnlineOnly(filters.onlineOnly);
+    setVerifiedOnly(filters.verifiedOnly);
+    setDistanceRange(filters.distanceRange);
+    setPriceRange(filters.priceRange);
+    setMinResponseTime(filters.minResponseTime);
+    setMinJobsCompleted(filters.minJobsCompleted);
+  };
+
+  // Count active advanced filters
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (selectedServices.length > 0) count += selectedServices.length;
+    if (selectedRatings.length > 0) count += selectedRatings.length; // All ratings are in More Filters now
+    if (onlineOnly) count++;
+    if (verifiedOnly) count++;
+    if (distanceRange[1] < 50) count++;
+    if (minResponseTime < 180) count++;
+    if (minJobsCompleted > 0) count++;
+    return count;
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Search Header */}
-      <div className="bg-card border-b sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 flex items-center gap-2 px-3 border border-border rounded-lg">
-              <Search className="w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="What service do you need?"
-                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
-            <div className="flex-1 flex items-center gap-2 px-3 border border-border rounded-lg">
-              <MapPin className="w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Your location"
-                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
-            <Button>Search</Button>
+      {/* Search Header - Sticky */}
+      <div className="bg-background border-b sticky top-16 z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <InputGroup>
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+              <InputGroupInput placeholder="Search services (e.g., plumber, electrician)" />
+            </InputGroup>
+            <InputGroup>
+              <InputGroupAddon>
+                <MapPin />
+              </InputGroupAddon>
+              <InputGroupInput placeholder="Your location" />
+            </InputGroup>
+            <InputGroup>
+              <InputGroupAddon>
+                <MapPin />
+              </InputGroupAddon>
+              <InputGroupInput placeholder="Worker/Service location" />
+            </InputGroup>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filters Sidebar - Desktop */}
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="bg-card rounded-lg border border-border p-6 sticky top-32">
-              <h3 className="font-semibold text-lg mb-4 text-foreground">
-                Filters
-              </h3>
-
-              <div className="space-y-6">
-                {/* Service Type */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Service Type
-                  </Label>
-                  <div className="space-y-2">
-                    {[
-                      "Plumbing",
-                      "Electrical",
-                      "Cleaning",
-                      "Painting",
-                      "Carpentry",
-                    ].map((service) => (
-                      <div key={service} className="flex items-center gap-2">
-                        <Checkbox id={service} />
-                        <Label
-                          htmlFor={service}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {service}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Hourly Rate: ${priceRange[0]} - ${priceRange[1]}
-                  </Label>
-                  <Slider
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    max={100}
-                    step={5}
-                    className="mb-2"
-                  />
-                </div>
-
-                {/* Rating */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Minimum Rating
-                  </Label>
-                  <div className="space-y-2">
-                    {[4.5, 4.0, 3.5, 3.0].map((rating) => (
-                      <div key={rating} className="flex items-center gap-2">
-                        <Checkbox id={`rating-${rating}`} />
-                        <Label
-                          htmlFor={`rating-${rating}`}
-                          className="text-sm font-normal cursor-pointer flex items-center gap-1"
-                        >
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          {rating}+ stars
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Availability */}
-                <div>
-                  <Label className="text-sm font-medium mb-3 block">
-                    Availability
-                  </Label>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Checkbox id="online" />
-                      <Label
-                        htmlFor="online"
-                        className="text-sm font-normal cursor-pointer"
-                      >
-                        Online Now
-                      </Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox id="verified" />
-                      <Label
-                        htmlFor="verified"
-                        className="text-sm font-normal cursor-pointer"
-                      >
-                        Verified Only
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-
-                <Button variant="outline" className="w-full">
-                  Clear Filters
-                </Button>
-              </div>
-            </div>
-          </aside>
-
-          {/* Mobile Filters */}
-          <div className="lg:hidden">
+          <div className="flex gap-2">
+            <Button className="flex-1 md:flex-none" size="sm">
+              <Search />
+              Search
+            </Button>
+            {/* Mobile Filter Toggle */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="md:hidden" size="sm">
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left">
+              <SheetContent
+                side="right"
+                className="w-full sm:max-w-md overflow-y-auto"
+              >
                 <SheetHeader>
                   <SheetTitle>Filters</SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 space-y-6">
-                  {/* Same filter content as desktop */}
-                  <div>
-                    <Label className="text-sm font-medium mb-3 block">
-                      Service Type
-                    </Label>
-                    <div className="space-y-2">
-                      {[
-                        "Plumbing",
-                        "Electrical",
-                        "Cleaning",
-                        "Painting",
-                        "Carpentry",
-                      ].map((service) => (
-                        <div key={service} className="flex items-center gap-2">
-                          <Checkbox id={`mobile-${service}`} />
-                          <Label
-                            htmlFor={`mobile-${service}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {service}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="mt-6">
+                  <CompactFilterPanel
+                    distanceRange={distanceRange}
+                    onDistanceRangeChange={setDistanceRange}
+                    priceRange={priceRange}
+                    onPriceRangeChange={setPriceRange}
+                    onOpenMoreFilters={() => setMoreFiltersOpen(true)}
+                    activeFiltersCount={getActiveFiltersCount()}
+                    onClearAllFilters={clearAllFilters}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
           </div>
+        </div>
+      </div>
 
-          {/* Results */}
-          <div className="flex-1">
+      {/* More Filters Dialog */}
+      <MoreFiltersDialog
+        open={moreFiltersOpen}
+        onOpenChange={setMoreFiltersOpen}
+        selectedServices={selectedServices}
+        selectedRatings={selectedRatings}
+        onlineOnly={onlineOnly}
+        verifiedOnly={verifiedOnly}
+        distanceRange={distanceRange}
+        priceRange={priceRange}
+        minResponseTime={minResponseTime}
+        minJobsCompleted={minJobsCompleted}
+        onApplyFilters={handleApplyMoreFilters}
+        professions={professions}
+      />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
+        <div className="flex gap-6">
+          {/* Results Section - Left (70%) */}
+          <div className="flex-1 w-full lg:w-[70%]">
+            {/* Marketing Stats Pills */}
+            <MarketingStats />
+
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  Available Workers
-                </h2>
-                <p className="text-muted-foreground mt-1">
-                  Found {mockWorkers.length} workers near you
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                >
-                  Grid
-                </Button>
-                <Button
-                  variant={viewMode === "map" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("map")}
-                >
-                  <MapIcon className="w-4 h-4 mr-2" />
-                  Map
-                </Button>
-              </div>
+            <div className="mb-4">
+              <h1 className="text-3xl font-bold text-foreground mb-1">
+                Results Near You
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Found {allMockWorkers.length} workers in your area
+              </p>
             </div>
 
-            {/* Worker Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mockWorkers.map((worker) => (
-                <Card
-                  key={worker.id}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex gap-4">
-                      <div className="relative">
-                        <Avatar className="w-16 h-16">
-                          <AvatarImage
-                            src={worker.avatar || "/placeholder.svg"}
-                            alt={worker.name}
-                          />
-                          <AvatarFallback>
-                            {worker.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        {worker.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
-                        )}
-                      </div>
-
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <Link
-                              href={`/worker/${worker.id}`}
-                              className="font-semibold text-lg text-foreground hover:text-primary"
-                            >
-                              {worker.name}
-                            </Link>
-                            <p className="text-sm text-muted-foreground">
-                              {worker.profession}
-                            </p>
-                          </div>
-                          <Button variant="ghost" size="icon">
-                            <Bookmark className="w-5 h-5" />
-                          </Button>
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{worker.rating}</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            ({worker.reviews} reviews)
-                          </span>
-                          {worker.verified && (
-                            <Badge variant="secondary" className="text-xs">
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                          <MapPin className="w-4 h-4" />
-                          {worker.location} • {worker.distance}
-                        </div>
-
-                        <div className="flex items-center justify-between mt-4">
-                          <div>
-                            <span className="text-2xl font-bold text-foreground">
-                              ${worker.hourlyRate}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              /hour
-                            </span>
-                          </div>
-                          <Button asChild>
-                            <Link href={`/worker/${worker.id}`}>
-                              View Profile
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Worker Cards - Single Column */}
+            <div className="space-y-6">
+              {displayedWorkers.map((worker) => (
+                <WorkerCard key={worker.id} worker={worker} />
               ))}
             </div>
+
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="flex justify-center items-center py-6">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm">Loading more workers...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Intersection Observer Target */}
+            {hasMore && <div ref={observerTarget} className="h-8" />}
+
+            {/* End of Results */}
+            {!hasMore && displayedWorkers.length > 0 && (
+              <div className="text-center py-6">
+                <p className="text-sm text-muted-foreground">
+                  You've reached the end of the results
+                </p>
+              </div>
+            )}
+
+            {/* No Results */}
+            {displayedWorkers.length === 0 && (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Briefcase className="h-12 w-12 text-primary" />
+                  </EmptyMedia>
+                  <EmptyTitle>Turn Your Skills Into Income</EmptyTitle>
+                  <EmptyDescription>
+                    We couldn't find workers matching your search. Be the first!
+                    Join our platform and connect with customers looking for
+                    professionals like you.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => router.push("/become-worker")}
+                  >
+                    <Briefcase />
+                    Become a Worker
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            )}
           </div>
+
+          {/* Filter Panel - Right (30%) - Desktop Only */}
+          <aside className="hidden lg:block w-[30%] flex-shrink-0">
+            <div className="sticky top-[210px] max-h-[calc(100vh-250px)] overflow-y-auto">
+              <Card className="border-border">
+                <CardContent>
+                  <CompactFilterPanel
+                    distanceRange={distanceRange}
+                    onDistanceRangeChange={setDistanceRange}
+                    priceRange={priceRange}
+                    onPriceRangeChange={setPriceRange}
+                    onOpenMoreFilters={() => setMoreFiltersOpen(true)}
+                    activeFiltersCount={getActiveFiltersCount()}
+                    onClearAllFilters={clearAllFilters}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

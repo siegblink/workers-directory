@@ -15,11 +15,25 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     pathname === "/forgot-password" ||
     pathname === "/reset-password";
 
+  const appPages = [
+    "/profile",
+    "/dashboard",
+    "/bookings",
+    "/credits",
+    "/settings",
+    "/search",
+    "/messages",
+  ];
+
+  // Pages that should hide only the footer (keep navigation)
+  const hideFooterPages =
+    appPages.includes(pathname) || pathname.startsWith("/worker/");
+
   return (
     <>
       {!isAuthPage && <Navigation />}
       <main>{children}</main>
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && !hideFooterPages && <Footer />}
     </>
   );
 }

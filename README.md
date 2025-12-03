@@ -1,6 +1,6 @@
 <div align="center">
 
-# Workers Directory
+# Direktory
 
 ### Your trusted marketplace for professional service workers
 
@@ -16,7 +16,7 @@ Built with Next.js 15 · Supabase · shadcn/ui
 
 ## Overview
 
-**Workers Directory** is a modern, full-featured service marketplace that empowers customers to discover, book, and manage appointments with professional service workers. Whether you need a plumber, electrician, cleaner, or any other service professional, Workers Directory provides a seamless experience with real-time messaging, secure authentication, and an intuitive booking system.
+**Direktory** is a modern, full-featured service marketplace that empowers customers to discover, book, and manage appointments with professional service workers. Whether you need a plumber, electrician, cleaner, or any other service professional, Direktory provides a seamless experience with real-time messaging, secure authentication, and an intuitive booking system.
 
 ## Features
 
@@ -63,7 +63,7 @@ Built with Next.js 15 · Supabase · shadcn/ui
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd workers-directory
+   cd direktory
    ```
 
 2. **Install dependencies**
@@ -188,7 +188,7 @@ Components will be automatically added to the `components/ui/` directory.
 
 ### Vercel (Recommended)
 
-**Workers Directory** is optimized for deployment on Vercel:
+**Direktory** is optimized for deployment on Vercel:
 
 1. Push your code to GitHub
 2. Import your repository to [Vercel](https://vercel.com/new)
@@ -210,7 +210,7 @@ The production server will start on port 3000.
 
 ## Contributing
 
-We welcome contributions to **Workers Directory**! Here's how you can help:
+We welcome contributions to **Direktory**! Here's how you can help:
 
 ### Development Workflow
 
@@ -286,8 +286,8 @@ Built with love using:
 
 <div align="center">
 
-**Workers Directory** - Connecting professionals with those who need them
+**Direktory** - Connecting professionals with those who need them
 
-Made with ❤️ by the Workers Directory team
+Made with ❤️ by the Direktory team
 
 </div>

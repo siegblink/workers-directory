@@ -31,7 +31,7 @@ export function Logo({ size = "default", className }: LogoProps) {
         <BookOpen className={cn("text-primary-foreground", iconClass)} />
       </div>
       <span className={cn("font-bold text-foreground", textSize)}>
-        Workers Directory
+        Direktory
       </span>
     </Link>
   );
