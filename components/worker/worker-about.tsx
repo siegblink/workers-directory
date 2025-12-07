@@ -18,7 +18,7 @@ export function WorkerAbout({ bio, skills }: WorkerAboutProps) {
         <h4 className="font-semibold mb-3">Skills & Expertise</h4>
         <div className="flex flex-wrap gap-2">
           {skills.map((skill) => (
-            <Badge key={skill} variant="secondary">
+            <Badge key={skill} variant="secondary" className="text-sm p-2">
               {skill}
             </Badge>
           ))}

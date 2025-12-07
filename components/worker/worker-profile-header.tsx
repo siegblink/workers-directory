@@ -88,7 +88,7 @@ export function WorkerProfileHeader({
                     </Pill>
                   )}
                   •
-                  <span className="text-lg text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     {worker.profession}
                   </span>
                 </div>
