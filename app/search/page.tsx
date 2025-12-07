@@ -1,6 +1,7 @@
 "use client";
 
 import { Briefcase, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CompactFilterPanel } from "@/components/compact-filter-panel";
@@ -220,14 +221,6 @@ export default function SearchPage() {
     };
   }, [loadMore]);
 
-  const _handleRatingToggle = (rating: number) => {
-    setSelectedRatings((prev) =>
-      prev.includes(rating)
-        ? prev.filter((r) => r !== rating)
-        : [...prev, rating],
-    );
-  };
-
   const clearAllFilters = () => {
     setPriceRange([0, 1000]);
     setSelectedServices([]);
@@ -427,7 +420,14 @@ export default function SearchPage() {
 
           {/* Filter Panel - Right (30%) - Desktop Only */}
           <aside className="hidden lg:block w-[30%] flex-shrink-0">
-            <div className="sticky top-[210px] max-h-[calc(100vh-250px)] overflow-y-auto">
+            <div className="sticky top-[206px] max-h-[calc(100vh-250px)] overflow-y-auto space-y-6">
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/become-worker">
+                  <Briefcase />
+                  Become a Worker
+                </Link>
+              </Button>
+
               <Card className="border-border">
                 <CardContent>
                   <CompactFilterPanel

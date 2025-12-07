@@ -161,24 +161,8 @@ export function Navigation() {
             <Logo />
           </div>
 
-          {/* Centered main navigation */}
-          <div className="hidden md:flex flex-1 justify-center items-center gap-4">
-            <Link
-              href="/become-worker"
-              className="text-muted-foreground hover:text-foreground font-medium"
-            >
-              Become a Worker
-            </Link>
-            <Link
-              href="/search"
-              className="text-muted-foreground hover:text-foreground font-medium"
-            >
-              Find Workers
-            </Link>
-          </div>
-
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2 ml-auto">
             {isLoggedIn ? (
               <>
                 <DropdownMenu>
@@ -298,16 +282,6 @@ export function Navigation() {
                     <DropdownMenuSeparator />
                   </>
                 )}
-
-                {/* Browse Section */}
-                <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
-                    <Link href="/search">Find Workers</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/become-worker">Become a Worker</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
 
                 {isLoggedIn ? (
                   <>
