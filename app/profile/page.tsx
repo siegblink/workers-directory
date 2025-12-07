@@ -1,21 +1,121 @@
 "use client";
 
-import { Bookmark, Calendar, Mail, MapPin, Phone, Star } from "lucide-react";
-import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { ProfileAbout } from "@/components/profile/profile-about";
+import { ProfileAvailability } from "@/components/profile/profile-availability";
+import {
+  type PortfolioItem,
+  ProfileGallery,
+} from "@/components/profile/profile-gallery";
+import {
+  type ProfileData,
+  ProfileHeader,
+} from "@/components/profile/profile-header";
+import { ProfileTabs } from "@/components/profile/profile-tabs";
+import {
+  ProfileTestimonials,
+  type Review,
+} from "@/components/profile/profile-testimonials";
+import type {
+  ProfileAboutFormValues,
+  ProfileAvailabilityFormValues,
+  ProfileHeaderFormValues,
+} from "@/lib/schemas/profile";
 
-const mockUser = {
+const mockProfile: ProfileData = {
   name: "Jane Doe",
-  email: "jane.doe@example.com",
-  phone: "+1 (555) 123-4567",
+  avatar: "/placeholder.svg?height=150&width=150",
+  statusEmoji: "✨",
+  statusText: "Available for new projects",
+  profession: "Home Services",
+  isOnline: true,
+  verified: true,
+  rating: 4.8,
+  reviews: 23,
   location: "New York, NY",
   joinedDate: "March 2023",
-  avatar: "/placeholder.svg?height=150&width=150",
+  hourlyRate: 50,
+  completedJobs: 45,
+  responseTime: "Within 2 hours",
 };
+
+const mockBio =
+  "Experienced home services professional with over 5 years of experience. Specialized in residential cleaning, organization, and home maintenance. Reliable, thorough, and always on time.";
+
+const mockSkills = [
+  "Deep Cleaning",
+  "Organization",
+  "Home Maintenance",
+  "Move-in/Move-out",
+  "Laundry Services",
+];
+
+const mockAvailability = {
+  monday: "9:00 AM - 6:00 PM",
+  tuesday: "9:00 AM - 6:00 PM",
+  wednesday: "9:00 AM - 6:00 PM",
+  thursday: "9:00 AM - 6:00 PM",
+  friday: "9:00 AM - 5:00 PM",
+  saturday: "10:00 AM - 3:00 PM",
+  sunday: "Closed",
+};
+
+const mockPortfolio: PortfolioItem[] = [
+  {
+    id: 1,
+    image: "https://picsum.photos/id/1048/800/600",
+    title: "Kitchen Deep Clean",
+    description:
+      "Complete kitchen cleaning including appliances, cabinets, and floor. All surfaces sanitized and organized.",
+    price: 150,
+  },
+  {
+    id: 2,
+    image: "https://picsum.photos/id/1067/800/600",
+    title: "Home Organization",
+    description:
+      "Full closet and storage organization with custom solutions. Decluttering and space optimization.",
+    price: 200,
+  },
+  {
+    id: 3,
+    image: "https://picsum.photos/id/180/800/600",
+    title: "Move-out Cleaning",
+    description:
+      "Comprehensive move-out cleaning service to ensure full deposit return. Every room detailed.",
+    price: 350,
+  },
+];
+
+const mockReviews: Review[] = [
+  {
+    id: 1,
+    author: "John Smith",
+    rating: 5,
+    date: "1 week ago",
+    comment:
+      "Jane did an amazing job with our kitchen! Everything was spotless and she was very professional.",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: 2,
+    author: "Sarah M.",
+    rating: 5,
+    date: "2 weeks ago",
+    comment:
+      "Highly recommend! She organized our entire closet system and it looks incredible.",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: 3,
+    author: "Mike R.",
+    rating: 4,
+    date: "3 weeks ago",
+    comment:
+      "Great service, arrived on time and did excellent work. Would hire again.",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+];
 
 const mockBookings = [
   {
@@ -56,186 +156,81 @@ const mockBookmarked = [
 ];
 
 export default function ProfilePage() {
+  const [profile, setProfile] = useState(mockProfile);
+  const [bio, setBio] = useState(mockBio);
+  const [skills, setSkills] = useState(mockSkills);
+  const [availability, setAvailability] = useState(mockAvailability);
+
+  const handleHeaderSave = async (data: ProfileHeaderFormValues) => {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setProfile((prev) => ({
+      ...prev,
+      name: data.name,
+      statusEmoji: data.statusEmoji,
+      statusText: data.statusText,
+      profession: data.profession,
+      location: data.location,
+      hourlyRate: data.hourlyRate,
+    }));
+    console.log("Header saved:", data);
+  };
+
+  const handleAvatarChange = async (file: File) => {
+    // Simulate API call for avatar upload
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    console.log("Avatar uploaded:", file.name);
+  };
+
+  const handleAboutSave = async (data: ProfileAboutFormValues) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setBio(data.bio);
+    setSkills(data.skills);
+    console.log("About saved:", data);
+  };
+
+  const handleAvailabilitySave = async (
+    data: ProfileAvailabilityFormValues,
+  ) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setAvailability(data);
+    console.log("Availability saved:", data);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         {/* Profile Header */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <Avatar className="w-32 h-32">
-                <AvatarImage
-                  src={mockUser.avatar || "/placeholder.svg"}
-                  alt={mockUser.name}
-                />
-                <AvatarFallback>
-                  {mockUser.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
+        <ProfileHeader
+          profile={profile}
+          onSave={handleHeaderSave}
+          onAvatarChange={handleAvatarChange}
+        />
 
-              <div className="flex-1">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-bold text-foreground mb-2">
-                      {mockUser.name}
-                    </h1>
-                    <div className="space-y-2 text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        {mockUser.email}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        {mockUser.phone}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        {mockUser.location}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        Member since {mockUser.joinedDate}
-                      </div>
-                    </div>
-                  </div>
+        {/* Gallery Section */}
+        <ProfileGallery portfolio={mockPortfolio} />
 
-                  <Button asChild>
-                    <Link href="/settings">Edit Profile</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* About Section */}
+        <ProfileAbout bio={bio} skills={skills} onSave={handleAboutSave} />
 
-        {/* Tabs */}
-        <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="bookings">My Bookings</TabsTrigger>
-            <TabsTrigger value="bookmarked">Saved Workers</TabsTrigger>
-          </TabsList>
+        {/* Testimonials Section */}
+        <ProfileTestimonials
+          rating={profile.rating}
+          reviewCount={profile.reviews}
+          reviews={mockReviews}
+        />
 
-          {/* Bookings Tab */}
-          <TabsContent value="bookings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mockBookings.map((booking) => (
-                    <div
-                      key={booking.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-foreground">
-                            {booking.worker}
-                          </h3>
-                          <Badge
-                            variant={
-                              booking.status === "Completed"
-                                ? "secondary"
-                                : "default"
-                            }
-                          >
-                            {booking.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {booking.service}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {booking.date}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-foreground">
-                          ${booking.amount}
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          asChild
-                        >
-                          <Link href={`/bookings/${booking.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {/* Availability Section */}
+        <ProfileAvailability
+          availability={availability}
+          onSave={handleAvailabilitySave}
+        />
 
-          {/* Bookmarked Tab */}
-          <TabsContent value="bookmarked">
-            <Card>
-              <CardHeader>
-                <CardTitle>Saved Workers</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mockBookmarked.map((worker) => (
-                    <div
-                      key={worker.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-16 h-16">
-                          <AvatarImage
-                            src={worker.avatar || "/placeholder.svg"}
-                            alt={worker.name}
-                          />
-                          <AvatarFallback>
-                            {worker.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-foreground">
-                            {worker.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {worker.profession}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium text-foreground">
-                              {worker.rating}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              • ${worker.hourlyRate}/hr
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/worker/${worker.id}`}>
-                            View Profile
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Bookmark className="w-5 h-5 fill-current" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Tabs Section */}
+        <ProfileTabs
+          bookings={mockBookings}
+          bookmarkedWorkers={mockBookmarked}
+        />
       </div>
     </div>
   );

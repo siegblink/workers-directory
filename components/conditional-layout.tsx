@@ -17,6 +17,7 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
 
   const appPages = [
     "/profile",
+    "/profile/gallery",
     "/dashboard",
     "/bookings",
     "/credits",
