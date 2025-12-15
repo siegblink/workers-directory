@@ -41,7 +41,7 @@ Built with Next.js 16 · Supabase · shadcn/ui
 ## Tech Stack
 
 - **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **React**: 19.1.0
+- **React**: 19.2.3
 - **Language**: TypeScript 5
 - **Styling**: [Tailwind CSS 4.1.9](https://tailwindcss.com/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/) (New York style)
@@ -124,13 +124,15 @@ bun format:write     # Format code and fix linting issues
 
 /components
   /ui                  - shadcn/ui components
-  /profile             - User profile editing components
+  /profile             - Profile editing (header, gallery, about, availability, testimonials)
   /worker              - Worker profile display components
   navigation.tsx       - Main navigation component
   footer.tsx           - Footer component
   theme-provider.tsx   - Theme context provider
   theme-toggle.tsx     - Dark/light mode toggle
   booking-modal.tsx    - Booking dialog component
+  compact-filter-panel.tsx - Search filter panel
+  more-filters-dialog.tsx  - Extended filters dialog
 
 /lib
   /supabase
