@@ -6,7 +6,7 @@
 
 **Connecting customers with verified plumbers, electricians, cleaners, and more.**
 
-Built with Next.js 15 · Supabase · shadcn/ui
+Built with Next.js 16 · Supabase · shadcn/ui
 
 [Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#installation) • [Documentation](#project-structure)
 
@@ -40,7 +40,7 @@ Built with Next.js 15 · Supabase · shadcn/ui
 
 ## Tech Stack
 
-- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
 - **React**: 19.1.0
 - **Language**: TypeScript 5
 - **Styling**: [Tailwind CSS 4.1.9](https://tailwindcss.com/)
@@ -107,6 +107,8 @@ bun format:write     # Format code and fix linting issues
 /app                    - Next.js App Router pages
   /login               - Authentication pages
   /signup
+  /forgot-password     - Password recovery
+  /reset-password      - Password reset
   /dashboard           - Worker dashboard (protected)
   /profile             - User profile (protected)
   /bookings            - Booking management (protected)
@@ -116,9 +118,14 @@ bun format:write     # Format code and fix linting issues
   /worker              - Worker profile pages
   /become-worker       - Worker registration
   /help                - Help/support pages
+  /credits             - Credits/payment
+  /terms               - Terms of service
+  /privacy             - Privacy policy
 
 /components
   /ui                  - shadcn/ui components
+  /profile             - User profile editing components
+  /worker              - Worker profile display components
   navigation.tsx       - Main navigation component
   footer.tsx           - Footer component
   theme-provider.tsx   - Theme context provider
@@ -130,6 +137,8 @@ bun format:write     # Format code and fix linting issues
     client.ts          - Supabase browser client
     server.ts          - Supabase server client
     middleware.ts      - Supabase session management
+  /database            - Database query utilities
+  /schemas             - Zod validation schemas
   utils.ts             - Utility functions
 
 proxy.ts               - Next.js 16 proxy for auth
