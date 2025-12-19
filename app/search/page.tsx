@@ -1,10 +1,11 @@
 "use client";
 
-import { Briefcase, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { Briefcase, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CompactFilterPanel } from "@/components/compact-filter-panel";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { MarketingStats } from "@/components/marketing-stats";
 import { MoreFiltersDialog } from "@/components/more-filters-dialog";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { WorkerCard } from "@/components/worker/worker-card";
+import { type Worker, WorkerCard } from "@/components/worker/worker-card";
 
-// Mock data generator
+// Professions list for filters
 const professions = [
   "Plumber",
   "Electrician",
@@ -45,124 +46,20 @@ const professions = [
   "Locksmith",
 ];
 
-const locations = [
-  { city: "Capitol Site", state: "Cebu City" },
-  { city: "Lahug", state: "Cebu City" },
-  { city: "Mabolo", state: "Cebu City" },
-  { city: "Banilad", state: "Cebu City" },
-  { city: "Talamban", state: "Cebu City" },
-  { city: "IT Park", state: "Cebu City" },
-  { city: "Guadalupe", state: "Cebu City" },
-  { city: "Kasambagan", state: "Cebu City" },
-  { city: "Busay", state: "Cebu City" },
-  { city: "Cebu Business Park", state: "Cebu City" },
-];
-
-const firstNames = [
-  "John",
-  "Sarah",
-  "Michael",
-  "Emily",
-  "David",
-  "Jessica",
-  "Robert",
-  "Amanda",
-  "James",
-  "Lisa",
-  "William",
-  "Jennifer",
-  "Daniel",
-  "Maria",
-  "Thomas",
-  "Karen",
-  "Christopher",
-  "Nancy",
-  "Matthew",
-  "Linda",
-];
-
-const lastNames = [
-  "Smith",
-  "Johnson",
-  "Williams",
-  "Brown",
-  "Jones",
-  "Garcia",
-  "Miller",
-  "Davis",
-  "Rodriguez",
-  "Martinez",
-  "Anderson",
-  "Taylor",
-  "Thomas",
-  "Moore",
-  "Jackson",
-  "Martin",
-  "Lee",
-  "Thompson",
-  "White",
-  "Harris",
-];
-
-// Seeded random number generator for deterministic results
-function seededRandom(seed: number) {
-  const x = Math.sin(seed++) * 10000;
-  return x - Math.floor(x);
-}
-
-function generateMockWorkers(count: number) {
-  return Array.from({ length: count }, (_, i) => {
-    // Use index as seed for deterministic random values
-    const seed = i * 7; // Multiply by prime for better distribution
-    const profession =
-      professions[Math.floor(seededRandom(seed) * professions.length)];
-    const location =
-      locations[Math.floor(seededRandom(seed + 1) * locations.length)];
-    const firstName =
-      firstNames[Math.floor(seededRandom(seed + 2) * firstNames.length)];
-    const lastName =
-      lastNames[Math.floor(seededRandom(seed + 3) * lastNames.length)];
-    const rating = Number((3.5 + seededRandom(seed + 4) * 1.5).toFixed(1));
-    const reviews = Math.floor(seededRandom(seed + 5) * 300) + 10;
-    const hourlyRateMin = Math.floor(seededRandom(seed + 6) * 100) + 50;
-    const hourlyRateMax =
-      hourlyRateMin + Math.floor(seededRandom(seed + 13) * 50) + 20;
-    const yearsExperience = Math.floor(seededRandom(seed + 7) * 20) + 1;
-    const jobsCompleted = Math.floor(seededRandom(seed + 8) * 500) + 10;
-    const distance = (seededRandom(seed + 9) * 15 + 0.5).toFixed(1);
-    const isOnline = seededRandom(seed + 10) > 0.5;
-    const verified = seededRandom(seed + 11) > 0.3;
-
-    return {
-      id: i + 1,
-      name: `${firstName} ${lastName}`,
-      profession,
-      rating,
-      reviews,
-      hourlyRateMin,
-      hourlyRateMax,
-      location: `${location.city}, ${location.state}`,
-      distance: `${distance} km`,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${firstName}${lastName}`,
-      isOnline,
-      verified,
-      yearsExperience,
-      jobsCompleted,
-      responseTime: Math.floor(seededRandom(seed + 12) * 120) + 10, // minutes
-    };
-  });
-}
-
-// Generate 30 mock workers with deterministic seed
-const allMockWorkers = generateMockWorkers(30);
-
 export default function SearchPage() {
   const router = useRouter();
-  const [displayedWorkers, setDisplayedWorkers] = useState(
-    allMockWorkers.slice(0, 10),
-  );
+  const [displayedWorkers, setDisplayedWorkers] = useState<Worker[]>([]);
+  const [totalWorkers, setTotalWorkers] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Search fields
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [userLocation, setUserLocation] = useState("");
+  const [workerLocation, setWorkerLocation] = useState("");
+
+  // Filters
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
@@ -175,29 +72,92 @@ export default function SearchPage() {
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Use a ref to track if a fetch is in progress to prevent race conditions
+  const isFetchingRef = useRef(false);
+
+  // Fetch workers from API
+  const fetchWorkers = useCallback(
+    async (page: number) => {
+      if (isLoading || isFetchingRef.current) return;
+
+      isFetchingRef.current = true;
+      setIsLoading(true);
+
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: "10",
+        });
+
+        // Add search parameters
+        if (serviceSearch) params.append("service", serviceSearch);
+        if (workerLocation) params.append("location", workerLocation);
+        if (userLocation) params.append("userLocation", userLocation);
+
+        // Add filters
+        if (verifiedOnly) params.append("verifiedOnly", "true");
+        if (onlineOnly) params.append("onlineOnly", "true");
+        if (priceRange[0] > 0)
+          params.append("minRate", priceRange[0].toString());
+        if (priceRange[1] < 1000)
+          params.append("maxRate", priceRange[1].toString());
+
+        const response = await fetch(`/api/workers?${params.toString()}`);
+        if (!response.ok) throw new Error("Failed to fetch workers");
+
+        const data = await response.json();
+
+        if (page === 1) {
+          setDisplayedWorkers(data.workers);
+        } else {
+          // Filter out duplicates before adding new workers
+          setDisplayedWorkers((prev) => {
+            const existingIds = new Set(prev.map((w) => w.id));
+            const newWorkers = data.workers.filter(
+              (w: Worker) => !existingIds.has(w.id),
+            );
+            return [...prev, ...newWorkers];
+          });
+        }
+
+        setTotalWorkers(data.pagination.total);
+        setHasMore(data.pagination.hasMore);
+        setCurrentPage(page);
+      } catch (error) {
+        console.error("Error fetching workers:", error);
+      } finally {
+        setIsLoading(false);
+        isFetchingRef.current = false;
+      }
+    },
+    [
+      verifiedOnly,
+      onlineOnly,
+      priceRange,
+      serviceSearch,
+      workerLocation,
+      userLocation,
+    ],
+  );
+
+  // Handle search button click
+  const handleSearch = () => {
+    setCurrentPage(1);
+    setDisplayedWorkers([]);
+    fetchWorkers(1);
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchWorkers(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Infinite scroll logic
   const loadMore = useCallback(() => {
     if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-
-    // Simulate loading delay
-    setTimeout(() => {
-      const currentLength = displayedWorkers.length;
-      const nextWorkers = allMockWorkers.slice(
-        currentLength,
-        currentLength + 10,
-      );
-
-      if (nextWorkers.length === 0) {
-        setHasMore(false);
-      } else {
-        setDisplayedWorkers((prev) => [...prev, ...nextWorkers]);
-      }
-
-      setIsLoading(false);
-    }, 800);
-  }, [displayedWorkers.length, isLoading, hasMore]);
+    fetchWorkers(currentPage + 1);
+  }, [currentPage, isLoading, hasMore, fetchWorkers]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -230,6 +190,16 @@ export default function SearchPage() {
     setDistanceRange([0, 50]);
     setMinResponseTime(180);
     setMinJobsCompleted(0);
+  };
+
+  const clearSearch = () => {
+    setServiceSearch("");
+    setUserLocation("");
+    setWorkerLocation("");
+    setCurrentPage(1);
+    setDisplayedWorkers([]);
+    // Trigger a fresh search with no filters
+    setTimeout(() => fetchWorkers(1), 0);
   };
 
   const handleApplyMoreFilters = (filters: {
@@ -275,26 +245,49 @@ export default function SearchPage() {
               <InputGroupAddon>
                 <Search />
               </InputGroupAddon>
-              <InputGroupInput placeholder="Search services (e.g., plumber, electrician)" />
+              <InputGroupInput
+                placeholder="Search services (e.g., plumber, electrician)"
+                value={serviceSearch}
+                onChange={(e) => setServiceSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
             </InputGroup>
-            <InputGroup>
-              <InputGroupAddon>
-                <MapPin />
-              </InputGroupAddon>
-              <InputGroupInput placeholder="Your location" />
-            </InputGroup>
-            <InputGroup>
-              <InputGroupAddon>
-                <MapPin />
-              </InputGroupAddon>
-              <InputGroupInput placeholder="Worker/Service location" />
-            </InputGroup>
+            <LocationAutocomplete
+              value={userLocation}
+              onChange={setUserLocation}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Your location"
+              disabled={isLoading}
+            />
+            <LocationAutocomplete
+              value={workerLocation}
+              onChange={setWorkerLocation}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Worker/Service location"
+              disabled={isLoading}
+            />
           </div>
           <div className="flex gap-2">
-            <Button className="flex-1 md:flex-none" size="sm">
+            <Button
+              className="flex-1 md:flex-none"
+              size="sm"
+              onClick={handleSearch}
+              disabled={isLoading}
+            >
               <Search />
               Search
             </Button>
+            {(serviceSearch || userLocation || workerLocation) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSearch}
+                disabled={isLoading}
+              >
+                <X />
+                Clear
+              </Button>
+            )}
             {/* Mobile Filter Toggle */}
             <Sheet>
               <SheetTrigger asChild>
@@ -354,10 +347,17 @@ export default function SearchPage() {
             {/* Results Header */}
             <div className="mb-4">
               <h1 className="text-3xl font-bold text-foreground mb-1">
-                Results Near You
+                {serviceSearch || workerLocation || userLocation
+                  ? "Search Results"
+                  : "Results Near You"}
               </h1>
               <p className="text-muted-foreground text-sm">
-                Found {allMockWorkers.length} workers in your area
+                Found {displayedWorkers.length} workers
+                {serviceSearch && ` for "${serviceSearch}"`}
+                {workerLocation && ` in ${workerLocation}`}
+                {userLocation
+                  ? ` • Sorted by distance from ${userLocation}`
+                  : ` • Sorted by distance from city center`}
               </p>
             </div>
 
