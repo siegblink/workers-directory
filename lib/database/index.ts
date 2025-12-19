@@ -39,6 +39,19 @@ export {
   removeFavorite,
   toggleFavorite,
 } from "./queries/favorites";
+export * as GalleryQueries from "./queries/gallery";
+export {
+  createGalleryItem,
+  deleteGalleryItem,
+  deleteWorkerGallery,
+  // Gallery
+  getGalleryById,
+  getWorkerGallery,
+  getWorkerGalleryCount,
+  searchGallery,
+  updateGalleryItem,
+  verifyGalleryOwnership,
+} from "./queries/gallery";
 export * as MessageQueries from "./queries/messages";
 export {
   getChatById,
