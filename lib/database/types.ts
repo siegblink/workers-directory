@@ -207,6 +207,15 @@ export interface JobSuggestion {
   updated_at: string;
 }
 
+export interface Gallery {
+  id: string; // UUID
+  worker_id: number; // Foreign key to users.id
+  title: string;
+  description: string | null;
+  media_url: string | null;
+  created_at: string;
+}
+
 // =====================================================
 // JOINED TYPES (for common queries)
 // =====================================================

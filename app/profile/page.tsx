@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
 import {
@@ -209,33 +209,143 @@ export default function ProfilePage() {
   const [bio, setBio] = useState(mockBio);
   const [skills, setSkills] = useState(mockSkills);
   const [availability, setAvailability] = useState(mockAvailability);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch profile data from API on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("/api/profile");
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const data = await response.json();
+        console.log("Fetched profile data:", data);
+
+        // Update profile state with fetched data
+        if (data.user) {
+          const fullName = `${data.user.firstname || ""} ${data.user.lastname || ""}`.trim();
+          const location = data.user.city && data.user.state
+            ? `${data.user.city}, ${data.user.state}`
+            : data.user.city || data.user.state || "Not set";
+
+          setProfile({
+            ...profile,
+            name: fullName || "Your Name",
+            profession: data.worker?.profession || "Home Services",
+            location,
+            hourlyRate: data.worker?.hourly_rate_min || 0,
+            avatar: data.user.profile_pic_url || profile.avatar,
+            completedJobs: data.worker?.jobs_completed || 0,
+            responseTime: data.worker?.response_time_minutes
+              ? `Within ${data.worker.response_time_minutes} minutes`
+              : "Within 2 hours",
+            verified: data.worker?.is_verified || false,
+          });
+
+          if (data.user.bio) {
+            setBio(data.user.bio);
+          }
+
+          if (data.worker?.skills && Array.isArray(data.worker.skills)) {
+            setSkills(data.worker.skills);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleHeaderSave = async (data: ProfileHeaderFormValues) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setProfile((prev) => ({
-      ...prev,
-      name: data.name,
-      statusEmoji: data.statusEmoji,
-      statusText: data.statusText,
-      profession: data.profession,
-      location: data.location,
-      hourlyRate: data.hourlyRate,
-    }));
-    console.log("Header saved:", data);
+    console.log("handleHeaderSave called with data:", data);
+    console.log("Current profile before update:", profile);
+
+    try {
+      // Save to API
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          statusEmoji: data.statusEmoji,
+          statusText: data.statusText,
+          profession: data.profession,
+          location: data.location,
+          hourlyRate: data.hourlyRate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save profile");
+      }
+
+      const result = await response.json();
+      console.log("Save response:", result);
+
+      // Update local state
+      const updatedProfile = {
+        ...profile,
+        name: data.name,
+        statusEmoji: data.statusEmoji,
+        statusText: data.statusText,
+        profession: data.profession,
+        location: data.location,
+        hourlyRate: data.hourlyRate,
+      };
+
+      console.log("Updated profile:", updatedProfile);
+      setProfile(updatedProfile);
+      console.log("Header saved successfully to database");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert("Failed to save profile. Please try again.");
+    }
   };
 
   const handleAvatarChange = async (file: File) => {
-    // Simulate API call for avatar upload
+    // TODO: Implement avatar upload to storage
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log("Avatar uploaded:", file.name);
+    // For now, just show the preview - will need to implement Supabase Storage upload
   };
 
   const handleAboutSave = async (data: ProfileAboutFormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setBio(data.bio);
-    setSkills(data.skills);
-    console.log("About saved:", data);
+    try {
+      // Save to API
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bio: data.bio,
+          skills: data.skills,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save about section");
+      }
+
+      const result = await response.json();
+      console.log("About save response:", result);
+
+      // Update local state
+      setBio(data.bio);
+      setSkills(data.skills);
+      console.log("About section saved successfully to database");
+    } catch (error) {
+      console.error("Error saving about section:", error);
+      alert("Failed to save about section. Please try again.");
+    }
   };
 
   const handleAvailabilitySave = async (
@@ -245,6 +355,17 @@ export default function ProfilePage() {
     setAvailability(data);
     console.log("Availability saved:", data);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

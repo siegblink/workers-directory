@@ -49,6 +49,20 @@ export {
   updateJobSuggestionStatus,
   upvoteJobSuggestion,
 } from "./queries/job-suggestions";
+
+export * as GalleryQueries from "./queries/gallery";
+export {
+  createGalleryItem,
+  deleteGalleryItem,
+  deleteWorkerGallery,
+  // Gallery
+  getGalleryById,
+  getWorkerGallery,
+  getWorkerGalleryCount,
+  searchGallery,
+  updateGalleryItem,
+  verifyGalleryOwnership,
+} from "./queries/gallery";
 export * as MessageQueries from "./queries/messages";
 export {
   getChatById,

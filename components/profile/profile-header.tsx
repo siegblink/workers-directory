@@ -11,7 +11,7 @@ import {
   Shield,
   Star,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,19 @@ export function ProfileHeader({
     },
   });
 
+  // Sync form with profile prop changes
+  useEffect(() => {
+    console.log("Profile prop changed, updating form values:", profile);
+    form.reset({
+      name: profile.name,
+      statusEmoji: profile.statusEmoji || "",
+      statusText: profile.statusText || "",
+      profession: profile.profession,
+      location: profile.location,
+      hourlyRate: profile.hourlyRate,
+    });
+  }, [profile, form]);
+
   const handleEdit = () => {
     form.reset({
       name: profile.name,
@@ -96,8 +109,14 @@ export function ProfileHeader({
   };
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSave(values);
-    setIsEditing(false);
+    try {
+      console.log("Submitting profile header:", values);
+      await onSave(values);
+      console.log("Profile header saved successfully");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving profile header:", error);
+    }
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
