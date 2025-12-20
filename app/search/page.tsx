@@ -65,6 +65,7 @@ export default function SearchPage() {
     lon: number;
   } | null>(null);
   const [manualLocationOverride, setManualLocationOverride] = useState(false);
+  const [isAutoDetected, setIsAutoDetected] = useState(false);
 
   // Filters
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -178,9 +179,10 @@ export default function SearchPage() {
           // Only use detected location if not manually overridden
           if (!manualLocationOverride) {
             // Use readable address if available, otherwise fallback to coordinates
-            setUserLocation(
-              address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-            );
+            const locationString =
+              address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            setUserLocation(locationString);
+            setIsAutoDetected(true);
           }
 
           setIsDetectingLocation(false);
@@ -201,11 +203,23 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initial load
+  // Initial load - wait for location detection to complete
   useEffect(() => {
-    fetchWorkers(1);
+    // If location is being detected, wait for it
+    if (isDetectingLocation) {
+      return;
+    }
+
+    // Trigger search automatically after location is detected
+    if (isAutoDetected && userLocation) {
+      fetchWorkers(1);
+      setIsAutoDetected(false); // Reset flag after triggering search
+    } else if (!isDetectingLocation && !userLocation) {
+      // If no location detected (permission denied or error), fetch default results
+      fetchWorkers(1);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isDetectingLocation, isAutoDetected, userLocation]);
 
   // Infinite scroll logic
   const loadMore = useCallback(() => {
@@ -313,11 +327,19 @@ export default function SearchPage() {
                 // Mark as manual override when user types
                 if (value && value !== userLocation) {
                   setManualLocationOverride(true);
+                  setIsAutoDetected(false);
                 }
               }}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Your location"
+              placeholder={
+                isDetectingLocation
+                  ? "Detecting your location..."
+                  : detectedCoords && !manualLocationOverride
+                    ? "Your location (auto-detected)"
+                    : "Your location"
+              }
               disabled={isLoading || isDetectingLocation}
+              skipAutocomplete={!manualLocationOverride && !!detectedCoords}
             />
             <LocationAutocomplete
               value={workerLocation}

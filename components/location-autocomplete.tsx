@@ -14,6 +14,7 @@ interface LocationAutocompleteProps {
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   placeholder: string;
   disabled?: boolean;
+  skipAutocomplete?: boolean; // Don't show suggestions when true
 }
 
 export function LocationAutocomplete({
@@ -22,6 +23,7 @@ export function LocationAutocomplete({
   onKeyDown,
   placeholder,
   disabled,
+  skipAutocomplete = false,
 }: LocationAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -33,6 +35,13 @@ export function LocationAutocomplete({
 
   // Fetch suggestions when input changes
   useEffect(() => {
+    // Skip fetch if autocomplete is disabled
+    if (skipAutocomplete) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
     // Skip fetch if the change came from selecting a suggestion
     if (isSelectingRef.current) {
       isSelectingRef.current = false;
