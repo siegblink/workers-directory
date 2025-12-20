@@ -149,6 +149,63 @@ export async function geocodeLocation(
 }
 
 /**
+ * Reverse geocode latitude/longitude coordinates to a human-readable address
+ * Uses Geoapify Reverse Geocoding API
+ */
+export async function reverseGeocode(
+  lat: number,
+  lon: number,
+): Promise<string | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+
+  if (!apiKey) {
+    console.error("NEXT_PUBLIC_GEOAPIFY_API_KEY not configured in environment variables");
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.geoapify.com/v1/geocode/reverse?` +
+        `lat=${lat}&lon=${lon}&` +
+        `apiKey=${apiKey}`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      console.error("Geoapify Reverse Geocode API error:", response.status);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data && data.features && data.features.length > 0) {
+      const props = data.features[0].properties;
+
+      // Build location string: City, State format
+      const parts: string[] = [];
+
+      if (props.city) {
+        parts.push(props.city);
+      }
+
+      if (props.state) {
+        parts.push(props.state);
+      }
+
+      return parts.length > 0 ? parts.join(", ") : props.formatted || null;
+    }
+  } catch (error) {
+    console.error("Reverse geocoding error:", error);
+  }
+
+  return null;
+}
+
+/**
  * Get autocomplete suggestions for location input using Geoapify Autocomplete API
  * Provides fast, accurate location suggestions as the user types
  */
