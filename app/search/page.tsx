@@ -31,6 +31,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { type Worker, WorkerCard } from "@/components/worker/worker-card";
+import { reverseGeocode } from "@/lib/utils/distance";
 
 // Professions list for filters
 const professions = [
@@ -58,6 +59,12 @@ export default function SearchPage() {
   const [serviceSearch, setServiceSearch] = useState("");
   const [userLocation, setUserLocation] = useState("");
   const [workerLocation, setWorkerLocation] = useState("");
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [detectedCoords, setDetectedCoords] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
+  const [manualLocationOverride, setManualLocationOverride] = useState(false);
 
   // Filters
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -146,6 +153,53 @@ export default function SearchPage() {
     setDisplayedWorkers([]);
     fetchWorkers(1);
   };
+
+  // Detect user location on mount
+  useEffect(() => {
+    const detectLocation = async () => {
+      if (!navigator.geolocation) {
+        console.log("Geolocation is not supported by this browser");
+        return;
+      }
+
+      setIsDetectingLocation(true);
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          // Store detected coordinates
+          const coords = { lat: latitude, lon: longitude };
+          setDetectedCoords(coords);
+
+          // Reverse geocode to get human-readable address
+          const address = await reverseGeocode(latitude, longitude);
+
+          // Only use detected location if not manually overridden
+          if (!manualLocationOverride) {
+            // Use readable address if available, otherwise fallback to coordinates
+            setUserLocation(
+              address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            );
+          }
+
+          setIsDetectingLocation(false);
+        },
+        (error) => {
+          console.log("Location detection error:", error.message);
+          setIsDetectingLocation(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000, // Cache for 5 minutes
+        },
+      );
+    };
+
+    detectLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -254,10 +308,16 @@ export default function SearchPage() {
             </InputGroup>
             <LocationAutocomplete
               value={userLocation}
-              onChange={setUserLocation}
+              onChange={(value) => {
+                setUserLocation(value);
+                // Mark as manual override when user types
+                if (value && value !== userLocation) {
+                  setManualLocationOverride(true);
+                }
+              }}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Your location"
-              disabled={isLoading}
+              disabled={isLoading || isDetectingLocation}
             />
             <LocationAutocomplete
               value={workerLocation}
