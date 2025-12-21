@@ -1,19 +1,15 @@
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 py-12">
+    <footer className="bg-primary text-primary-foreground">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">D</span>
-              </div>
-              <span className="font-bold text-xl text-white">Direktory</span>
-            </div>
+            <Logo variant="inverted" className="mb-4" />
             <p className="text-sm leading-relaxed">
               Connecting trusted service workers with customers for all your
               home and business needs.
@@ -22,12 +18,12 @@ export function Footer() {
 
           {/* For Customers */}
           <div>
-            <h3 className="font-semibold text-white mb-4">For Customers</h3>
+            <h3 className="font-semibold text-primary-foreground mb-4">For Customers</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/search"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Find Workers
                 </Link>
@@ -35,7 +31,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/bookings"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   My Bookings
                 </Link>
@@ -43,7 +39,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/credits"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Buy Credits
                 </Link>
@@ -51,7 +47,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/help"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Help Center
                 </Link>
@@ -61,12 +57,12 @@ export function Footer() {
 
           {/* For Workers */}
           <div>
-            <h3 className="font-semibold text-white mb-4">For Workers</h3>
+            <h3 className="font-semibold text-primary-foreground mb-4">For Workers</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/become-worker"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Become a Worker
                 </Link>
@@ -74,7 +70,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/dashboard"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Worker Dashboard
                 </Link>
@@ -82,7 +78,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/dashboard/promote"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Promote Profile
                 </Link>
@@ -90,7 +86,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/help"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Worker Resources
                 </Link>
@@ -100,12 +96,12 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold text-white mb-4">Company</h3>
+            <h3 className="font-semibold text-primary-foreground mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/about"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   About Us
                 </Link>
@@ -113,7 +109,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/help"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Help Center
                 </Link>
@@ -121,7 +117,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Terms of Service
                 </Link>
@@ -129,7 +125,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/privacy"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-primary-foreground/80 transition-colors"
                 >
                   Privacy Policy
                 </Link>
@@ -139,32 +135,32 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-primary/20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm">© 2025 Direktory. All rights reserved.</p>
 
           {/* Social Links */}
           <div className="flex items-center gap-4">
             <button
               type="button"
-              className="hover:text-white transition-colors"
+              className="hover:text-primary-foreground/80 transition-colors"
             >
               <Facebook className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className="hover:text-white transition-colors"
+              className="hover:text-primary-foreground/80 transition-colors"
             >
               <Twitter className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className="hover:text-white transition-colors"
+              className="hover:text-primary-foreground/80 transition-colors"
             >
               <Instagram className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className="hover:text-white transition-colors"
+              className="hover:text-primary-foreground/80 transition-colors"
             >
               <Linkedin className="w-5 h-5" />
             </button>
