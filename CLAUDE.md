@@ -180,6 +180,37 @@ Required environment variables (should be in `.env.local`):
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
+## Deployment
+
+### Vercel Configuration
+
+This project is configured to use **Bun runtime on Vercel** for improved performance:
+- **Runtime**: Bun 1.x (managed by Vercel)
+- **Configuration**: `vercel.json`
+- **Performance**: ~28% faster compared to Node.js for CPU-bound rendering workloads
+- **Status**: Public Beta (as of October 2025)
+
+**Deploy using:**
+- **CLI**: `bunx vercel deploy` or `bun i -g vercel && vercel deploy`
+- **Git Integration**: Push to your connected repository (recommended)
+
+**Local development with Vercel CLI:**
+```bash
+bunx vercel dev
+```
+
+**Runtime Verification:**
+After deployment, verify Bun runtime is active by checking deployment logs or adding to a server component:
+```typescript
+console.log("Runtime:", process.versions.bun);
+```
+
+**Limitations (Public Beta):**
+- Automatic source maps not yet supported
+- Byte-code caching not yet supported
+- Metrics on `node:http/https` not yet available
+- `Bun.serve` is not supported (use Next.js framework instead)
+
 ## Security Best Practices
 
 **Never Expose Secret Credentials**
