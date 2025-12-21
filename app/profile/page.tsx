@@ -24,6 +24,7 @@ import type {
 
 const mockProfile: ProfileData = {
   name: "Jane Doe",
+  username: "janedoe",
   avatar: "/placeholder.svg?height=150&width=150",
   statusEmoji: "✨",
   statusText: "Available for new projects",
