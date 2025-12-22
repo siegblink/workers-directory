@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { DirectoriesMenu } from "@/components/directories-menu";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -157,8 +158,13 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <Logo />
+          </div>
+
+          {/* Directories Menu - Desktop Only */}
+          <div className="ml-4 hidden lg:block">
+            <DirectoriesMenu />
           </div>
 
           {/* Desktop Navigation */}
