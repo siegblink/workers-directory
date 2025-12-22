@@ -18,7 +18,9 @@ export function Footer() {
 
           {/* For Customers */}
           <div>
-            <h3 className="font-semibold text-primary-foreground mb-4">For Customers</h3>
+            <h3 className="font-semibold text-primary-foreground mb-4">
+              For Customers
+            </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
@@ -57,7 +59,9 @@ export function Footer() {
 
           {/* For Workers */}
           <div>
-            <h3 className="font-semibold text-primary-foreground mb-4">For Workers</h3>
+            <h3 className="font-semibold text-primary-foreground mb-4">
+              For Workers
+            </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
@@ -96,7 +100,9 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold text-primary-foreground mb-4">Company</h3>
+            <h3 className="font-semibold text-primary-foreground mb-4">
+              Company
+            </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
