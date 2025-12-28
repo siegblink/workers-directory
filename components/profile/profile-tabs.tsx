@@ -27,12 +27,27 @@ export interface BookmarkedWorker {
   avatar: string;
 }
 
+export interface Conversation {
+  id: number;
+  name: string;
+  profession: string;
+  avatar: string;
+  lastMessage: string;
+  timestamp: string;
+  unread: number;
+}
+
 interface ProfileTabsProps {
   bookings: Booking[];
   bookmarkedWorkers: BookmarkedWorker[];
+  conversations: Conversation[];
 }
 
-export function ProfileTabs({ bookings, bookmarkedWorkers }: ProfileTabsProps) {
+export function ProfileTabs({
+  bookings,
+  bookmarkedWorkers,
+  conversations,
+}: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState("bookings");
 
   return (
@@ -45,9 +60,10 @@ export function ProfileTabs({ bookings, bookmarkedWorkers }: ProfileTabsProps) {
             <TabsList>
               <TabsTrigger value="bookings">My Bookings</TabsTrigger>
               <TabsTrigger value="bookmarked">Saved Workers</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
 
-            {/* Conditional "View all bookings" button */}
+            {/* Conditional "View all" buttons */}
             {activeTab === "bookings" && bookings.length > 0 && (
               <Button
                 variant="outline"
@@ -56,6 +72,16 @@ export function ProfileTabs({ bookings, bookmarkedWorkers }: ProfileTabsProps) {
                 className="w-full md:w-auto"
               >
                 <Link href="/bookings">View all bookings</Link>
+              </Button>
+            )}
+            {activeTab === "messages" && conversations.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="w-full md:w-auto"
+              >
+                <Link href="/messages">View all messages</Link>
               </Button>
             )}
           </div>
@@ -165,6 +191,64 @@ export function ProfileTabs({ bookings, bookmarkedWorkers }: ProfileTabsProps) {
                       </Button>
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/worker/${worker.id}`}>View Profile</Link>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="messages">
+            <div className="space-y-4">
+              {conversations.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No messages yet.
+                </p>
+              ) : (
+                conversations.slice(0, 5).map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-14 h-14">
+                        <AvatarImage
+                          src={conversation.avatar || "/placeholder.svg"}
+                          alt={conversation.name}
+                        />
+                        <AvatarFallback>
+                          {conversation.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-foreground">
+                            {conversation.name}
+                          </h3>
+                          {conversation.unread > 0 && (
+                            <Badge variant="default" className="text-xs">
+                              {conversation.unread}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {conversation.profession}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate max-w-xs">
+                          {conversation.lastMessage}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {conversation.timestamp}
+                      </span>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/messages">View</Link>
                       </Button>
                     </div>
                   </div>

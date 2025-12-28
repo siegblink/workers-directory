@@ -156,6 +156,54 @@ const mockBookmarked = [
   },
 ];
 
+const mockConversations = [
+  {
+    id: 1,
+    name: "John Smith",
+    profession: "Plumber",
+    avatar: "/placeholder.svg?height=60&width=60",
+    lastMessage: "I can come by tomorrow at 2 PM",
+    timestamp: "2m ago",
+    unread: 2,
+  },
+  {
+    id: 2,
+    name: "Sarah Johnson",
+    profession: "Electrician",
+    avatar: "/placeholder.svg?height=60&width=60",
+    lastMessage: "The job is complete. Let me know if you have any questions!",
+    timestamp: "1h ago",
+    unread: 0,
+  },
+  {
+    id: 3,
+    name: "Mike Davis",
+    profession: "Cleaner",
+    avatar: "/placeholder.svg?height=60&width=60",
+    lastMessage: "Thanks for the booking!",
+    timestamp: "3h ago",
+    unread: 1,
+  },
+  {
+    id: 4,
+    name: "Emily Chen",
+    profession: "Painter",
+    avatar: "/placeholder.svg?height=60&width=60",
+    lastMessage: "I'll bring all the supplies needed",
+    timestamp: "1d ago",
+    unread: 0,
+  },
+  {
+    id: 5,
+    name: "David Wilson",
+    profession: "Handyman",
+    avatar: "/placeholder.svg?height=60&width=60",
+    lastMessage: "See you next week!",
+    timestamp: "2d ago",
+    unread: 0,
+  },
+];
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState(mockProfile);
   const [bio, setBio] = useState(mockBio);
@@ -231,6 +279,7 @@ export default function ProfilePage() {
         <ProfileTabs
           bookings={mockBookings}
           bookmarkedWorkers={mockBookmarked}
+          conversations={mockConversations}
         />
       </div>
     </div>
