@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BookingModal } from "@/components/booking-modal";
 import { WorkerAbout } from "@/components/worker/worker-about";
@@ -108,6 +109,7 @@ const mockPortfolio = [
 ];
 
 export default function WorkerProfilePage() {
+  const router = useRouter();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
@@ -129,7 +131,7 @@ export default function WorkerProfilePage() {
         {/* Gallery Section */}
         <WorkerGallery
           portfolio={mockPortfolio}
-          onBookNow={() => setBookingModalOpen(true)}
+          onBookNow={() => router.push(`/messages?workerId=${mockWorker.id}`)}
         />
 
         {/* About Section */}
