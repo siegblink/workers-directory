@@ -4,11 +4,13 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   Calendar,
   CreditCard,
+  Flame,
   LayoutDashboard,
   LogOut,
   Menu,
   MessageSquare,
   Settings,
+  TrendingUp,
   User,
 } from "lucide-react";
 import Link from "next/link";
@@ -163,8 +165,20 @@ export function Navigation() {
           </div>
 
           {/* Directories Menu - Desktop Only */}
-          <div className="ml-4 hidden lg:block">
+          <div className="ml-4 hidden lg:flex items-center gap-1">
             <DirectoriesMenu />
+            <Button variant="ghost" asChild>
+              <Link href="/trending">
+                <TrendingUp />
+                Trending
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/hot">
+                <Flame />
+                Hot
+              </Link>
+            </Button>
           </div>
 
           {/* Desktop Navigation */}
@@ -292,9 +306,25 @@ export function Navigation() {
                   </>
                 )}
 
+                {/* Trending & Hot Links */}
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/trending">
+                      <TrendingUp />
+                      Trending
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/hot">
+                      <Flame />
+                      Hot
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+
                 {isLoggedIn ? (
                   <>
-                    <DropdownMenuSeparator />
                     {/* Account Section */}
                     <DropdownMenuGroup>
                       <DropdownMenuItem asChild>
@@ -347,12 +377,9 @@ export function Navigation() {
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/login">Login</Link>
-                    </DropdownMenuItem>
-                  </>
+                  <DropdownMenuItem asChild>
+                    <Link href="/login">Login</Link>
+                  </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
