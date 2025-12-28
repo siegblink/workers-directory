@@ -171,11 +171,14 @@ export function Navigation() {
           <div className="hidden lg:flex items-center gap-2 ml-auto">
             {isLoggedIn ? (
               <>
+                <Button variant="ghost" asChild>
+                  <Link href="/messages">Messages</Link>
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2 h-10 px-3"
+                      className="flex items-center gap-2 px-3"
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarImage
