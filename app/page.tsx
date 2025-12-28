@@ -21,7 +21,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       {/* Directories */}
       <section className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-foreground mb-8">Directories</h2>
+        <h2 className="text-xl text-foreground mb-8">Featured Directories</h2>
 
         {/* Directories Grid */}
         <nav aria-label="Directory navigation">
