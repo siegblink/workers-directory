@@ -85,7 +85,7 @@ export function WorkerGallery({ portfolio, onBookNow }: WorkerGalleryProps) {
                         fill
                         className="object-cover transition-transform group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                         <p className="text-white font-semibold text-sm">
                           {item.title}
                         </p>
@@ -95,8 +95,14 @@ export function WorkerGallery({ portfolio, onBookNow }: WorkerGalleryProps) {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-2" />
-            <CarouselNext className="right-2" />
+            <CarouselPrevious
+              variant="ghost"
+              className="left-2 bg-background/80 hover:bg-background/90 backdrop-blur-sm"
+            />
+            <CarouselNext
+              variant="ghost"
+              className="right-2 bg-background/80 hover:bg-background/90 backdrop-blur-sm"
+            />
           </Carousel>
         </CardContent>
       </Card>
