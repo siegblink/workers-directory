@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
     const verifiedOnly = searchParams.get("verifiedOnly") === "true";
     const onlineOnly = searchParams.get("onlineOnly") === "true";
     const radiusKm = parseInt(searchParams.get("radius") || "50"); // Default 50km radius
+    const minDistanceKm = parseFloat(searchParams.get("minDistance") || "0"); // Minimum distance filter
+    const maxDistanceKm = parseFloat(searchParams.get("maxDistance") || "50"); // Maximum distance filter
 
     // Geocode both locations in parallel for better performance
     const [userCoords, locationCoords] = await Promise.all([
@@ -61,42 +63,51 @@ export async function GET(request: NextRequest) {
 
     // Transform to WorkerCard interface
     // Note: Ratings are now included in the PostGIS query (optimized - no N+1 queries!)
-    const transformedWorkers = (workers || []).map((worker: any) => {
-      // Format distance display
-      const distance = worker.distance_km || 0;
-      let distanceDisplay = "N/A";
-      if (distance > 0) {
-        if (distance < 1) {
-          const meters = Math.round(distance * 1000);
-          distanceDisplay = `${meters} m`;
-        } else {
-          distanceDisplay = `${distance.toFixed(1)} km`;
+    const transformedWorkers = (workers || [])
+      .map((worker: any) => {
+        // Format distance display
+        const distance = worker.distance_km || 0;
+        let distanceDisplay = "N/A";
+        if (distance > 0) {
+          if (distance < 1) {
+            const meters = Math.round(distance * 1000);
+            distanceDisplay = `${meters} m`;
+          } else {
+            // Show up to 2 decimal places, removing trailing zeros
+            const formatted = distance.toFixed(2).replace(/\.?0+$/, "");
+            distanceDisplay = `${formatted} km`;
+          }
         }
-      }
 
-      return {
-        id: worker.id,
-        name: `${worker.firstname} ${worker.lastname}`,
-        profession: worker.profession || "General Worker",
-        rating: parseFloat(worker.average_rating) || 0,
-        reviews: worker.total_ratings || 0,
-        hourlyRateMin: worker.hourly_rate_min || 0,
-        hourlyRateMax: worker.hourly_rate_max || 0,
-        location: `${worker.city || "Unknown"}, ${worker.state || "Unknown"}`,
-        distance: distanceDisplay,
-        distanceValue: distance,
-        avatar:
-          worker.profile_pic_url ||
-          `https://api.dicebear.com/7.x/avataaars/svg?seed=${worker.firstname || "default"}${worker.lastname || "user"}`,
-        isOnline: worker.is_online || false,
-        verified: worker.is_verified || false,
-        yearsExperience: worker.years_experience || 0,
-        jobsCompleted: worker.jobs_completed || 0,
-        responseTime: worker.response_time_minutes || 60,
-        userLatitude: worker.latitude || null,
-        userLongitude: worker.longitude || null,
-      };
-    });
+        return {
+          id: worker.id,
+          name: `${worker.firstname} ${worker.lastname}`,
+          profession: worker.profession || "General Worker",
+          rating: parseFloat(worker.average_rating) || 0,
+          reviews: worker.total_ratings || 0,
+          hourlyRateMin: worker.hourly_rate_min || 0,
+          hourlyRateMax: worker.hourly_rate_max || 0,
+          location: `${worker.city || "Unknown"}, ${worker.state || "Unknown"}`,
+          distance: distanceDisplay,
+          distanceValue: distance,
+          avatar:
+            worker.profile_pic_url ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${worker.firstname || "default"}${worker.lastname || "user"}`,
+          isOnline: worker.is_online || false,
+          verified: worker.is_verified || false,
+          yearsExperience: worker.years_experience || 0,
+          jobsCompleted: worker.jobs_completed || 0,
+          responseTime: worker.response_time_minutes || 60,
+          userLatitude: worker.latitude || null,
+          userLongitude: worker.longitude || null,
+        };
+      })
+      // Filter by distance range (strict filtering)
+      // Use < with +1 to include decimals (e.g., 3km includes 0-3.999... but not 4.0)
+      .filter((worker: any) => {
+        const distance = worker.distanceValue || 0;
+        return distance >= minDistanceKm && distance < maxDistanceKm + 1;
+      });
 
     // Get total count
     const { count } = await supabase

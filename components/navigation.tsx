@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DirectoriesMenu } from "@/components/directories-menu";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -47,7 +47,8 @@ export function Navigation() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [_isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const creditsBalance = 1000;
+  const creditsBalance = 120;
+  const hasInitializedRef = useRef(false);
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
@@ -86,6 +87,7 @@ export function Navigation() {
       // Fetch profile data if user is authenticated
       if (session?.user) {
         fetchUserProfile(session.user.id);
+        hasInitializedRef.current = true;
       }
     });
 
@@ -95,11 +97,15 @@ export function Navigation() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
 
-      // Fetch profile data when user logs in
-      if (session?.user) {
+      // Only fetch profile if this is not the initial session (already handled above)
+      if (session?.user && hasInitializedRef.current) {
         fetchUserProfile(session.user.id);
+      } else if (session?.user) {
+        // Mark as initialized for future auth changes
+        hasInitializedRef.current = true;
       } else {
         setProfile(null);
+        hasInitializedRef.current = false;
       }
     });
 

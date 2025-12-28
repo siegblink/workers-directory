@@ -83,6 +83,14 @@ export default function SearchPage() {
   // Use a ref to track if a fetch is in progress to prevent race conditions
   const isFetchingRef = useRef(false);
 
+  // Track if observer should be active
+  const shouldObserveRef = useRef(true);
+
+  // Track if user is actively typing to prevent multiple search triggers
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const [searchTrigger, setSearchTrigger] = useState(0);
+
   // Fetch workers from API
   const fetchWorkers = useCallback(
     async (page: number) => {
@@ -110,11 +118,19 @@ export default function SearchPage() {
         if (priceRange[1] < 1000)
           params.append("maxRate", priceRange[1].toString());
 
+        // Add distance range filter - API will filter strictly by min/max distance
+        params.append("minDistance", distanceRange[0].toString());
+        params.append("maxDistance", distanceRange[1].toString());
+        // Fetch extra workers from DB to account for filtering (add 1 to radius for decimals)
+        if (distanceRange[1] < 50)
+          params.append("radius", (distanceRange[1] + 1).toString());
+
         const response = await fetch(`/api/workers?${params.toString()}`);
         if (!response.ok) throw new Error("Failed to fetch workers");
 
         const data = await response.json();
 
+        // Workers are already filtered by the API, no need for client-side filtering
         if (page === 1) {
           setDisplayedWorkers(data.workers);
         } else {
@@ -142,6 +158,7 @@ export default function SearchPage() {
       verifiedOnly,
       onlineOnly,
       priceRange,
+      distanceRange,
       serviceSearch,
       workerLocation,
       userLocation,
@@ -221,20 +238,58 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDetectingLocation, isAutoDetected, userLocation]);
 
-  // Infinite scroll logic
+  // Auto-trigger search when filters change
+  useEffect(() => {
+    // Skip if this is the initial load or location is being detected
+    if (isDetectingLocation || displayedWorkers.length === 0) {
+      return;
+    }
+
+    // Skip if user is actively typing in custom inputs
+    if (isTypingRef.current) {
+      return;
+    }
+
+    // Debounce filter changes to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      setDisplayedWorkers([]);
+      fetchWorkers(1);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [distanceRange, priceRange, verifiedOnly, onlineOnly, searchTrigger]);
+
+  // Infinite scroll logic with proper trigger management
   const loadMore = useCallback(() => {
-    if (isLoading || !hasMore) return;
+    // Extra check to prevent multiple simultaneous requests
+    if (isLoading || !hasMore || isFetchingRef.current || !shouldObserveRef.current) return;
+
+    // Disable observer until this load completes
+    shouldObserveRef.current = false;
+
     fetchWorkers(currentPage + 1);
   }, [currentPage, isLoading, hasMore, fetchWorkers]);
+
+  // Re-enable observer when new data is loaded
+  useEffect(() => {
+    if (!isLoading && hasMore) {
+      shouldObserveRef.current = true;
+    }
+  }, [isLoading, hasMore, displayedWorkers.length]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && shouldObserveRef.current && !isLoading && hasMore) {
           loadMore();
         }
       },
-      { threshold: 0.1 },
+      {
+        threshold: 0.1,
+        rootMargin: '50px' // Start loading slightly before reaching the bottom
+      },
     );
 
     const currentTarget = observerTarget.current;
@@ -247,7 +302,7 @@ export default function SearchPage() {
         observer.unobserve(currentTarget);
       }
     };
-  }, [loadMore]);
+  }, [loadMore, isLoading, hasMore]);
 
   const clearAllFilters = () => {
     setPriceRange([0, 1000]);
@@ -394,6 +449,20 @@ export default function SearchPage() {
                     onOpenMoreFilters={() => setMoreFiltersOpen(true)}
                     activeFiltersCount={getActiveFiltersCount()}
                     onClearAllFilters={clearAllFilters}
+                    onTypingStart={() => {
+                      isTypingRef.current = true;
+                      if (typingTimeoutRef.current) {
+                        clearTimeout(typingTimeoutRef.current);
+                      }
+                    }}
+                    onTypingEnd={() => {
+                      // Reset typing flag and trigger search
+                      typingTimeoutRef.current = setTimeout(() => {
+                        isTypingRef.current = false;
+                        // Trigger search by updating searchTrigger state
+                        setSearchTrigger((prev) => prev + 1);
+                      }, 100);
+                    }}
                   />
                 </div>
               </SheetContent>
@@ -520,6 +589,20 @@ export default function SearchPage() {
                     onOpenMoreFilters={() => setMoreFiltersOpen(true)}
                     activeFiltersCount={getActiveFiltersCount()}
                     onClearAllFilters={clearAllFilters}
+                    onTypingStart={() => {
+                      isTypingRef.current = true;
+                      if (typingTimeoutRef.current) {
+                        clearTimeout(typingTimeoutRef.current);
+                      }
+                    }}
+                    onTypingEnd={() => {
+                      // Reset typing flag and trigger search
+                      typingTimeoutRef.current = setTimeout(() => {
+                        isTypingRef.current = false;
+                        // Trigger search by updating searchTrigger state
+                        setSearchTrigger((prev) => prev + 1);
+                      }, 100);
+                    }}
                   />
                 </CardContent>
               </Card>

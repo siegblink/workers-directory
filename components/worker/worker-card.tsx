@@ -26,6 +26,7 @@ export interface Worker {
   hourlyRateMax: number;
   location: string;
   distance: string;
+  distanceValue?: number; // Distance in km (numeric value)
   avatar: string;
   isOnline: boolean;
   verified: boolean;
