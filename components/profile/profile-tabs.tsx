@@ -2,7 +2,7 @@
 
 import { Bookmark, Star } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,12 +43,28 @@ interface ProfileTabsProps {
   conversations: Conversation[];
 }
 
+const VALID_TABS = ["bookings", "bookmarked", "messages"] as const;
+
 export function ProfileTabs({
   bookings,
   bookmarkedWorkers,
   conversations,
 }: ProfileTabsProps) {
-  const [activeTab, setActiveTab] = useState("bookings");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const tabParam = searchParams.get("tab");
+  const activeTab =
+    tabParam && VALID_TABS.includes(tabParam as (typeof VALID_TABS)[number])
+      ? tabParam
+      : "bookings";
+
+  const setActiveTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <Card>
