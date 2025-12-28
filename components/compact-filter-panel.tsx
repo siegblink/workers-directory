@@ -1,7 +1,7 @@
 "use client";
 
 import { Filter, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -17,6 +17,8 @@ interface CompactFilterPanelProps {
   onOpenMoreFilters: () => void;
   activeFiltersCount: number;
   onClearAllFilters: () => void;
+  onTypingStart?: () => void;
+  onTypingEnd?: () => void;
 }
 
 /**
@@ -31,28 +33,144 @@ export function CompactFilterPanel({
   onOpenMoreFilters,
   activeFiltersCount,
   onClearAllFilters,
+  onTypingStart,
+  onTypingEnd,
 }: CompactFilterPanelProps) {
   const [isDistanceCustom, setIsDistanceCustom] = useState(false);
   const [isPriceCustom, setIsPriceCustom] = useState(false);
 
+  // Local state for input values to allow smooth typing
+  const [distanceMinInput, setDistanceMinInput] = useState(
+    distanceRange[0].toString(),
+  );
+  const [distanceMaxInput, setDistanceMaxInput] = useState(
+    distanceRange[1].toString(),
+  );
+  const [priceMinInput, setPriceMinInput] = useState(priceRange[0].toString());
+  const [priceMaxInput, setPriceMaxInput] = useState(priceRange[1].toString());
+
+  // Refs for debouncing
+  const distanceDebounceRef = useRef<NodeJS.Timeout>();
+  const priceDebounceRef = useRef<NodeJS.Timeout>();
+
+  // Track if user is actively typing in custom inputs
+  const isTypingDistanceRef = useRef(false);
+  const isTypingPriceRef = useRef(false);
+
+  // Update local state when props change (e.g., from Clear All or slider)
+  // But only if user is not actively typing in custom inputs
+  useEffect(() => {
+    if (!isTypingDistanceRef.current) {
+      setDistanceMinInput(distanceRange[0].toString());
+      setDistanceMaxInput(distanceRange[1].toString());
+    }
+  }, [distanceRange]);
+
+  useEffect(() => {
+    if (!isTypingPriceRef.current) {
+      setPriceMinInput(priceRange[0].toString());
+      setPriceMaxInput(priceRange[1].toString());
+    }
+  }, [priceRange]);
+
   const handleDistanceMinChange = (value: string) => {
-    const numValue = parseInt(value, 10) || 0;
-    onDistanceRangeChange([Math.max(0, numValue), distanceRange[1]]);
+    // Mark that user is typing
+    isTypingDistanceRef.current = true;
+    onTypingStart?.();
+
+    // Update local state immediately for smooth typing
+    setDistanceMinInput(value);
+
+    // Clear previous timeout
+    if (distanceDebounceRef.current) {
+      clearTimeout(distanceDebounceRef.current);
+    }
+
+    // Debounce the parent state update
+    distanceDebounceRef.current = setTimeout(() => {
+      const numValue = value === "" ? 0 : parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        onDistanceRangeChange([Math.max(0, numValue), distanceRange[1]]);
+      }
+      // Reset typing flag after update completes
+      isTypingDistanceRef.current = false;
+      onTypingEnd?.();
+    }, 500);
   };
 
   const handleDistanceMaxChange = (value: string) => {
-    const numValue = parseInt(value, 10) || 0;
-    onDistanceRangeChange([distanceRange[0], Math.max(0, numValue)]);
+    // Mark that user is typing
+    isTypingDistanceRef.current = true;
+    onTypingStart?.();
+
+    // Update local state immediately for smooth typing
+    setDistanceMaxInput(value);
+
+    // Clear previous timeout
+    if (distanceDebounceRef.current) {
+      clearTimeout(distanceDebounceRef.current);
+    }
+
+    // Debounce the parent state update
+    distanceDebounceRef.current = setTimeout(() => {
+      const numValue = value === "" ? 0 : parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        onDistanceRangeChange([distanceRange[0], Math.max(0, numValue)]);
+      }
+      // Reset typing flag after update completes
+      isTypingDistanceRef.current = false;
+      onTypingEnd?.();
+    }, 500);
   };
 
   const handlePriceMinChange = (value: string) => {
-    const numValue = parseInt(value, 10) || 0;
-    onPriceRangeChange([Math.max(0, numValue), priceRange[1]]);
+    // Mark that user is typing
+    isTypingPriceRef.current = true;
+    onTypingStart?.();
+
+    // Update local state immediately for smooth typing
+    setPriceMinInput(value);
+
+    // Clear previous timeout
+    if (priceDebounceRef.current) {
+      clearTimeout(priceDebounceRef.current);
+    }
+
+    // Debounce the parent state update
+    priceDebounceRef.current = setTimeout(() => {
+      const numValue = value === "" ? 0 : parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        onPriceRangeChange([Math.max(0, numValue), priceRange[1]]);
+      }
+      // Reset typing flag after update completes
+      isTypingPriceRef.current = false;
+      onTypingEnd?.();
+    }, 500);
   };
 
   const handlePriceMaxChange = (value: string) => {
-    const numValue = parseInt(value, 10) || 0;
-    onPriceRangeChange([priceRange[0], Math.max(0, numValue)]);
+    // Mark that user is typing
+    isTypingPriceRef.current = true;
+    onTypingStart?.();
+
+    // Update local state immediately for smooth typing
+    setPriceMaxInput(value);
+
+    // Clear previous timeout
+    if (priceDebounceRef.current) {
+      clearTimeout(priceDebounceRef.current);
+    }
+
+    // Debounce the parent state update
+    priceDebounceRef.current = setTimeout(() => {
+      const numValue = value === "" ? 0 : parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        onPriceRangeChange([priceRange[0], Math.max(0, numValue)]);
+      }
+      // Reset typing flag after update completes
+      isTypingPriceRef.current = false;
+      onTypingEnd?.();
+    }, 500);
   };
 
   return (
@@ -83,7 +201,7 @@ export function CompactFilterPanel({
                 <InputGroup>
                   <InputGroupInput
                     type="number"
-                    value={distanceRange[0]}
+                    value={distanceMinInput}
                     onChange={(e) => handleDistanceMinChange(e.target.value)}
                     min={0}
                     placeholder="0"
@@ -97,7 +215,7 @@ export function CompactFilterPanel({
                 <InputGroup>
                   <InputGroupInput
                     type="number"
-                    value={distanceRange[1]}
+                    value={distanceMaxInput}
                     onChange={(e) => handleDistanceMaxChange(e.target.value)}
                     min={0}
                     placeholder="50"
@@ -151,7 +269,7 @@ export function CompactFilterPanel({
                 <InputGroup>
                   <InputGroupInput
                     type="number"
-                    value={priceRange[0]}
+                    value={priceMinInput}
                     onChange={(e) => handlePriceMinChange(e.target.value)}
                     min={0}
                     placeholder="0"
@@ -165,7 +283,7 @@ export function CompactFilterPanel({
                 <InputGroup>
                   <InputGroupInput
                     type="number"
-                    value={priceRange[1]}
+                    value={priceMaxInput}
                     onChange={(e) => handlePriceMaxChange(e.target.value)}
                     min={0}
                     placeholder="1000"
