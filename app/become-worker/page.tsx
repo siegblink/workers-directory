@@ -1,8 +1,10 @@
 "use client";
 
-import { Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
+import { AlertCircle, Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 const benefits = [
@@ -54,7 +57,10 @@ const professions = [
 ];
 
 export default function BecomeWorkerPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     profession: "",
     experience: "",
@@ -64,13 +70,43 @@ export default function BecomeWorkerPage() {
     agreeToTerms: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
     if (step < 3) {
       setStep(step + 1);
     } else {
       // Handle final submission
-      console.log("Form submitted:", formData);
+      if (!formData.agreeToTerms) {
+        setError("You must agree to the terms and conditions");
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        const response = await fetch("/api/become-worker", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to submit application");
+        }
+
+        // Success! Redirect to dashboard or success page
+        router.push("/dashboard?newWorker=true");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -376,6 +412,13 @@ export default function BecomeWorkerPage() {
                   </>
                 )}
 
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="flex gap-3">
                   {step > 2 && (
                     <Button
@@ -383,12 +426,22 @@ export default function BecomeWorkerPage() {
                       variant="outline"
                       onClick={() => setStep(step - 1)}
                       className="flex-1"
+                      disabled={isSubmitting}
                     >
                       Back
                     </Button>
                   )}
-                  <Button type="submit" className="flex-1">
-                    {step === 3 ? "Submit Application" : "Continue"}
+                  <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Spinner className="mr-2" />
+                        Submitting...
+                      </>
+                    ) : step === 3 ? (
+                      "Submit Application"
+                    ) : (
+                      "Continue"
+                    )}
                   </Button>
                 </div>
               </form>
