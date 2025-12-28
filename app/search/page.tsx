@@ -115,8 +115,8 @@ export default function SearchPage() {
         if (onlineOnly) params.append("onlineOnly", "true");
         if (priceRange[0] > 0)
           params.append("minRate", priceRange[0].toString());
-        if (priceRange[1] < 1000)
-          params.append("maxRate", priceRange[1].toString());
+        // Always send maxRate to ensure proper filtering (even at max value)
+        params.append("maxRate", priceRange[1].toString());
 
         // Add distance range filter - API will filter strictly by min/max distance
         params.append("minDistance", distanceRange[0].toString());

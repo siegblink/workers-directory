@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAnnouncement } from "@/contexts/announcement-context";
 import { createClient } from "@/lib/supabase/client";
+import { usePresence } from "@/hooks/usePresence";
 
 interface UserProfile {
   firstname: string;
@@ -49,6 +50,9 @@ export function Navigation() {
   const router = useRouter();
   const creditsBalance = 120;
   const hasInitializedRef = useRef(false);
+
+  // Manage user presence (online/offline status)
+  usePresence(user?.id);
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
@@ -114,6 +118,25 @@ export function Navigation() {
 
   const handleLogout = async () => {
     const supabase = createClient();
+
+    // Set user as offline before logging out
+    if (user?.id) {
+      try {
+        await supabase
+          .from("user_presence")
+          .upsert({
+            user_id: user.id,
+            is_online: false,
+            last_seen: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+          });
+      } catch (error) {
+        console.error("Error setting user offline on logout:", error);
+      }
+    }
+
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
