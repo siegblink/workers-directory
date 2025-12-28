@@ -84,6 +84,16 @@ export function ProfileTabs({
                 <Link href="/messages">View all messages</Link>
               </Button>
             )}
+            {activeTab === "bookmarked" && bookmarkedWorkers.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="w-full md:w-auto"
+              >
+                <Link href="/saved-workers">View all saved workers</Link>
+              </Button>
+            )}
           </div>
 
           {/* Tab content */}
