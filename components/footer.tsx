@@ -76,7 +76,7 @@ export function Footer() {
                   href="/dashboard"
                   className="hover:text-primary-foreground/80 transition-colors"
                 >
-                  Worker Dashboard
+                  Dashboard
                 </Link>
               </li>
               <li>

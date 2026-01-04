@@ -226,7 +226,7 @@ export function Navigation() {
                       <DropdownMenuItem asChild>
                         <Link href="/dashboard">
                           <LayoutDashboard />
-                          Worker Dashboard
+                          Dashboard
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -348,7 +348,7 @@ export function Navigation() {
                       <DropdownMenuItem asChild>
                         <Link href="/dashboard">
                           <LayoutDashboard />
-                          Worker Dashboard
+                          Dashboard
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
