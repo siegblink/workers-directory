@@ -80,7 +80,7 @@ const mockUpcomingJobs = [
 export default function WorkerDashboardPage() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
@@ -91,7 +91,7 @@ export default function WorkerDashboardPage() {
 
         {/* Promotion Banner */}
         <Card className="mb-6 bg-linear-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
-          <CardContent className="p-6">
+          <CardContent>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-yellow-400 dark:bg-yellow-600 rounded-full flex items-center justify-center">
@@ -209,7 +209,7 @@ export default function WorkerDashboardPage() {
             <div className="space-y-4">
               {mockPendingRequests.map((request) => (
                 <Card key={request.id}>
-                  <CardContent className="p-6">
+                  <CardContent>
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="flex items-start gap-4">
                         <Avatar className="w-16 h-16">
@@ -280,8 +280,8 @@ export default function WorkerDashboardPage() {
 
               {mockPendingRequests.length === 0 && (
                 <Card>
-                  <CardContent className="p-12 text-center">
-                    <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <CardContent className="text-center">
+                    <AlertCircle className="text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2 text-foreground">
                       No Pending Requests
                     </h3>
@@ -300,7 +300,7 @@ export default function WorkerDashboardPage() {
             <div className="space-y-4">
               {mockUpcomingJobs.map((job) => (
                 <Card key={job.id}>
-                  <CardContent className="p-6">
+                  <CardContent>
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="flex items-start gap-4">
                         <Avatar className="w-16 h-16">
