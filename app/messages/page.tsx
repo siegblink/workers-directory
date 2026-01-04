@@ -108,9 +108,9 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background">
-      <div className="max-w-7xl mx-auto h-full">
-        <div className="flex h-full">
+    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col">
+      <div className="w-full max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
+        <div className="flex flex-1 min-h-0">
           {/* Conversations List */}
           <div className="w-full md:w-96 bg-card border-r border-border flex flex-col">
             {/* Search Header */}
