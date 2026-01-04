@@ -98,7 +98,7 @@ export default function BookingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             My Bookings
@@ -109,8 +109,8 @@ export default function BookingsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+          <div>
             <Tabs defaultValue="all" className="w-full">
               <TabsList className="w-full md:w-auto">
                 <TabsTrigger value="all">All</TabsTrigger>
@@ -142,9 +142,9 @@ export default function BookingsPage() {
           {mockBookings.map((booking) => (
             <Card
               key={booking.id}
-              className="hover:shadow-lg transition-shadow"
+              className="hover:shadow-lg transition-shadow min-h-[194px]"
             >
-              <CardContent className="p-6">
+              <CardContent>
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Worker Info */}
                   <div className="flex items-start gap-4">
