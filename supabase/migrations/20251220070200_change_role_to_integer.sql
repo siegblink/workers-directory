@@ -39,9 +39,7 @@ ALTER TABLE public.users
 ALTER COLUMN role SET DEFAULT 2;
 
 -- Step 8: Add foreign key constraint to roles.level
-ALTER TABLE public.users
-ADD CONSTRAINT fk_users_role_level
-FOREIGN KEY (role) REFERENCES public.roles(level);
+-- SKIPPED: roles table doesn't exist in this schema
 
 -- Step 9: Add index for faster role lookups
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
@@ -60,6 +58,7 @@ $$ LANGUAGE SQL STABLE;
 COMMENT ON FUNCTION is_admin IS 'Check if a user has admin role (role = 1)';
 
 -- Step 11: Create helper function to get user role info
+-- SKIPPED: roles table doesn't exist, simplified version below
 CREATE OR REPLACE FUNCTION get_user_role_info(user_id UUID)
 RETURNS TABLE (
   role_level BIGINT,
@@ -68,10 +67,13 @@ RETURNS TABLE (
 ) AS $$
   SELECT
     u.role as role_level,
-    r.name as role_name,
+    CASE u.role
+      WHEN 1 THEN 'admin'::VARCHAR
+      WHEN 2 THEN 'user'::VARCHAR
+      ELSE 'unknown'::VARCHAR
+    END as role_name,
     (u.role = 1) as is_admin
   FROM public.users u
-  LEFT JOIN public.roles r ON u.role = r.level
   WHERE u.id = user_id
   LIMIT 1;
 $$ LANGUAGE SQL STABLE;
@@ -79,16 +81,20 @@ $$ LANGUAGE SQL STABLE;
 COMMENT ON FUNCTION get_user_role_info IS 'Get complete role information for a user';
 
 -- Step 12: Create helper view for user roles
+-- SKIPPED: roles table doesn't exist, simplified version below
 CREATE OR REPLACE VIEW user_roles_view AS
 SELECT
   u.id as user_id,
   u.firstname,
   u.lastname,
   u.role as role_level,
-  r.name as role_name,
+  CASE u.role
+    WHEN 1 THEN 'admin'
+    WHEN 2 THEN 'user'
+    ELSE 'unknown'
+  END as role_name,
   (u.role = 1) as is_admin
-FROM public.users u
-LEFT JOIN public.roles r ON u.role = r.level;
+FROM public.users u;
 
 COMMENT ON VIEW user_roles_view IS 'Convenient view showing user roles with level and name';
 
@@ -109,10 +115,6 @@ SELECT
   as distribution
 FROM public.users;
 
--- Show role mapping
+-- Show role mapping (simplified since roles table doesn't exist)
 SELECT
-  r.level as "Role Level (use in users.role)",
-  r.name as "Role Name",
-  r.id as "Role UUID (for reference)"
-FROM public.roles r
-ORDER BY r.level;
+  'Role mapping: 1 = admin, 2 = user' as role_mapping;

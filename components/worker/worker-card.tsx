@@ -105,7 +105,9 @@ export function WorkerCard({
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <div className="flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-semibold">{worker.rating}</span>
+                <span className="text-sm font-semibold">
+                  {(Math.floor(worker.rating * 100) / 100).toFixed(2)}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   ({worker.reviews})
                 </span>
