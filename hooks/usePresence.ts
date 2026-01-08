@@ -15,17 +15,56 @@ export function usePresence(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return;
 
-    // Set user as online immediately
+    // Get current location from browser geolocation API
+    const getCurrentLocation = (): Promise<{ lat: number; lon: number } | null> => {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          console.warn("Geolocation not supported");
+          resolve(null);
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.warn("Error getting location:", error.message);
+            resolve(null);
+          },
+          {
+            enableHighAccuracy: false, // Use network location for faster response
+            timeout: 5000,
+            maximumAge: 30000, // Cache for 30 seconds
+          }
+        );
+      });
+    };
+
+    // Set user as online immediately with GPS location
     const setOnline = async () => {
       try {
+        const location = await getCurrentLocation();
+        const presenceData: any = {
+          user_id: userId,
+          is_online: true,
+          last_seen: new Date().toISOString(),
+        };
+
+        // Add GPS location data if available
+        if (location) {
+          presenceData.latitude = location.lat;
+          presenceData.longitude = location.lon;
+          presenceData.location_updated_at = new Date().toISOString();
+        }
+
         // Use upsert to insert or update in one operation
         const { error } = await supabase
           .from("user_presence")
-          .upsert({
-            user_id: userId,
-            is_online: true,
-            last_seen: new Date().toISOString(),
-          }, {
+          .upsert(presenceData, {
             onConflict: 'user_id',
             ignoreDuplicates: false
           });
@@ -38,16 +77,26 @@ export function usePresence(userId: string | undefined) {
       }
     };
 
-    // Send heartbeat to keep user marked as online
+    // Send heartbeat to keep user marked as online with updated GPS location
     const sendHeartbeat = async () => {
       try {
+        const location = await getCurrentLocation();
+        const presenceData: any = {
+          user_id: userId,
+          is_online: true,
+          last_seen: new Date().toISOString(),
+        };
+
+        // Add GPS location data if available
+        if (location) {
+          presenceData.latitude = location.lat;
+          presenceData.longitude = location.lon;
+          presenceData.location_updated_at = new Date().toISOString();
+        }
+
         await supabase
           .from("user_presence")
-          .upsert({
-            user_id: userId,
-            is_online: true,
-            last_seen: new Date().toISOString(),
-          }, {
+          .upsert(presenceData, {
             onConflict: 'user_id',
             ignoreDuplicates: false
           });
