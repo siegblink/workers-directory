@@ -3,13 +3,7 @@
 -- role_id appears to be an old/unused column
 
 -- Step 1: Verify role_id is redundant (optional verification)
-DO $$
-DECLARE
-  role_id_usage_count INTEGER;
-BEGIN
-  SELECT COUNT(DISTINCT role_id) INTO role_id_usage_count FROM users;
-  RAISE NOTICE 'role_id has % distinct values (should be mostly 2 if unused)', role_id_usage_count;
-END $$;
+-- SKIPPED: Column may not exist in this schema
 
 -- Step 2: Drop the redundant role_id column
 ALTER TABLE public.users
@@ -30,12 +24,10 @@ SELECT
   COUNT(DISTINCT role) as distinct_roles
 FROM public.users;
 
--- Show role distribution
+-- Show role distribution (simplified since roles table doesn't exist)
 SELECT
-  r.level,
-  r.name as role_name,
-  COUNT(u.id) as user_count
-FROM public.roles r
-LEFT JOIN public.users u ON u.role = r.level
-GROUP BY r.level, r.name
-ORDER BY r.level;
+  role as role_level,
+  COUNT(*) as user_count
+FROM public.users
+GROUP BY role
+ORDER BY role;

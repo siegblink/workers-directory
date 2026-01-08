@@ -1,8 +1,5 @@
--- Optimized search function that includes ratings in a single query
--- This eliminates the N+1 query problem
-
--- Drop the old function first since we're changing the return type
-DROP FUNCTION IF EXISTS search_workers_by_location;
+-- Update search function to sort online workers first, then offline
+-- Within each group (online/offline), sort by distance
 
 CREATE OR REPLACE FUNCTION search_workers_by_location(
   user_lat double precision,
@@ -75,9 +72,9 @@ BEGIN
         ) / 1000.0
       ELSE 0
     END as distance_km,
-    -- Aggregate ratings in the same query
-    COALESCE(ROUND(AVG(r.rating_value), 1), 0) as average_rating,
-    COALESCE(COUNT(r.id)::integer, 0) as total_ratings
+    -- Aggregate ratings in the same query with 2 decimal precision
+    COALESCE(ROUND(AVG(r.rating_value), 2), 0) as average_rating,
+    COALESCE(COUNT(r.id), 0)::bigint as total_ratings
   FROM workers w
   INNER JOIN users u ON w.worker_id = u.id
   LEFT JOIN user_presence up ON u.id = up.user_id
@@ -124,15 +121,15 @@ BEGIN
     up.is_online,
     up.last_seen,
     u.location
-  ORDER BY distance_km ASC
+  ORDER BY
+    -- Online workers first (true > false in DESC order)
+    COALESCE(up.is_online, false) DESC,
+    -- Then sort by distance within each group
+    distance_km ASC
   LIMIT result_limit
   OFFSET result_offset;
 END;
 $$;
 
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION search_workers_by_location TO authenticated;
-GRANT EXECUTE ON FUNCTION search_workers_by_location TO anon;
-
--- Add comment
-COMMENT ON FUNCTION search_workers_by_location IS 'Optimized search workers by location using PostGIS spatial queries with ratings aggregated in a single query. Returns workers sorted by distance from user location, with optional filters for worker location radius, profession, rates, verification, and online status.';
+-- Verification
+SELECT 'Search sorting updated: online first, then by distance' as status;

@@ -9,7 +9,7 @@ CREATE POLICY "Public can view worker profiles"
 ON public.users
 FOR SELECT
 USING (
-  role = 2  -- WORKER role
+  role = '2'  -- WORKER role (string at this point in migration sequence)
   AND status = 'active'
   AND EXISTS (
     SELECT 1 FROM public.workers

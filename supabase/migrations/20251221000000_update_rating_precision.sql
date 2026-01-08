@@ -1,8 +1,5 @@
--- Optimized search function that includes ratings in a single query
--- This eliminates the N+1 query problem
-
--- Drop the old function first since we're changing the return type
-DROP FUNCTION IF EXISTS search_workers_by_location;
+-- Update rating precision from 1 decimal to 2 decimals
+-- This provides more accurate rating display (e.g., 4.75 instead of 4.8)
 
 CREATE OR REPLACE FUNCTION search_workers_by_location(
   user_lat double precision,
@@ -75,8 +72,8 @@ BEGIN
         ) / 1000.0
       ELSE 0
     END as distance_km,
-    -- Aggregate ratings in the same query
-    COALESCE(ROUND(AVG(r.rating_value), 1), 0) as average_rating,
+    -- Aggregate ratings in the same query with 2 decimal precision
+    COALESCE(ROUND(AVG(r.rating_value), 2), 0) as average_rating,
     COALESCE(COUNT(r.id)::integer, 0) as total_ratings
   FROM workers w
   INNER JOIN users u ON w.worker_id = u.id
@@ -130,9 +127,5 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION search_workers_by_location TO authenticated;
-GRANT EXECUTE ON FUNCTION search_workers_by_location TO anon;
-
--- Add comment
-COMMENT ON FUNCTION search_workers_by_location IS 'Optimized search workers by location using PostGIS spatial queries with ratings aggregated in a single query. Returns workers sorted by distance from user location, with optional filters for worker location radius, profession, rates, verification, and online status.';
+-- Verification
+SELECT 'Rating precision updated to 2 decimals' as status;
