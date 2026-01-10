@@ -98,12 +98,28 @@ export default function SearchPage() {
   const [searchTrigger, setSearchTrigger] = useState(0);
   const initialLoadDone = useRef(false); // Track if initial load has been completed
 
+  // Refs to store latest location values (to avoid stale closure issues)
+  const detectedCoordsRef = useRef(detectedCoords);
+  const userLocationRef = useRef(userLocation);
+
+  // Update refs whenever state changes
+  useEffect(() => {
+    detectedCoordsRef.current = detectedCoords;
+  }, [detectedCoords]);
+
+  useEffect(() => {
+    userLocationRef.current = userLocation;
+  }, [userLocation]);
+
   // Fetch workers from API
   const fetchWorkers = useCallback(
     async (page: number) => {
       console.log("[fetchWorkers] Called with page:", page, {
         isLoading,
         isFetchingRef: isFetchingRef.current,
+        // Read from refs to get latest values
+        detectedCoords: detectedCoordsRef.current,
+        userLocation: userLocationRef.current,
       });
 
       if (isLoading || isFetchingRef.current) {
@@ -125,14 +141,18 @@ export default function SearchPage() {
         if (workerLocation) params.append("location", workerLocation);
 
         // Always use GPS coordinates if available (for accurate distance calculation)
-        if (detectedCoords) {
-          params.append("userLat", detectedCoords.lat.toString());
-          params.append("userLon", detectedCoords.lon.toString());
+        // Read from ref to get the latest value
+        const currentCoords = detectedCoordsRef.current;
+        if (currentCoords) {
+          params.append("userLat", currentCoords.lat.toString());
+          params.append("userLon", currentCoords.lon.toString());
         }
 
         // If user typed a location, ALWAYS use it as a FILTER (strict city filtering)
-        if (userLocation) {
-          params.append("filterLocation", userLocation);
+        // Read from ref to get the latest value
+        const currentLocation = userLocationRef.current;
+        if (currentLocation) {
+          params.append("filterLocation", currentLocation);
         }
 
         // Add filters
@@ -152,8 +172,8 @@ export default function SearchPage() {
 
         console.log("[Search] Fetching workers with params:", {
           page,
-          detectedCoords,
-          userLocation,
+          detectedCoords: currentCoords,
+          userLocation: currentLocation,
           filterLocation: params.get("filterLocation"),
           userLat: params.get("userLat"),
           userLon: params.get("userLon"),
@@ -198,9 +218,8 @@ export default function SearchPage() {
       distanceRange,
       serviceSearch,
       workerLocation,
-      userLocation,
-      detectedCoords,
-      manualLocationOverride,
+      // Note: detectedCoords and userLocation are read from refs, not closure
+      // This prevents stale closure issues during initial load
     ],
   );
 
@@ -209,8 +228,8 @@ export default function SearchPage() {
     console.log("[Search Button] Clicked - Current state:", {
       isLoading,
       isFetchingRef: isFetchingRef.current,
-      userLocation,
-      detectedCoords,
+      userLocation: userLocationRef.current,
+      detectedCoords: detectedCoordsRef.current,
     });
     setCurrentPage(1);
     setDisplayedWorkers([]);
@@ -238,19 +257,28 @@ export default function SearchPage() {
           // This ensures all state updates happen together in one batch
           const address = await reverseGeocode(latitude, longitude);
 
+          // CRITICAL: Update refs SYNCHRONOUSLY before any state updates
+          // This ensures fetchWorkers will have the latest values when initial load triggers
+          detectedCoordsRef.current = coords;
+
+          const locationString =
+            address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+          if (!manualLocationOverride) {
+            userLocationRef.current = locationString;
+          }
+
           // Now update all states together in a single batch
           setDetectedCoords(coords);
 
           // Only use detected location if not manually overridden
           if (!manualLocationOverride) {
-            // Use readable address if available, otherwise fallback to coordinates
-            const locationString =
-              address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
             setUserLocation(locationString);
             setIsAutoDetected(true);
           }
 
           setIsDetectingLocation(false);
+          // Set this LAST to trigger the initial load with refs already updated
           setLocationDetectionAttempted(true);
         },
         (error) => {
@@ -311,10 +339,10 @@ export default function SearchPage() {
 
     // At this point, location detection is complete
     // Make ONE API call with location if detected, or without if not
-    if (userLocation) {
+    if (userLocationRef.current) {
       console.log("[Search] Page load: Searching with detected location:", {
-        userLocation,
-        detectedCoords,
+        userLocation: userLocationRef.current,
+        detectedCoords: detectedCoordsRef.current,
       });
     } else {
       console.log("[Search] Page load: No location detected, showing all workers");
@@ -606,62 +634,75 @@ export default function SearchPage() {
             </div>
 
             {/* Worker Cards - Single Column */}
-            <div className="space-y-6">
-              {displayedWorkers.map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} />
-              ))}
-            </div>
+            {/* Only render after location detection is complete to prevent intermediate states */}
+            {locationDetectionAttempted ? (
+              <>
+                <div className="space-y-6">
+                  {displayedWorkers.map((worker) => (
+                    <WorkerCard key={worker.id} worker={worker} />
+                  ))}
+                </div>
 
-            {/* Loading Indicator */}
-            {isLoading && (
-              <div className="flex justify-center items-center py-6">
+                {/* Loading Indicator */}
+                {isLoading && (
+                  <div className="flex justify-center items-center py-6">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm">Loading more workers...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Intersection Observer Target */}
+                {hasMore && <div ref={observerTarget} className="h-8" />}
+
+                {/* End of Results */}
+                {!hasMore && displayedWorkers.length > 0 && (
+                  <div className="text-center py-6">
+                    <p className="text-sm text-muted-foreground">
+                      You've reached the end of the results
+                    </p>
+                  </div>
+                )}
+
+                {/* No Results */}
+                {displayedWorkers.length === 0 && !isLoading && (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Briefcase className="h-12 w-12 text-primary" />
+                      </EmptyMedia>
+                      <EmptyTitle>Turn Your Skills Into Income</EmptyTitle>
+                      <EmptyDescription>
+                        We couldn't find workers matching your search. Be the first!
+                        Join our platform and connect with customers looking for
+                        professionals like you.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      {/* Only show "Become a Worker" if user is not already a worker */}
+                      {userRole !== USER_ROLES.WORKER && (
+                        <Button
+                          size="sm"
+                          className="w-full sm:w-auto"
+                          onClick={() => router.push("/become-worker")}
+                        >
+                          <Briefcase />
+                          Become a Worker
+                        </Button>
+                      )}
+                    </EmptyContent>
+                  </Empty>
+                )}
+              </>
+            ) : (
+              // Show loading state while detecting location
+              <div className="flex justify-center items-center py-12">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm">Loading more workers...</span>
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span>Detecting your location...</span>
                 </div>
               </div>
-            )}
-
-            {/* Intersection Observer Target */}
-            {hasMore && <div ref={observerTarget} className="h-8" />}
-
-            {/* End of Results */}
-            {!hasMore && displayedWorkers.length > 0 && (
-              <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground">
-                  You've reached the end of the results
-                </p>
-              </div>
-            )}
-
-            {/* No Results */}
-            {displayedWorkers.length === 0 && (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Briefcase className="h-12 w-12 text-primary" />
-                  </EmptyMedia>
-                  <EmptyTitle>Turn Your Skills Into Income</EmptyTitle>
-                  <EmptyDescription>
-                    We couldn't find workers matching your search. Be the first!
-                    Join our platform and connect with customers looking for
-                    professionals like you.
-                  </EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent>
-                  {/* Only show "Become a Worker" if user is not already a worker */}
-                  {userRole !== USER_ROLES.WORKER && (
-                    <Button
-                      size="sm"
-                      className="w-full sm:w-auto"
-                      onClick={() => router.push("/become-worker")}
-                    >
-                      <Briefcase />
-                      Become a Worker
-                    </Button>
-                  )}
-                </EmptyContent>
-              </Empty>
             )}
           </div>
 
