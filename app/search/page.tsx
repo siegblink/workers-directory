@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/sheet";
 import { type Worker, WorkerCard } from "@/components/worker/worker-card";
 import { reverseGeocode } from "@/lib/utils/distance";
+import { createClient } from "@/lib/supabase/client";
+import { USER_ROLES } from "@/lib/constants";
 
 // Professions list for filters
 const professions = [
@@ -67,6 +69,9 @@ export default function SearchPage() {
   } | null>(null);
   const [manualLocationOverride, setManualLocationOverride] = useState(false);
   const [isAutoDetected, setIsAutoDetected] = useState(false);
+
+  // User role for conditional rendering
+  const [userRole, setUserRole] = useState<number | null>(null);
 
   // Filters
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -261,6 +266,30 @@ export default function SearchPage() {
 
     detectLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch user role on mount
+  useEffect(() => {
+    const getUserRole = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (userData) {
+          setUserRole(userData.role);
+        }
+      }
+    };
+
+    getUserRole();
   }, []);
 
   // Initial load - wait for location detection to complete, then make ONE API call
@@ -610,14 +639,17 @@ export default function SearchPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <Button
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={() => router.push("/become-worker")}
-                  >
-                    <Briefcase />
-                    Become a Worker
-                  </Button>
+                  {/* Only show "Become a Worker" if user is not already a worker */}
+                  {userRole !== USER_ROLES.WORKER && (
+                    <Button
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={() => router.push("/become-worker")}
+                    >
+                      <Briefcase />
+                      Become a Worker
+                    </Button>
+                  )}
                 </EmptyContent>
               </Empty>
             )}
@@ -626,12 +658,15 @@ export default function SearchPage() {
           {/* Filter Panel - Right (30%) - Desktop Only */}
           <aside className="hidden lg:block w-[30%] shrink-0">
             <div className="sticky top-[206px] max-h-[calc(100vh-250px)] overflow-y-auto space-y-6">
-              <Button asChild variant="outline" className="w-full">
-                <Link href="/become-worker">
-                  <Briefcase />
-                  Become a Worker
-                </Link>
-              </Button>
+              {/* Only show "Become a Worker" if user is not already a worker */}
+              {userRole !== USER_ROLES.WORKER && (
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/become-worker">
+                    <Briefcase />
+                    Become a Worker
+                  </Link>
+                </Button>
+              )}
 
               <Card className="border-border">
                 <CardContent>

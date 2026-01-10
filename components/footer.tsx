@@ -1,8 +1,38 @@
+"use client";
+
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { USER_ROLES } from "@/lib/constants";
 
 export function Footer() {
+  const [userRole, setUserRole] = useState<number | null>(null);
+
+  useEffect(() => {
+    const getUserRole = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (userData) {
+          setUserRole(userData.role);
+        }
+      }
+    };
+
+    getUserRole();
+  }, []);
+
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
@@ -63,14 +93,17 @@ export function Footer() {
               For Workers
             </h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/become-worker"
-                  className="hover:text-primary-foreground/80 transition-colors"
-                >
-                  Become a Worker
-                </Link>
-              </li>
+              {/* Only show "Become a Worker" if user is not already a worker */}
+              {userRole !== USER_ROLES.WORKER && (
+                <li>
+                  <Link
+                    href="/become-worker"
+                    className="hover:text-primary-foreground/80 transition-colors"
+                  >
+                    Become a Worker
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/dashboard"
