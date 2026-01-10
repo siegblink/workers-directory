@@ -96,6 +96,7 @@ export default function SearchPage() {
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const [searchTrigger, setSearchTrigger] = useState(0);
+  const initialLoadDone = useRef(false); // Track if initial load has been completed
 
   // Fetch workers from API
   const fetchWorkers = useCallback(
@@ -231,13 +232,14 @@ export default function SearchPage() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-
-          // Store detected coordinates
           const coords = { lat: latitude, lon: longitude };
-          setDetectedCoords(coords);
 
-          // Reverse geocode to get human-readable address
+          // Reverse geocode to get human-readable address FIRST
+          // This ensures all state updates happen together in one batch
           const address = await reverseGeocode(latitude, longitude);
+
+          // Now update all states together in a single batch
+          setDetectedCoords(coords);
 
           // Only use detected location if not manually overridden
           if (!manualLocationOverride) {
@@ -294,10 +296,18 @@ export default function SearchPage() {
 
   // Initial load - wait for location detection to complete, then make ONE API call
   useEffect(() => {
+    // Only run once - prevent multiple calls
+    if (initialLoadDone.current) {
+      return;
+    }
+
     // Only run after location detection has been attempted (success or failure)
     if (!locationDetectionAttempted) {
       return;
     }
+
+    // Mark as done immediately to prevent any re-runs
+    initialLoadDone.current = true;
 
     // At this point, location detection is complete
     // Make ONE API call with location if detected, or without if not
