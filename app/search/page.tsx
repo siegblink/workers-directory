@@ -59,7 +59,8 @@ export default function SearchPage() {
   const [serviceSearch, setServiceSearch] = useState("");
   const [userLocation, setUserLocation] = useState("");
   const [workerLocation, setWorkerLocation] = useState("");
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(true); // Start as true to block initial fetch
+  const [locationDetectionAttempted, setLocationDetectionAttempted] = useState(false);
   const [detectedCoords, setDetectedCoords] = useState<{
     lat: number;
     lon: number;
@@ -217,10 +218,10 @@ export default function SearchPage() {
     const detectLocation = async () => {
       if (!navigator.geolocation) {
         console.log("Geolocation is not supported by this browser");
+        setIsDetectingLocation(false);
+        setLocationDetectionAttempted(true);
         return;
       }
-
-      setIsDetectingLocation(true);
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -243,10 +244,12 @@ export default function SearchPage() {
           }
 
           setIsDetectingLocation(false);
+          setLocationDetectionAttempted(true);
         },
         (error) => {
           console.log("Location detection error:", error.message);
           setIsDetectingLocation(false);
+          setLocationDetectionAttempted(true);
         },
         {
           enableHighAccuracy: true,
@@ -260,23 +263,27 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initial load - wait for location detection to complete
+  // Initial load - wait for location detection to complete, then make ONE API call
   useEffect(() => {
-    // If location is being detected, wait for it
-    if (isDetectingLocation) {
+    // Only run after location detection has been attempted (success or failure)
+    if (!locationDetectionAttempted) {
       return;
     }
 
-    // Trigger search automatically after location is detected
-    if (isAutoDetected && userLocation) {
-      fetchWorkers(1);
-      setIsAutoDetected(false); // Reset flag after triggering search
-    } else if (!isDetectingLocation && !userLocation) {
-      // If no location detected (permission denied or error), fetch default results
-      fetchWorkers(1);
+    // At this point, location detection is complete
+    // Make ONE API call with location if detected, or without if not
+    if (userLocation) {
+      console.log("[Search] Page load: Searching with detected location:", {
+        userLocation,
+        detectedCoords,
+      });
+    } else {
+      console.log("[Search] Page load: No location detected, showing all workers");
     }
+
+    fetchWorkers(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDetectingLocation, isAutoDetected, userLocation]);
+  }, [locationDetectionAttempted]);
 
   // Auto-trigger search when filters change - DISABLED to prevent infinite loop
   // Users must click Search button to update results
