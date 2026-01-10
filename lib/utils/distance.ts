@@ -91,11 +91,16 @@ export async function geocodeLocation(
     return knownLocations[normalizedLocation];
   }
 
-  // Try partial match in cache
-  for (const [key, coords] of Object.entries(knownLocations)) {
-    if (normalizedLocation.includes(key) || key.includes(normalizedLocation)) {
-      return coords;
-    }
+  // Try partial match in cache - prioritize longer/more specific matches
+  const matchingKeys = Object.keys(knownLocations).filter(
+    (key) => normalizedLocation.includes(key) || key.includes(normalizedLocation)
+  );
+
+  if (matchingKeys.length > 0) {
+    // Sort by length (descending) to prioritize more specific matches
+    // e.g., "liloan" (6 chars) should match before "cebu" (4 chars) in "liloan, cebu"
+    matchingKeys.sort((a, b) => b.length - a.length);
+    return knownLocations[matchingKeys[0]];
   }
 
   // Use Geoapify Geocoding API for accurate worldwide geocoding
