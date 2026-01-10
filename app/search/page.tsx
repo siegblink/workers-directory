@@ -94,7 +94,15 @@ export default function SearchPage() {
   // Fetch workers from API
   const fetchWorkers = useCallback(
     async (page: number) => {
-      if (isLoading || isFetchingRef.current) return;
+      console.log("[fetchWorkers] Called with page:", page, {
+        isLoading,
+        isFetchingRef: isFetchingRef.current,
+      });
+
+      if (isLoading || isFetchingRef.current) {
+        console.log("[fetchWorkers] Blocked by guard - returning early");
+        return;
+      }
 
       isFetchingRef.current = true;
       setIsLoading(true);
@@ -108,7 +116,17 @@ export default function SearchPage() {
         // Add search parameters
         if (serviceSearch) params.append("service", serviceSearch);
         if (workerLocation) params.append("location", workerLocation);
-        if (userLocation) params.append("userLocation", userLocation);
+
+        // Always use GPS coordinates if available (for accurate distance calculation)
+        if (detectedCoords) {
+          params.append("userLat", detectedCoords.lat.toString());
+          params.append("userLon", detectedCoords.lon.toString());
+        }
+
+        // If user typed a location, ALWAYS use it as a FILTER (strict city filtering)
+        if (userLocation) {
+          params.append("filterLocation", userLocation);
+        }
 
         // Add filters
         if (verifiedOnly) params.append("verifiedOnly", "true");
@@ -124,6 +142,15 @@ export default function SearchPage() {
         // Fetch extra workers from DB to account for filtering (add 1 to radius for decimals)
         if (distanceRange[1] < 50)
           params.append("radius", (distanceRange[1] + 1).toString());
+
+        console.log("[Search] Fetching workers with params:", {
+          page,
+          detectedCoords,
+          userLocation,
+          filterLocation: params.get("filterLocation"),
+          userLat: params.get("userLat"),
+          userLon: params.get("userLon"),
+        });
 
         const response = await fetch(`/api/workers?${params.toString()}`);
         if (!response.ok) throw new Error("Failed to fetch workers");
@@ -149,6 +176,9 @@ export default function SearchPage() {
         setCurrentPage(page);
       } catch (error) {
         console.error("Error fetching workers:", error);
+        // On error, clear workers to stop any loops
+        setDisplayedWorkers([]);
+        setHasMore(false);
       } finally {
         setIsLoading(false);
         isFetchingRef.current = false;
@@ -162,13 +192,23 @@ export default function SearchPage() {
       serviceSearch,
       workerLocation,
       userLocation,
+      detectedCoords,
+      manualLocationOverride,
     ],
   );
 
   // Handle search button click
   const handleSearch = () => {
+    console.log("[Search Button] Clicked - Current state:", {
+      isLoading,
+      isFetchingRef: isFetchingRef.current,
+      userLocation,
+      detectedCoords,
+    });
     setCurrentPage(1);
     setDisplayedWorkers([]);
+    // Force fetch by resetting the ref
+    isFetchingRef.current = false;
     fetchWorkers(1);
   };
 
@@ -238,28 +278,35 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDetectingLocation, isAutoDetected, userLocation]);
 
-  // Auto-trigger search when filters change
-  useEffect(() => {
-    // Skip if this is the initial load or location is being detected
-    if (isDetectingLocation || displayedWorkers.length === 0) {
-      return;
-    }
+  // Auto-trigger search when filters change - DISABLED to prevent infinite loop
+  // Users must click Search button to update results
+  // useEffect(() => {
+  //   // Skip if this is the initial load or location is being detected
+  //   if (isDetectingLocation || displayedWorkers.length === 0) {
+  //     return;
+  //   }
 
-    // Skip if user is actively typing in custom inputs
-    if (isTypingRef.current) {
-      return;
-    }
+  //   // Skip if user is actively typing in custom inputs
+  //   if (isTypingRef.current) {
+  //     return;
+  //   }
 
-    // Debounce filter changes to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1);
-      setDisplayedWorkers([]);
-      fetchWorkers(1);
-    }, 300);
+  //   // Skip if already loading to prevent duplicate requests
+  //   if (isLoading || isFetchingRef.current) {
+  //     return;
+  //   }
 
-    return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [distanceRange, priceRange, verifiedOnly, onlineOnly, searchTrigger]);
+  //   // Debounce filter changes to avoid too many API calls
+  //   const timeoutId = setTimeout(() => {
+  //     setCurrentPage(1);
+  //     setDisplayedWorkers([]);
+  //     isFetchingRef.current = false; // Reset before calling
+  //     fetchWorkers(1);
+  //   }, 300);
+
+  //   return () => clearTimeout(timeoutId);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [distanceRange, priceRange, verifiedOnly, onlineOnly, searchTrigger]);
 
   // Infinite scroll logic with proper trigger management
   const loadMore = useCallback(() => {

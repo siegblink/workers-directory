@@ -16,7 +16,7 @@ export function usePresence(userId: string | undefined) {
     if (!userId) return;
 
     // Get current location from browser geolocation API
-    const getCurrentLocation = (): Promise<{ lat: number; lon: number } | null> => {
+    const getCurrentLocation = (forceRefresh = false): Promise<{ lat: number; lon: number } | null> => {
       return new Promise((resolve) => {
         if (!navigator.geolocation) {
           console.warn("Geolocation not supported");
@@ -38,7 +38,7 @@ export function usePresence(userId: string | undefined) {
           {
             enableHighAccuracy: false, // Use network location for faster response
             timeout: 5000,
-            maximumAge: 30000, // Cache for 30 seconds
+            maximumAge: forceRefresh ? 0 : 30000, // Force fresh GPS on initial mount, cache for heartbeats
           }
         );
       });
@@ -47,7 +47,7 @@ export function usePresence(userId: string | undefined) {
     // Set user as online immediately with GPS location
     const setOnline = async () => {
       try {
-        const location = await getCurrentLocation();
+        const location = await getCurrentLocation(true); // Force fresh GPS on mount
         const presenceData: any = {
           user_id: userId,
           is_online: true,
@@ -59,6 +59,12 @@ export function usePresence(userId: string | undefined) {
           presenceData.latitude = location.lat;
           presenceData.longitude = location.lon;
           presenceData.location_updated_at = new Date().toISOString();
+          console.log(`[usePresence] Updated GPS for user ${userId}:`, {
+            lat: location.lat,
+            lon: location.lon,
+          });
+        } else {
+          console.warn(`[usePresence] No GPS location available for user ${userId}`);
         }
 
         // Use upsert to insert or update in one operation

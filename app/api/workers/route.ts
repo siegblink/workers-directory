@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
 
     // Get search parameters
     const service = searchParams.get("service");
-    const userLocation = searchParams.get("userLocation");
+    const filterLocation = searchParams.get("filterLocation"); // Typed location for FILTERING
+    const userLat = searchParams.get("userLat"); // GPS for distance calculation
+    const userLon = searchParams.get("userLon"); // GPS for distance calculation
 
     // Get filter parameters
     const profession = searchParams.get("profession");
@@ -64,22 +66,42 @@ export async function GET(request: NextRequest) {
     const minDistanceKm = parseFloat(searchParams.get("minDistance") || "0"); // Minimum distance filter
     const maxDistanceKm = parseFloat(searchParams.get("maxDistance") || "50"); // Maximum distance filter
 
-    // When user types a location in "Your location" field:
-    // - Use it as filter_lat/filter_lon for STRICT city filtering (10km radius)
-    // - Also use it as user_lat/user_lon for distance calculation display
-    const userCoords = userLocation
-      ? await geocodeLocation(userLocation)
-      : { lat: 10.3157, lon: 123.8854 }; // Default: Capitol Site, Cebu City
+    // User coordinates for DISTANCE calculation (always use GPS if available)
+    let userCoords: { lat: number; lon: number };
+    if (userLat && userLon) {
+      userCoords = { lat: parseFloat(userLat), lon: parseFloat(userLon) };
+    } else {
+      // Default: Cebu City center
+      userCoords = { lat: 10.3157, lon: 123.8854 };
+    }
+
+    // Filter coordinates for CITY FILTERING (only if user typed a location)
+    let filterCoords: { lat: number; lon: number } | null = null;
+    if (filterLocation) {
+      const geocoded = await geocodeLocation(filterLocation);
+      filterCoords = geocoded;
+      console.log("[API] Filter location geocoded:", {
+        filterLocation,
+        geocoded: filterCoords,
+      });
+    }
+
+    console.log("[API] Search params:", {
+      userCoords,
+      filterCoords,
+      filterLocation,
+      service,
+    });
 
     // Use PostGIS function for efficient spatial queries with real-time GPS
     const { data: workers, error } = await supabase.rpc(
       "search_workers_by_location",
       {
-        user_lat: userCoords?.lat || 10.3157,
-        user_lon: userCoords?.lon || 123.8854,
-        // Use typed location as STRICT city filter (10km radius)
-        filter_lat: userLocation ? userCoords?.lat : null,
-        filter_lon: userLocation ? userCoords?.lon : null,
+        user_lat: userCoords.lat,
+        user_lon: userCoords.lon,
+        // Use typed location as STRICT city filter (10km radius from typed location)
+        filter_lat: filterCoords?.lat || null,
+        filter_lon: filterCoords?.lon || null,
         radius_meters: radiusKm * 1000, // Not used in new logic
         search_profession: service || profession || null,
         min_rate: minRate ? parseInt(minRate) : null,
@@ -96,11 +118,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    console.log("[API] Workers returned from DB:", workers?.length || 0);
+
+    // Filter workers without GPS by city name if filter location is provided
+    let filteredWorkers = workers || [];
+    if (filterLocation && filterCoords) {
+      // Extract city name from filter location (e.g., "Liloan, Cebu" -> "Liloan")
+      const filterCityName = filterLocation.split(',')[0].trim().toLowerCase();
+
+      filteredWorkers = (workers || []).filter((worker: any) => {
+        // Workers with GPS are already filtered by the database
+        if (worker.latitude && worker.longitude) {
+          return true;
+        }
+
+        // Workers without GPS: check if registered city matches filter city
+        const workerCity = (worker.city || '').toLowerCase();
+        const matches = workerCity.includes(filterCityName) || filterCityName.includes(workerCity);
+
+        console.log("[API] Filtering worker without GPS:", {
+          workerName: `${worker.firstname} ${worker.lastname}`,
+          workerCity: worker.city,
+          filterCity: filterCityName,
+          matches,
+        });
+
+        return matches;
+      });
+
+      console.log("[API] After city filtering:", filteredWorkers.length, "workers");
+    }
+
     // Transform to WorkerCard interface
     // Note: Ratings are now included in the PostGIS query (optimized - no N+1 queries!)
     const transformedWorkers = await Promise.all(
-      (workers || [])
-        .map(async (worker: any) => {
+      filteredWorkers.map(async (worker: any) => {
           // Format distance display
           const distance = worker.distance_km || 0;
           let distanceDisplay = "N/A";
