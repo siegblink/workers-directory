@@ -154,9 +154,11 @@ export async function GET(request: NextRequest) {
     const transformedWorkers = await Promise.all(
       filteredWorkers.map(async (worker: any) => {
           // Format distance display
-          const distance = worker.distance_km || 0;
+          const distance = worker.distance_km;
           let distanceDisplay = "N/A";
-          if (distance > 0) {
+
+          // Only show distance if we have valid GPS coordinates and distance
+          if (distance !== null && distance !== undefined && distance >= 0) {
             if (distance < 0.05) {
               // Less than 50 meters - show as "Nearby"
               distanceDisplay = "Nearby";
@@ -169,10 +171,8 @@ export async function GET(request: NextRequest) {
               const formatted = distance.toFixed(2).replace(/\.?0+$/, "");
               distanceDisplay = `${formatted} km`;
             }
-          } else {
-            // Distance is 0 or null
-            distanceDisplay = "Nearby";
           }
+          // If distance is null (no GPS), distanceDisplay stays "N/A"
 
           // Use reverse geocoding if city/state are missing but GPS coordinates are available
           let city = worker.city;
