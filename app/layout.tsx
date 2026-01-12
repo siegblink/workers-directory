@@ -4,6 +4,7 @@ import type React from "react";
 import { Suspense } from "react";
 import { ConditionalLayout } from "@/components/conditional-layout";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AnnouncementProvider } from "@/contexts/announcement-context";
 import "./globals.css";
 
 import {
@@ -64,9 +65,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={<div>Loading...</div>}>
-            <ConditionalLayout>{children}</ConditionalLayout>
-          </Suspense>
+          <AnnouncementProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </Suspense>
+          </AnnouncementProvider>
           <Analytics />
         </ThemeProvider>
       </body>

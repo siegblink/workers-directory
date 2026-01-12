@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAnnouncement } from "@/contexts/announcement-context";
 import { createClient } from "@/lib/supabase/client";
 
 interface UserProfile {
@@ -39,6 +40,8 @@ interface UserProfile {
 }
 
 export function Navigation() {
+  const { announcementHeight } = useAnnouncement();
+
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [_isLoading, setIsLoading] = useState(true);
@@ -156,7 +159,10 @@ export function Navigation() {
   const isLoggedIn = !!user;
 
   return (
-    <nav className="border-b bg-background sticky top-0 z-50">
+    <nav
+      className="border-b bg-background sticky z-50 transition-all duration-300"
+      style={{ top: `${announcementHeight}px` }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
           {/* Logo */}

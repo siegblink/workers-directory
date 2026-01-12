@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { AnnouncementStrip } from "@/components/announcement-strip";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAnnouncement } from "@/contexts/announcement-context";
 import { directories } from "@/lib/constants/directories";
 import { cn } from "@/lib/utils";
 
@@ -17,92 +19,102 @@ function ComingSoonRibbon() {
 }
 
 export default function HomePage() {
+  const { announcementHeight } = useAnnouncement();
+
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Directories */}
-      <section className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-        <h2 className="text-xl text-foreground mb-8">Featured Directories</h2>
+    <>
+      <AnnouncementStrip />
+      <div className="min-h-screen flex flex-col">
+        {/* Directories */}
+        <section
+          className="max-w-7xl mx-auto px-4 pb-5 sm:px-6 lg:px-8"
+          style={{ paddingTop: `${announcementHeight + 64 + 24}px` }}
+        >
+          <h2 className="text-2xl text-foreground mb-10">
+            Featured Directories
+          </h2>
 
-        {/* Directories Grid */}
-        <nav aria-label="Directory navigation">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {directories.map((directory) => (
-              <Link
-                key={directory.id}
-                href={directory.href}
-                className={cn(
-                  "group relative block transition-all duration-300",
-                  directory.isComingSoon
-                    ? "cursor-not-allowed"
-                    : "hover:scale-[1.03] hover:-translate-y-1 cursor-pointer",
-                )}
-                onClick={(e) => directory.isComingSoon && e.preventDefault()}
-                aria-disabled={directory.isComingSoon}
-                aria-label={`${directory.label}${directory.isComingSoon ? " - Coming soon" : ""}`}
-              >
-                <Card
+          {/* Directories Grid */}
+          <nav aria-label="Directory navigation">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {directories.map((directory) => (
+                <Link
+                  key={directory.id}
+                  href={directory.href}
                   className={cn(
-                    "h-full overflow-hidden",
-                    // Glassmorphism base styles
-                    "bg-white/5 dark:bg-white/5 backdrop-blur-md",
-                    "border border-white/10 dark:border-white/10",
-                    "shadow-lg shadow-black/5",
-                    // Hover enhancements
-                    "transition-all duration-300",
+                    "group relative block transition-all duration-300",
                     directory.isComingSoon
-                      ? "opacity-80"
-                      : "hover:bg-white/10 dark:hover:bg-white/10 hover:border-white/20 hover:shadow-xl hover:shadow-primary/10",
+                      ? "cursor-not-allowed"
+                      : "hover:scale-[1.03] hover:-translate-y-1 cursor-pointer",
                   )}
+                  onClick={(e) => directory.isComingSoon && e.preventDefault()}
+                  aria-disabled={directory.isComingSoon}
+                  aria-label={`${directory.label}${directory.isComingSoon ? " - Coming soon" : ""}`}
                 >
-                  <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[180px] relative">
-                    {directory.isComingSoon && <ComingSoonRibbon />}
+                  <Card
+                    className={cn(
+                      "h-full overflow-hidden",
+                      // Glassmorphism base styles
+                      "bg-white/5 dark:bg-white/5 backdrop-blur-md",
+                      "border border-white/10 dark:border-white/10",
+                      "shadow-lg shadow-black/5",
+                      // Hover enhancements
+                      "transition-all duration-300",
+                      directory.isComingSoon
+                        ? "opacity-80"
+                        : "hover:bg-white/10 dark:hover:bg-white/10 hover:border-white/20 hover:shadow-xl hover:shadow-primary/10",
+                    )}
+                  >
+                    <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[180px] relative">
+                      {directory.isComingSoon && <ComingSoonRibbon />}
 
-                    {/* Icon Container */}
-                    <div
-                      className={cn(
-                        "w-16 h-16 rounded-full flex items-center justify-center mb-4",
-                        directory.bgColor,
-                        "shadow-lg shadow-black/10",
-                        "ring-1 ring-white/10",
-                        "transition-all duration-300",
-                        !directory.isComingSoon &&
-                          "group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-black/20 group-hover:ring-white/20",
-                      )}
-                    >
-                      <directory.icon
+                      {/* Icon Container */}
+                      <div
                         className={cn(
-                          "w-8 h-8 transition-transform duration-300 group-hover:scale-105",
-                          directory.iconColor,
-                        )}
-                      />
-                    </div>
-
-                    {/* Label */}
-                    <h3 className="text-lg font-semibold text-foreground mb-1">
-                      {directory.label}
-                    </h3>
-
-                    {/* Description - reveals on hover */}
-                    {directory.description && (
-                      <p
-                        className={cn(
-                          "text-sm text-muted-foreground",
-                          "opacity-0 translate-y-2 max-h-0",
-                          "transition-all duration-300 ease-out",
+                          "w-16 h-16 rounded-full flex items-center justify-center mb-4",
+                          directory.bgColor,
+                          "shadow-lg shadow-black/10",
+                          "ring-1 ring-white/10",
+                          "transition-all duration-300",
                           !directory.isComingSoon &&
-                            "group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-10",
+                            "group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-black/20 group-hover:ring-white/20",
                         )}
                       >
-                        {directory.description}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </nav>
-      </section>
-    </div>
+                        <directory.icon
+                          className={cn(
+                            "w-8 h-8 transition-transform duration-300 group-hover:scale-105",
+                            directory.iconColor,
+                          )}
+                        />
+                      </div>
+
+                      {/* Label */}
+                      <h3 className="text-lg font-semibold text-foreground mb-1">
+                        {directory.label}
+                      </h3>
+
+                      {/* Description - reveals on hover */}
+                      {directory.description && (
+                        <p
+                          className={cn(
+                            "text-sm text-muted-foreground",
+                            "opacity-0 translate-y-2 max-h-0",
+                            "transition-all duration-300 ease-out",
+                            !directory.isComingSoon &&
+                              "group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-10",
+                          )}
+                        >
+                          {directory.description}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </nav>
+        </section>
+      </div>
+    </>
   );
 }
