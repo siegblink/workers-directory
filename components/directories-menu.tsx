@@ -66,7 +66,7 @@ export function DirectoriesMenu() {
 
                     {/* Coming Soon Badge */}
                     {directory.isComingSoon && (
-                      <span className="inline-block mt-2 px-2 py-0.5 text-[10px] font-medium rounded-full bg-destructive/10 text-destructive">
+                      <span className="text-center inline-block mt-2 px-2 py-1 text-[10px] font-medium rounded-full bg-destructive/10 text-destructive">
                         Coming Soon
                       </span>
                     )}

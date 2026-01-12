@@ -11,7 +11,7 @@ function ComingSoonRibbon() {
   return (
     <div className="absolute top-[-24px] right-0 z-10 pointer-events-none overflow-hidden w-28 h-28">
       {/* Main ribbon band */}
-      <div className="absolute top-[14px] right-[-38px] w-[140px] bg-destructive text-destructive-foreground py-1.5 text-center text-xs font-semibold shadow-lg transform rotate-45">
+      <div className="absolute top-[14px] right-[-42px] w-[140px] bg-destructive text-destructive-foreground py-1.5 text-center text-xs font-semibold shadow-lg transform rotate-45">
         Coming Soon
       </div>
     </div>
@@ -54,15 +54,15 @@ export default function HomePage() {
                   <Card
                     className={cn(
                       "h-full overflow-hidden",
-                      // Glassmorphism base styles
-                      "bg-white/5 dark:bg-white/5 backdrop-blur-md",
-                      "border border-white/10 dark:border-white/10",
-                      "shadow-lg shadow-black/5",
+                      // Base styles - theme-aware for better light mode visibility
+                      "bg-white dark:bg-white/5 backdrop-blur-md",
+                      "border border-neutral-200 dark:border-white/10",
+                      "shadow-md shadow-neutral-200/50 dark:shadow-lg dark:shadow-black/5",
                       // Hover enhancements
                       "transition-all duration-300",
                       directory.isComingSoon
                         ? "opacity-80"
-                        : "hover:bg-white/10 dark:hover:bg-white/10 hover:border-white/20 hover:shadow-xl hover:shadow-primary/10",
+                        : "hover:bg-neutral-50 dark:hover:bg-white/10 hover:border-neutral-300 dark:hover:border-white/20 hover:shadow-lg hover:shadow-neutral-300/60 dark:hover:shadow-xl dark:hover:shadow-primary/10",
                     )}
                   >
                     <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[180px] relative">
