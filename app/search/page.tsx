@@ -419,7 +419,7 @@ export default function SearchPage() {
           </div>
 
           {/* Filter Panel - Right (30%) - Desktop Only */}
-          <aside className="hidden lg:block w-[30%] flex-shrink-0">
+          <aside className="hidden lg:block w-[30%] shrink-0">
             <div className="sticky top-[206px] max-h-[calc(100vh-250px)] overflow-y-auto space-y-6">
               <Button asChild variant="outline" className="w-full">
                 <Link href="/become-worker">

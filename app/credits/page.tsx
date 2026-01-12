@@ -83,7 +83,7 @@ export default function CreditsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Credits</h1>
@@ -93,8 +93,8 @@ export default function CreditsPage() {
         </div>
 
         {/* Current Balance */}
-        <Card className="mb-8 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 text-white border-0">
-          <CardContent className="p-8">
+        <Card className="mb-8 bg-linear-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 text-white border-0">
+          <CardContent>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 dark:text-blue-200 mb-2">
@@ -211,7 +211,7 @@ export default function CreditsPage() {
                   <CardContent>
                     <div className="mb-4">
                       <span className="text-3xl font-bold text-foreground">
-                        ${pkg.price}
+                        ₱{pkg.price}
                       </span>
                     </div>
                     <ul className="space-y-2">
@@ -232,7 +232,7 @@ export default function CreditsPage() {
           </RadioGroup>
 
           <Card className="mt-6">
-            <CardContent className="p-6">
+            <CardContent>
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-lg mb-1 text-foreground">
@@ -241,7 +241,7 @@ export default function CreditsPage() {
                   <p className="text-sm text-muted-foreground">
                     Selected:{" "}
                     {creditPackages.find((p) => p.id === selectedPackage)?.name}{" "}
-                    - $
+                    - ₱
                     {
                       creditPackages.find((p) => p.id === selectedPackage)
                         ?.price
