@@ -7,6 +7,8 @@ interface AnnouncementContextType {
   isVisible: boolean;
   setIsVisible: (visible: boolean) => void;
   announcementHeight: number;
+  isOnHomePage: boolean;
+  setIsOnHomePage: (value: boolean) => void;
 }
 
 const AnnouncementContext = createContext<AnnouncementContextType | undefined>(
@@ -21,6 +23,8 @@ export function AnnouncementProvider({
   // Optimistic initial state (show by default)
   // This prevents layout shift on initial render
   const [isVisible, setIsVisibleState] = useState(true);
+  // Track whether the announcement strip is rendered on the current page
+  const [isOnHomePage, setIsOnHomePage] = useState(false);
 
   // Sync with localStorage on mount
   useEffect(() => {
@@ -48,14 +52,16 @@ export function AnnouncementProvider({
     }
   }
 
-  // Calculate announcement height based on visibility
-  // 40px (h-10) when visible, 0px when hidden
-  const announcementHeight = isVisible ? 40 : 0;
+  // Calculate announcement height based on visibility AND page context
+  // 40px (h-10) when visible and on home page, 0px otherwise
+  const announcementHeight = isVisible && isOnHomePage ? 40 : 0;
 
   const value: AnnouncementContextType = {
     isVisible,
     setIsVisible,
     announcementHeight,
+    isOnHomePage,
+    setIsOnHomePage,
   };
 
   return (

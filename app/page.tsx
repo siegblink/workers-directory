@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { AnnouncementStrip } from "@/components/announcement-strip";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAnnouncement } from "@/contexts/announcement-context";
@@ -19,7 +20,13 @@ function ComingSoonRibbon() {
 }
 
 export default function HomePage() {
-  const { announcementHeight } = useAnnouncement();
+  const { announcementHeight, setIsOnHomePage } = useAnnouncement();
+
+  // Register this page as having the announcement strip
+  useEffect(() => {
+    setIsOnHomePage(true);
+    return () => setIsOnHomePage(false);
+  }, [setIsOnHomePage]);
 
   return (
     <>
