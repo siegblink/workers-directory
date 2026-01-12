@@ -47,7 +47,7 @@ export function Navigation() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [_isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const creditsBalance = 120;
+  const creditsBalance = 1000;
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
@@ -200,6 +200,9 @@ export function Navigation() {
               <>
                 <Button variant="ghost" asChild>
                   <Link href="/messages">Messages</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/credits">{creditsBalance} Credits</Link>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
