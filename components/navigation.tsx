@@ -6,6 +6,7 @@ import {
   CreditCard,
   Flame,
   LayoutDashboard,
+  Lightbulb,
   LogOut,
   Menu,
   MessageSquare,
@@ -185,6 +186,12 @@ export function Navigation() {
                 Hot
               </Link>
             </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/suggest-jobs">
+                <Lightbulb />
+                Suggest Jobs
+              </Link>
+            </Button>
           </div>
 
           {/* Desktop Navigation */}
@@ -324,6 +331,12 @@ export function Navigation() {
                     <Link href="/hot">
                       <Flame />
                       Hot
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/suggest-jobs">
+                      <Lightbulb />
+                      Suggest Jobs
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>

@@ -39,6 +39,16 @@ export {
   removeFavorite,
   toggleFavorite,
 } from "./queries/favorites";
+export * as JobSuggestionQueries from "./queries/job-suggestions";
+export {
+  autocompleteJobTitles,
+  createJobSuggestion,
+  // Job Suggestions
+  getAllJobSuggestions,
+  getJobSuggestionById,
+  updateJobSuggestionStatus,
+  upvoteJobSuggestion,
+} from "./queries/job-suggestions";
 export * as MessageQueries from "./queries/messages";
 export {
   getChatById,

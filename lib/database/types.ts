@@ -26,6 +26,11 @@ export type NotificationType =
   | "payment"
   | "rating"
   | "system";
+export type JobSuggestionStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "implemented";
 
 // =====================================================
 // TABLE TYPES
@@ -191,6 +196,17 @@ export interface GlobalSetting {
   created_at: string;
 }
 
+export interface JobSuggestion {
+  id: string; // UUID
+  job_title: string;
+  description: string | null;
+  user_id: string | null; // UUID
+  upvotes: number;
+  status: JobSuggestionStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 // =====================================================
 // JOINED TYPES (for common queries)
 // =====================================================
@@ -236,6 +252,14 @@ export interface RatingWithDetails extends Rating {
 
 export interface NotificationWithUser extends Notification {
   user?: User;
+}
+
+export interface JobSuggestionWithUser extends JobSuggestion {
+  user?: {
+    firstname: string;
+    lastname: string;
+    profile_pic_url: string | null;
+  } | null;
 }
 
 // =====================================================
@@ -297,6 +321,12 @@ export interface MessageFilters extends PaginationOptions {
   sort?: SortOptions;
 }
 
+export interface JobSuggestionFilters extends PaginationOptions {
+  status?: JobSuggestionStatus;
+  search?: string;
+  sort?: SortOptions;
+}
+
 // =====================================================
 // API RESPONSE TYPES
 // =====================================================
@@ -339,4 +369,5 @@ export enum Tables {
   WORKER_POSTS = "workers_posts",
   PROFILE_SETTINGS = "profile_settings",
   GLOBAL_SETTINGS = "global_settings",
+  JOB_SUGGESTIONS = "job_suggestions",
 }
