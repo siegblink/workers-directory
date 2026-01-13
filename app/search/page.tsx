@@ -510,9 +510,7 @@ export default function SearchPage() {
               placeholder={
                 isDetectingLocation
                   ? "Detecting your location..."
-                  : detectedCoords && !manualLocationOverride
-                    ? "Your location (auto-detected)"
-                    : "Your location"
+                  : "Your location"
               }
               disabled={isLoading || isDetectingLocation}
               skipAutocomplete={!manualLocationOverride && !!detectedCoords}
