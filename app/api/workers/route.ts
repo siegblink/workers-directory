@@ -195,6 +195,7 @@ export async function GET(request: NextRequest) {
 
           return {
             id: worker.id,
+            workerId: worker.worker_id, // User ID who owns this worker profile
             name: `${worker.firstname} ${worker.lastname}`,
             profession: worker.profession || "General Worker",
             rating: parseFloat(worker.average_rating) || 0,

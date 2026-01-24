@@ -17,7 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export interface Worker {
-  id: number;
+  id: string;
+  workerId?: string; // User ID who owns this worker profile
   name: string;
   profession: string;
   rating: number;
@@ -33,13 +34,15 @@ export interface Worker {
   yearsExperience: number;
   jobsCompleted: number;
   responseTime: number;
+  isSaved?: boolean; // Whether the worker is saved by the current user
+  isOwner?: boolean; // Whether the current user owns this worker profile
 }
 
 interface WorkerCardProps {
   worker: Worker;
-  onMessage?: (workerId: number) => void;
-  onBook?: (workerId: number) => void;
-  onSave?: (workerId: number) => void;
+  onMessage?: (workerId: string) => void;
+  onBook?: (workerId: string) => void;
+  onSave?: (workerId: string, isSaved: boolean) => void;
 }
 
 export function WorkerCard({
@@ -145,33 +148,39 @@ export function WorkerCard({
             {/* Action Buttons */}
             <div className="flex gap-2">
               <Button asChild size="sm" className="flex-1 sm:flex-none">
-                <Link href={`/worker/${worker.id}`}>View Profile</Link>
+                <Link href={worker.isOwner ? "/profile" : `/worker/${worker.id}`}>
+                  View Profile
+                </Link>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-auto"
-                onClick={() => onMessage?.(worker.id)}
-              >
-                <MessageSquare />
-                Message
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onBook?.(worker.id)}
-              >
-                <Calendar />
-                Book
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSave?.(worker.id)}
-              >
-                <Bookmark />
-                Save
-              </Button>
+              {!worker.isOwner && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => onMessage?.(worker.id)}
+                  >
+                    <MessageSquare />
+                    Message
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onBook?.(worker.id)}
+                  >
+                    <Calendar />
+                    Book
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSave?.(worker.id, worker.isSaved || false)}
+                  >
+                    <Bookmark className={worker.isSaved ? "fill-current" : ""} />
+                    {worker.isSaved ? "Saved" : "Save"}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

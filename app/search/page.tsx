@@ -73,6 +73,11 @@ export default function SearchPage() {
   // User role for conditional rendering
   const [userRole, setUserRole] = useState<number | null>(null);
 
+  // Saved workers state
+  const [savedWorkerIds, setSavedWorkerIds] = useState<Set<string>>(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
   // Filters
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -298,15 +303,19 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch user role on mount
+  // Fetch user role and saved workers on mount
   useEffect(() => {
-    const getUserRole = async () => {
+    const getUserData = async () => {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (user) {
+        setIsAuthenticated(true);
+        setCurrentUserId(user.id);
+
+        // Get user role
         const { data: userData } = await supabase
           .from("users")
           .select("role")
@@ -316,10 +325,17 @@ export default function SearchPage() {
         if (userData) {
           setUserRole(userData.role);
         }
+
+        // Get saved workers
+        const response = await fetch("/api/workers/saved");
+        if (response.ok) {
+          const data = await response.json();
+          setSavedWorkerIds(new Set(data.workerIds));
+        }
       }
     };
 
-    getUserRole();
+    getUserData();
   }, []);
 
   // Initial load - wait for location detection to complete, then make ONE API call
@@ -464,6 +480,47 @@ export default function SearchPage() {
     setPriceRange(filters.priceRange);
     setMinResponseTime(filters.minResponseTime);
     setMinJobsCompleted(filters.minJobsCompleted);
+  };
+
+  // Handle save/unsave worker
+  const handleSaveWorker = async (workerId: string, isSaved: boolean) => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.push("/login");
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        // Unsave the worker
+        const response = await fetch("/api/workers/saved", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workerId }),
+        });
+
+        if (response.ok) {
+          setSavedWorkerIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(workerId);
+            return newSet;
+          });
+        }
+      } else {
+        // Save the worker
+        const response = await fetch("/api/workers/saved", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workerId }),
+        });
+
+        if (response.ok) {
+          setSavedWorkerIds((prev) => new Set(prev).add(workerId));
+        }
+      }
+    } catch (error) {
+      console.error("Error saving/unsaving worker:", error);
+    }
   };
 
   // Count active advanced filters
@@ -637,7 +694,15 @@ export default function SearchPage() {
               <>
                 <div className="space-y-6">
                   {displayedWorkers.map((worker) => (
-                    <WorkerCard key={worker.id} worker={worker} />
+                    <WorkerCard
+                      key={worker.id}
+                      worker={{
+                        ...worker,
+                        isSaved: savedWorkerIds.has(worker.id),
+                        isOwner: currentUserId ? worker.workerId === currentUserId : false,
+                      }}
+                      onSave={handleSaveWorker}
+                    />
                   ))}
                 </div>
 
