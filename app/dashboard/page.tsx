@@ -12,11 +12,14 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createClient } from "@/lib/supabase/client";
 
 const mockStats = {
   totalEarnings: 12450,
@@ -78,6 +81,43 @@ const mockUpcomingJobs = [
 ];
 
 export default function WorkerDashboardPage() {
+  const [verificationStatus, setVerificationStatus] = useState<
+    "loading" | "verified" | "pending" | "not_verified"
+  >("loading");
+
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      const supabase = createClient();
+
+      // Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setVerificationStatus("not_verified");
+        return;
+      }
+
+      // Check verification status
+      const { data: verification } = await supabase
+        .from("verifications")
+        .select("status")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!verification) {
+        setVerificationStatus("not_verified");
+      } else if (verification.status === "approved") {
+        setVerificationStatus("verified");
+      } else {
+        setVerificationStatus("pending");
+      }
+    };
+
+    checkVerificationStatus();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
@@ -88,6 +128,36 @@ export default function WorkerDashboardPage() {
             Manage your bookings and track your performance
           </p>
         </div>
+
+        {/* Verification Reminder Banner */}
+        {verificationStatus === "not_verified" && (
+          <Alert className="mb-6 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertTitle className="text-blue-900 dark:text-blue-100">
+              Complete Your Verification
+            </AlertTitle>
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              Get verified to increase your visibility and receive more
+              bookings.
+              <Link href="/verify" className="underline hover:no-underline">
+                Verify now
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {verificationStatus === "pending" && (
+          <Alert className="mb-6 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+            <AlertTitle className="text-yellow-900 dark:text-yellow-100">
+              Verification In Progress
+            </AlertTitle>
+            <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+              Your verification is being reviewed. This usually takes 24-48
+              hours.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Promotion Banner */}
         <Card className="mb-6 bg-linear-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">

@@ -10,8 +10,8 @@ interface AuthLayoutProps {
 export function AuthLayout({ title, description, children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex flex-1 relative items-center justify-center p-12">
+      {/* Left Side - Branding (Fixed) */}
+      <div className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen flex-1 relative items-center justify-center p-12 overflow-hidden">
         <GridPattern
           width={60}
           height={60}
@@ -31,9 +31,11 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         </div>
       </div>
 
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        {children}
+      {/* Right Side - Scrollable Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-screen flex items-center justify-center p-8">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -51,6 +51,8 @@ export async function updateSession(request: NextRequest) {
     "/messages",
     "/settings",
     "/profile",
+    "/verify",
+    "/verification-pending",
   ];
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path),

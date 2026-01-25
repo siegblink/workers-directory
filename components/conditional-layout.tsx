@@ -13,7 +13,9 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname === "/forgot-password" ||
-    pathname === "/reset-password";
+    pathname === "/reset-password" ||
+    pathname === "/verify" ||
+    pathname === "/verification-pending";
 
   const appPages = [
     "/profile",
