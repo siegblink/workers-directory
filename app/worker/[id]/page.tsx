@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BookingModal } from "@/components/booking-modal";
 import { WorkerAbout } from "@/components/worker/worker-about";
 import { WorkerAvailability } from "@/components/worker/worker-availability";
@@ -110,19 +110,82 @@ const mockPortfolio = [
 
 export default function WorkerProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const workerId = params.id as string;
+
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [worker, setWorker] = useState(mockWorker);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch worker data from API
+  useEffect(() => {
+    const fetchWorker = async () => {
+      try {
+        console.log("[Worker Profile] Fetching worker data for ID:", workerId);
+        const response = await fetch(`/api/workers/${workerId}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("[Worker Profile] Worker data:", data);
+
+          // Update worker state with fetched data
+          setWorker({
+            id: data.worker.id,
+            name: data.worker.name,
+            profession: data.worker.profession,
+            rating: data.worker.rating,
+            reviews: data.worker.reviews,
+            hourlyRate: data.worker.hourlyRateMin,
+            location: data.worker.location,
+            avatar: data.worker.avatar,
+            isOnline: true, // TODO: Implement online status
+            verified: data.worker.verified,
+            joinedDate: mockWorker.joinedDate, // TODO: Calculate from created_at
+            completedJobs: data.worker.completedJobs,
+            responseTime: data.worker.responseTime,
+            statusEmoji: mockWorker.statusEmoji, // TODO: Add to database
+            statusText: mockWorker.statusText, // TODO: Add to database
+            bio: data.worker.bio,
+            skills: data.worker.skills,
+            availability: mockWorker.availability, // TODO: Implement availability
+          });
+        } else {
+          console.error("[Worker Profile] Failed to fetch worker data");
+        }
+      } catch (error) {
+        console.error("[Worker Profile] Error fetching worker:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (workerId) {
+      fetchWorker();
+    }
+  }, [workerId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading worker profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
         {/* Profile Header */}
         <WorkerProfileHeader
-          worker={mockWorker}
+          worker={worker}
           isBookmarked={isBookmarked}
           onMessage={() => {
             // TODO: Implement message functionality
-            console.log("Message worker:", mockWorker.id);
+            console.log("Message worker:", worker.id);
           }}
           onBookNow={() => setBookingModalOpen(true)}
           onBookmarkToggle={setIsBookmarked}
@@ -131,32 +194,32 @@ export default function WorkerProfilePage() {
         {/* Gallery Section */}
         <WorkerGallery
           portfolio={mockPortfolio}
-          onBookNow={() => router.push(`/messages?workerId=${mockWorker.id}`)}
+          onBookNow={() => router.push(`/messages?workerId=${worker.id}`)}
         />
 
         {/* About Section */}
-        <WorkerAbout bio={mockWorker.bio} skills={mockWorker.skills} />
+        <WorkerAbout bio={worker.bio} skills={worker.skills} />
 
         {/* Testimonials Section */}
         <WorkerTestimonials
-          rating={mockWorker.rating}
-          reviewCount={mockWorker.reviews}
+          rating={worker.rating}
+          reviewCount={worker.reviews}
           reviews={mockReviews}
-          workerId={mockWorker.id}
-          workerName={mockWorker.name}
+          workerId={worker.id}
+          workerName={worker.name}
         />
 
         {/* Availability Section */}
-        <WorkerAvailability availability={mockWorker.availability} />
+        <WorkerAvailability availability={worker.availability} />
       </div>
 
       {/* Booking Modal */}
       <BookingModal
         open={bookingModalOpen}
         onOpenChange={setBookingModalOpen}
-        workerName={mockWorker.name}
-        workerProfession={mockWorker.profession}
-        hourlyRate={mockWorker.hourlyRate}
+        workerName={worker.name}
+        workerProfession={worker.profession}
+        hourlyRate={worker.hourlyRate}
       />
     </div>
   );

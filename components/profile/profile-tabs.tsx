@@ -19,7 +19,7 @@ export interface Booking {
 }
 
 export interface BookmarkedWorker {
-  id: number;
+  id: string;
   name: string;
   profession: string;
   rating: number;
@@ -149,7 +149,7 @@ export function ProfileTabs({
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-foreground">
-                        ${booking.amount}
+                        ₱{booking.amount}
                       </p>
                       <Button
                         variant="outline"
@@ -206,7 +206,7 @@ export function ProfileTabs({
                             {worker.rating}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            • ${worker.hourlyRate}/hr
+                            • ₱{worker.hourlyRate}/hr
                           </span>
                         </div>
                       </div>

@@ -4,8 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * GET /api/workers/saved
  * Get all saved workers for the authenticated user
+ * Query params:
+ *   - details=true: Include full worker details instead of just IDs
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -19,10 +21,40 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get favorited worker IDs
+    // Check if full details are requested via query parameter
+    const searchParams = request.nextUrl.searchParams;
+    const includeDetails = searchParams.get("details") === "true";
+
+    if (!includeDetails) {
+      // Get favorited worker IDs only
+      const { data: savedWorkers, error } = await supabase
+        .from("favorites")
+        .select("worker_id")
+        .eq("customer_id", user.id);
+
+      if (error) {
+        console.error("Error fetching saved workers:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Return array of worker IDs
+      const workerIds = savedWorkers.map((sw) => sw.worker_id);
+      return NextResponse.json({ workerIds });
+    }
+
+    // Get full worker details by joining with workers and users tables
     const { data: savedWorkers, error } = await supabase
       .from("favorites")
-      .select("worker_id")
+      .select(`
+        worker_id,
+        workers (
+          id,
+          worker_id,
+          profession,
+          hourly_rate_min,
+          hourly_rate_max
+        )
+      `)
       .eq("customer_id", user.id);
 
     if (error) {
@@ -30,9 +62,55 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Return array of worker IDs
-    const workerIds = savedWorkers.map((sw) => sw.worker_id);
-    return NextResponse.json({ workerIds });
+    console.log(`[Saved Workers API] Found ${savedWorkers?.length || 0} saved workers`);
+    console.log("[Saved Workers API] Workers data:", JSON.stringify(savedWorkers, null, 2));
+
+    // Get user details and ratings for each worker
+    const workersWithDetails = await Promise.all(
+      savedWorkers
+        .filter((sw: any) => sw.workers) // Filter out any null workers
+        .map(async (sw: any) => {
+          const worker = sw.workers;
+
+          // Get user details from the users table
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("firstname, lastname, profile_pic_url")
+            .eq("id", worker.worker_id)
+            .single();
+
+          if (userError) {
+            console.error(`Error fetching user data for worker ${worker.id}:`, userError);
+          }
+
+          // Get average rating
+          const { data: ratingData } = await supabase
+            .from("ratings")
+            .select("rating")
+            .eq("worker_id", worker.id);
+
+          const avgRating = ratingData && ratingData.length > 0
+            ? ratingData.reduce((sum, r) => sum + r.rating, 0) / ratingData.length
+            : 0;
+
+          const firstname = userData?.firstname || "";
+          const lastname = userData?.lastname || "";
+          const fullName = `${firstname} ${lastname}`.trim();
+
+          console.log(`Worker ${worker.id}: firstname="${firstname}", lastname="${lastname}", fullName="${fullName}"`);
+
+          return {
+            id: worker.id,
+            name: fullName || "Unknown Worker",
+            profession: worker.profession || "General Worker",
+            rating: Math.round(avgRating * 10) / 10,
+            hourlyRate: worker.hourly_rate_min || 0,
+            avatar: userData?.profile_pic_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firstname}${lastname}`,
+          };
+        })
+    );
+
+    return NextResponse.json({ workers: workersWithDetails });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

@@ -137,24 +137,14 @@ const mockBookings = [
   },
 ];
 
-const mockBookmarked = [
-  {
-    id: 1,
-    name: "Mike Davis",
-    profession: "Cleaner",
-    rating: 4.7,
-    hourlyRate: 35,
-    avatar: "/placeholder.svg?height=60&width=60",
-  },
-  {
-    id: 2,
-    name: "Lisa Brown",
-    profession: "Painter",
-    rating: 4.9,
-    hourlyRate: 50,
-    avatar: "/placeholder.svg?height=60&width=60",
-  },
-];
+interface BookmarkedWorker {
+  id: string;
+  name: string;
+  profession: string;
+  rating: number;
+  hourlyRate: number;
+  avatar: string;
+}
 
 const mockConversations = [
   {
@@ -209,6 +199,7 @@ export default function ProfilePage() {
   const [bio, setBio] = useState(mockBio);
   const [skills, setSkills] = useState(mockSkills);
   const [availability, setAvailability] = useState(mockAvailability);
+  const [bookmarkedWorkers, setBookmarkedWorkers] = useState<BookmarkedWorker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch profile data from API on mount
@@ -260,6 +251,31 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
+  }, []);
+
+  // Fetch bookmarked workers
+  useEffect(() => {
+    const fetchBookmarkedWorkers = async () => {
+      try {
+        console.log("[Profile] Fetching bookmarked workers...");
+        const response = await fetch("/api/workers/saved?details=true");
+        console.log("[Profile] Response status:", response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("[Profile] Bookmarked workers data:", data);
+          console.log("[Profile] Workers array:", data.workers);
+          setBookmarkedWorkers(data.workers || []);
+        } else {
+          const errorData = await response.json();
+          console.error("[Profile] Error response:", errorData);
+        }
+      } catch (error) {
+        console.error("[Profile] Error fetching bookmarked workers:", error);
+      }
+    };
+
+    fetchBookmarkedWorkers();
   }, []);
 
   const handleHeaderSave = async (data: ProfileHeaderFormValues) => {
@@ -399,7 +415,7 @@ export default function ProfilePage() {
         {/* Tabs Section */}
         <ProfileTabs
           bookings={mockBookings}
-          bookmarkedWorkers={mockBookmarked}
+          bookmarkedWorkers={bookmarkedWorkers}
           conversations={mockConversations}
         />
       </div>
