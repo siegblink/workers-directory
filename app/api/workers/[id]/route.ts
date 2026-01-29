@@ -7,17 +7,18 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const workerId = params.id;
+    const params = await context.params;
+    const slug = params.id; // This will be the slug from the URL
 
-    // Fetch worker details
+    // Fetch worker details by slug
     const { data: worker, error: workerError } = await supabase
       .from("workers")
       .select("*")
-      .eq("id", workerId)
+      .eq("slug", slug)
       .single();
 
     if (workerError || !worker) {
@@ -32,22 +33,22 @@ export async function GET(
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("firstname, lastname, bio, city, state, profile_pic_url")
-      .eq("id", worker.worker_id)
+      .eq("id", worker.user_id)
       .single();
 
     if (userError) {
       console.error("Error fetching user data:", userError);
     }
 
-    // Calculate average rating
+    // Calculate average rating (ratings.worker_id now references workers.id)
     const { data: ratings } = await supabase
       .from("ratings")
-      .select("rating")
-      .eq("worker_id", workerId);
+      .select("rating_value")
+      .eq("worker_id", worker.id);
 
     const avgRating =
       ratings && ratings.length > 0
-        ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+        ? ratings.reduce((sum, r) => sum + r.rating_value, 0) / ratings.length
         : 0;
 
     // Format response

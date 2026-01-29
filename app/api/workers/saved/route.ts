@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         worker_id,
         workers (
           id,
-          worker_id,
+          user_id,
           profession,
           hourly_rate_min,
           hourly_rate_max
@@ -76,21 +76,21 @@ export async function GET(request: NextRequest) {
           const { data: userData, error: userError } = await supabase
             .from("users")
             .select("firstname, lastname, profile_pic_url")
-            .eq("id", worker.worker_id)
+            .eq("id", worker.user_id)
             .single();
 
           if (userError) {
             console.error(`Error fetching user data for worker ${worker.id}:`, userError);
           }
 
-          // Get average rating
+          // Get average rating (ratings.worker_id now references workers.id)
           const { data: ratingData } = await supabase
             .from("ratings")
-            .select("rating")
+            .select("rating_value")
             .eq("worker_id", worker.id);
 
           const avgRating = ratingData && ratingData.length > 0
-            ? ratingData.reduce((sum, r) => sum + r.rating, 0) / ratingData.length
+            ? ratingData.reduce((sum, r) => sum + r.rating_value, 0) / ratingData.length
             : 0;
 
           const firstname = userData?.firstname || "";

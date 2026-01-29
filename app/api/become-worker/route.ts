@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const { data: existingWorker } = await supabase
       .from("workers")
       .select("id")
-      .eq("worker_id", user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (existingWorker) {
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     const { data: workerData, error: workerError } = await supabase
       .from("workers")
       .insert({
-        worker_id: user.id,
+        user_id: user.id,
         profession: profession,
         hourly_rate_min: rateValue,
         hourly_rate_max: rateValue, // Use same rate for both min/max initially

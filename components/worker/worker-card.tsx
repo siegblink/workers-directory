@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 
 export interface Worker {
   id: string;
+  slug?: string; // Unique slug for URL
   workerId?: string; // User ID who owns this worker profile
   name: string;
   profession: string;
@@ -84,7 +85,7 @@ export function WorkerCard({
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <Link
-                    href={`/worker/${worker.id}`}
+                    href={`/worker/${worker.slug || worker.id}`}
                     className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
                   >
                     {worker.name}
@@ -148,7 +149,7 @@ export function WorkerCard({
             {/* Action Buttons */}
             <div className="flex gap-2">
               <Button asChild size="sm" className="flex-1 sm:flex-none">
-                <Link href={worker.isOwner ? "/profile" : `/worker/${worker.id}`}>
+                <Link href={worker.isOwner ? "/profile" : `/worker/${worker.slug || worker.id}`}>
                   View Profile
                 </Link>
               </Button>

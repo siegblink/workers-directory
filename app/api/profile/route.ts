@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       const { data, error: workerError } = await supabase
         .from("workers")
         .select("*")
-        .eq("worker_id", user.id)
+        .eq("user_id", user.id)
         .single();
 
       if (workerError) {
@@ -164,7 +164,7 @@ export async function PATCH(request: NextRequest) {
       const { error: workerError } = await supabase
         .from("workers")
         .update(workerUpdate)
-        .eq("worker_id", user.id);
+        .eq("user_id", user.id);
 
       if (workerError) {
         console.error("Error updating worker:", workerError);
