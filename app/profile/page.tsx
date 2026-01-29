@@ -202,6 +202,25 @@ export default function ProfilePage() {
   const [bookmarkedWorkers, setBookmarkedWorkers] = useState<BookmarkedWorker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch availability data
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const response = await fetch("/api/profile/availability");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.availability) {
+            setAvailability(data.availability);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching availability:", error);
+      }
+    };
+
+    fetchAvailability();
+  }, []);
+
   // Fetch profile data from API on mount
   useEffect(() => {
     const fetchProfile = async () => {
@@ -221,9 +240,15 @@ export default function ProfilePage() {
             ? `${data.user.city}, ${data.user.state}`
             : data.user.city || data.user.state || "Not set";
 
+          // Format created_at date
+          const joinedDate = data.user.created_at
+            ? new Date(data.user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+            : "Recently joined";
+
           setProfile({
             ...profile,
             name: fullName || "Your Name",
+            username: data.user.firstname?.toLowerCase() || "user",
             profession: data.worker?.profession || "Home Services",
             location,
             hourlyRate: data.worker?.hourly_rate_min || 0,
@@ -233,6 +258,10 @@ export default function ProfilePage() {
               ? `Within ${data.worker.response_time_minutes} minutes`
               : "Within 2 hours",
             verified: data.worker?.is_verified || false,
+            rating: data.ratings?.averageRating || 0,
+            reviews: data.ratings?.totalReviews || 0,
+            joinedDate,
+            statusText: data.user.status || profile.statusText,
           });
 
           if (data.user.bio) {
@@ -367,9 +396,30 @@ export default function ProfilePage() {
   const handleAvailabilitySave = async (
     data: ProfileAvailabilityFormValues,
   ) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setAvailability(data);
-    console.log("Availability saved:", data);
+    try {
+      // Save to API
+      const response = await fetch("/api/profile/availability", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save availability");
+      }
+
+      const result = await response.json();
+      console.log("Availability save response:", result);
+
+      // Update local state
+      setAvailability(data);
+      console.log("Availability saved successfully to database");
+    } catch (error) {
+      console.error("Error saving availability:", error);
+      alert("Failed to save availability. Please try again.");
+    }
   };
 
   if (isLoading) {

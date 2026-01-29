@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
 
     // Check if user is a worker and fetch worker data
     let workerData = null;
-    if (userData.role === "worker") {
+    let ratingStats = null;
+    if (userData.role === 2) { // role 2 = worker
       const { data, error: workerError } = await supabase
         .from("workers")
         .select("*")
@@ -48,12 +49,34 @@ export async function GET(request: NextRequest) {
         console.error("Error fetching worker data:", workerError);
       } else {
         workerData = data;
+
+        // Fetch rating statistics for this worker
+        if (data) {
+          const { data: ratings, error: ratingsError } = await supabase
+            .from("ratings")
+            .select("rating_value")
+            .eq("worker_id", data.id);
+
+          if (!ratingsError && ratings && ratings.length > 0) {
+            const avgRating = ratings.reduce((sum, r) => sum + r.rating_value, 0) / ratings.length;
+            ratingStats = {
+              averageRating: Math.round(avgRating * 10) / 10,
+              totalReviews: ratings.length,
+            };
+          } else {
+            ratingStats = {
+              averageRating: 0,
+              totalReviews: 0,
+            };
+          }
+        }
       }
     }
 
     return NextResponse.json({
       user: userData,
       worker: workerData,
+      ratings: ratingStats,
     });
   } catch (error) {
     console.error("Profile API error:", error);
@@ -127,6 +150,7 @@ export async function PATCH(request: NextRequest) {
     if (firstname) userUpdate.firstname = firstname;
     if (lastname) userUpdate.lastname = lastname;
     if (bio !== undefined) userUpdate.bio = bio;
+    if (statusText !== undefined) userUpdate.status = statusText;
     if (city !== null) userUpdate.city = city;
     if (state !== null) userUpdate.state = state;
     if (latitude !== null) userUpdate.latitude = latitude;
@@ -152,7 +176,7 @@ export async function PATCH(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (userData?.role === "worker") {
+    if (userData?.role === 2) { // role 2 = worker
       const workerUpdate: Record<string, any> = {};
       if (profession !== undefined) workerUpdate.profession = profession;
       if (skills !== undefined) workerUpdate.skills = skills;
