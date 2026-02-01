@@ -11,8 +11,8 @@ const creditPackages = [
   {
     id: "starter",
     name: "Starter Pack",
-    credits: 50,
-    price: 49,
+    credits: 100,
+    price: 100,
     bonus: 0,
     features: [
       "Perfect for trying out services",
@@ -23,13 +23,13 @@ const creditPackages = [
   {
     id: "popular",
     name: "Popular Pack",
-    credits: 100,
-    price: 89,
-    bonus: 10,
+    credits: 500,
+    price: 500,
+    bonus: 20,
     popular: true,
     features: [
       "Best value for regular users",
-      "10 bonus credits",
+      "20 bonus credits",
       "No expiration",
       "Priority support",
     ],
@@ -37,12 +37,12 @@ const creditPackages = [
   {
     id: "premium",
     name: "Premium Pack",
-    credits: 200,
-    price: 169,
-    bonus: 30,
+    credits: 1000,
+    price: 1000,
+    bonus: 60,
     features: [
       "Maximum savings",
-      "30 bonus credits",
+      "60 bonus credits",
       "No expiration",
       "Priority support",
       "Exclusive deals",
