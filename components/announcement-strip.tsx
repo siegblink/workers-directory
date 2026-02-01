@@ -31,8 +31,19 @@ export function AnnouncementStrip() {
     "Security guard needed in Cordova",
   ];
 
-  const marqueeContent = announcements.join(
-    "\u00A0\u00A0\u00A0\u00A0•\u00A0\u00A0\u00A0\u00A0",
+  const renderAnnouncements = () => (
+    <>
+      {announcements.map((text, index) => (
+        <span key={text}>
+          <span className="text-muted-foreground">{text}</span>
+          {index < announcements.length - 1 && (
+            <span className="text-primary">
+              &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+          )}
+        </span>
+      ))}
+    </>
   );
 
   return (
@@ -41,9 +52,9 @@ export function AnnouncementStrip() {
         {/* Marquee content wrapper */}
         <div className="flex h-full items-center animate-marquee">
           {/* Duplicate content for seamless loop */}
-          <div className="flex gap-8 whitespace-nowrap px-8 text-sm text-muted-foreground">
-            <span>{marqueeContent}</span>
-            <span aria-hidden="true">{marqueeContent}</span>
+          <div className="flex gap-0 whitespace-nowrap px-8 text-sm">
+            {renderAnnouncements()}
+            <span aria-hidden="true">{renderAnnouncements()}</span>
           </div>
         </div>
 
