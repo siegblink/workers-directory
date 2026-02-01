@@ -9,7 +9,7 @@ import {
   ThumbsUp,
   User,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,12 +46,193 @@ import {
 } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  autocompleteJobTitles,
-  createJobSuggestion,
-  getAllJobSuggestions,
-} from "@/lib/database";
 import type { JobSuggestionWithUser } from "@/lib/database/types";
+
+// Simple UUID generator for creating new suggestion IDs
+const generateUUID = () => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+// Mock data for job suggestions
+const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
+  {
+    id: "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+    job_title: "Solar Panel Installer",
+    description:
+      "Growing demand for renewable energy. Many homeowners looking for solar installation services.",
+    user_id: "u1",
+    upvotes: 42,
+    status: "approved",
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "Sarah",
+      lastname: "Chen",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    job_title: "Pet Groomer",
+    description: null,
+    user_id: null,
+    upvotes: 35,
+    status: "pending",
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    user: null,
+  },
+  {
+    id: "c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f",
+    job_title: "Personal Chef",
+    description:
+      "Busy professionals and families need meal prep services. This could be a popular category.",
+    user_id: "u2",
+    upvotes: 28,
+    status: "implemented",
+    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "Marcus",
+      lastname: "Johnson",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "d4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f8a",
+    job_title: "Mobile Car Detailer",
+    description:
+      "On-site car cleaning and detailing services. Convenient for busy car owners.",
+    user_id: null,
+    upvotes: 23,
+    status: "pending",
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    user: null,
+  },
+  {
+    id: "e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b",
+    job_title: "Home Organizer",
+    description:
+      "Professional organizing services for closets, garages, and entire homes.",
+    user_id: "u3",
+    upvotes: 19,
+    status: "approved",
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "Emily",
+      lastname: "Rodriguez",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "f6a7b8c9-d0e1-4f5a-3b4c-5d6e7f8a9b0c",
+    job_title: "Drone Photographer",
+    description: null,
+    user_id: "u4",
+    upvotes: 15,
+    status: "pending",
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "Alex",
+      lastname: "Thompson",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "a7b8c9d0-e1f2-4a5b-4c5d-6e7f8a9b0c1d",
+    job_title: "E-bike Repair Technician",
+    description:
+      "Electric bikes are becoming popular. Need specialized repair services.",
+    user_id: null,
+    upvotes: 12,
+    status: "pending",
+    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    user: null,
+  },
+  {
+    id: "b8c9d0e1-f2a3-4b5c-5d6e-7f8a9b0c1d2e",
+    job_title: "Smart Home Installer",
+    description:
+      "Installation and setup of smart home devices, security systems, and automation.",
+    user_id: "u5",
+    upvotes: 8,
+    status: "approved",
+    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "David",
+      lastname: "Kim",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    job_title: "Aquarium Maintenance Specialist",
+    description: null,
+    user_id: null,
+    upvotes: 5,
+    status: "rejected",
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    user: null,
+  },
+  {
+    id: "d0e1f2a3-b4c5-4d5e-7f8a-9b0c1d2e3f4a",
+    job_title: "Plant Care Consultant",
+    description:
+      "Professional plant care, diagnosis, and maintenance for indoor and outdoor gardens.",
+    user_id: "u6",
+    upvotes: 3,
+    status: "pending",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "Jessica",
+      lastname: "Martinez",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "e1f2a3b4-c5d6-4e5f-8a9b-0c1d2e3f4a5b",
+    job_title: "Home Theater Installer",
+    description:
+      "Professional setup of home entertainment systems, projectors, and sound systems.",
+    user_id: "u7",
+    upvotes: 18,
+    status: "approved",
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      firstname: "Ryan",
+      lastname: "O'Brien",
+      profile_pic_url: null,
+    },
+  },
+  {
+    id: "f2a3b4c5-d6e7-4f5a-9b0c-1d2e3f4a5b6c",
+    job_title: "Furniture Assembly Specialist",
+    description: null,
+    user_id: null,
+    upvotes: 50,
+    status: "implemented",
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    user: null,
+  },
+];
+
+// Extract unique job titles for autocomplete
+const MOCK_AUTOCOMPLETE_TITLES = Array.from(
+  new Set(MOCK_SUGGESTIONS.map((s) => s.job_title)),
+).sort();
 
 const suggestionSchema = z.object({
   jobTitle: z
@@ -71,11 +252,8 @@ export default function SuggestJobsPage() {
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
-  const [suggestions, setSuggestions] = useState<JobSuggestionWithUser[]>([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
-  const observerTarget = useRef<HTMLDivElement>(null);
+  const [suggestions, setSuggestions] =
+    useState<JobSuggestionWithUser[]>(MOCK_SUGGESTIONS);
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -90,17 +268,23 @@ export default function SuggestJobsPage() {
 
   const jobTitleValue = form.watch("jobTitle");
 
-  // Fetch autocomplete results with debounce
+  // Autocomplete with mock data (debounced)
   useEffect(() => {
-    const fetchAutocomplete = async () => {
+    const fetchAutocomplete = () => {
       if (!jobTitleValue || jobTitleValue.length < 2) {
         setAutocompleteResults([]);
         return;
       }
 
       setAutocompleteLoading(true);
-      const { data } = await autocompleteJobTitles(jobTitleValue, 8);
-      setAutocompleteResults(data || []);
+
+      // Filter mock titles based on search input
+      const searchLower = jobTitleValue.toLowerCase();
+      const filtered = MOCK_AUTOCOMPLETE_TITLES.filter((title) =>
+        title.toLowerCase().includes(searchLower),
+      ).slice(0, 8);
+
+      setAutocompleteResults(filtered);
       setAutocompleteLoading(false);
     };
 
@@ -108,75 +292,26 @@ export default function SuggestJobsPage() {
     return () => clearTimeout(timer);
   }, [jobTitleValue]);
 
-  // Fetch initial suggestions
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      setListLoading(true);
-      const { data } = await getAllJobSuggestions({ page: 1, limit: 10 });
-      setSuggestions(data || []);
-      setHasMore((data?.length || 0) === 10);
-      setListLoading(false);
-    };
-
-    fetchSuggestions();
-  }, []);
-
-  // Load more suggestions (infinite scroll)
-  const loadMore = useCallback(async () => {
-    if (listLoading || !hasMore) return;
-
-    setListLoading(true);
-    const nextPage = page + 1;
-    const { data } = await getAllJobSuggestions({ page: nextPage, limit: 10 });
-
-    if (data && data.length > 0) {
-      setSuggestions((prev) => [...prev, ...data]);
-      setPage(nextPage);
-      setHasMore(data.length === 10);
-    } else {
-      setHasMore(false);
-    }
-    setListLoading(false);
-  }, [page, listLoading, hasMore]);
-
-  // Intersection observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !listLoading) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [loadMore, hasMore, listLoading]);
-
   const onSubmit = async (values: SuggestionFormValues) => {
     setSubmitError(null);
     setSubmitSuccess(false);
 
     try {
-      const { data, error } = await createJobSuggestion(
-        values.jobTitle,
-        values.description,
-      );
+      // Create new suggestion with mock data
+      const newSuggestion: JobSuggestionWithUser = {
+        id: generateUUID(),
+        job_title: values.jobTitle,
+        description: values.description || null,
+        user_id: null,
+        upvotes: 0,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user: null,
+      };
 
-      if (error) throw error;
-
-      if (data) {
-        setSuggestions((prev) => [{ ...data, user: null }, ...prev]);
-      }
+      // Add to the beginning of the suggestions list
+      setSuggestions((prev) => [newSuggestion, ...prev]);
 
       setSubmitSuccess(true);
       form.reset();
@@ -331,7 +466,7 @@ export default function SuggestJobsPage() {
                         {...field}
                         disabled={form.formState.isSubmitting}
                         aria-invalid={!!fieldState.error}
-                        className="min-h-[100px]"
+                        className="min-h-25"
                       />
                       <FieldError>{fieldState.error?.message}</FieldError>
                     </Field>
@@ -384,11 +519,7 @@ export default function SuggestJobsPage() {
         <div>
           <h2 className="text-2xl font-bold mb-4">Community Suggestions</h2>
 
-          {listLoading && suggestions.length === 0 ? (
-            <div className="flex justify-center py-12">
-              <Spinner className="w-8 h-8" />
-            </div>
-          ) : suggestions.length === 0 ? (
+          {suggestions.length === 0 ? (
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -464,23 +595,6 @@ export default function SuggestJobsPage() {
                   </CardContent>
                 </Card>
               ))}
-
-              {/* Infinite scroll target */}
-              {hasMore && <div ref={observerTarget} className="h-8" />}
-
-              {/* Loading more indicator */}
-              {listLoading && suggestions.length > 0 && (
-                <div className="flex justify-center py-4">
-                  <Spinner />
-                </div>
-              )}
-
-              {/* End of list */}
-              {!hasMore && suggestions.length > 0 && (
-                <p className="text-center text-muted-foreground text-sm py-4">
-                  You've reached the end of suggestions
-                </p>
-              )}
             </div>
           )}
         </div>
