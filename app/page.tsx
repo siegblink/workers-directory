@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 
 function ComingSoonRibbon() {
   return (
-    <div className="absolute top-[-24px] right-0 z-10 pointer-events-none overflow-hidden w-28 h-28">
+    <div className="absolute -top-6 right-0 z-10 pointer-events-none overflow-hidden w-28 h-28">
       {/* Main ribbon band */}
-      <div className="absolute top-[14px] right-[-42px] w-[140px] bg-destructive text-destructive-foreground py-1.5 text-center text-xs font-semibold shadow-lg transform rotate-45">
+      <div className="absolute top-3.5 -right-10.5 w-35 bg-destructive text-destructive-foreground py-1.5 text-center text-xs font-semibold shadow-lg transform rotate-45">
         Coming Soon
       </div>
     </div>
@@ -72,7 +72,7 @@ export default function HomePage() {
                         : "hover:bg-neutral-50 dark:hover:bg-white/10 hover:border-neutral-300 dark:hover:border-white/20 hover:shadow-lg hover:shadow-neutral-300/60 dark:hover:shadow-xl dark:hover:shadow-primary/10",
                     )}
                   >
-                    <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[180px] relative">
+                    <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-45 relative">
                       {directory.isComingSoon && <ComingSoonRibbon />}
 
                       {/* Icon Container */}
