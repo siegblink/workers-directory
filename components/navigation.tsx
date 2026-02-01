@@ -176,19 +176,19 @@ export function Navigation() {
             <DirectoriesMenu />
             <Button variant="ghost" asChild>
               <Link href="/trending">
-                <TrendingUp />
+                <TrendingUp className="text-orange-600" />
                 Trending
               </Link>
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/hot">
-                <Flame />
+                <Flame className="text-green-400" />
                 Hot
               </Link>
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/suggest-jobs">
-                <Lightbulb />
+                <Lightbulb className="text-yellow-500" />
                 Suggest Jobs
               </Link>
             </Button>
@@ -326,19 +326,19 @@ export function Navigation() {
                 <DropdownMenuGroup>
                   <DropdownMenuItem asChild>
                     <Link href="/trending">
-                      <TrendingUp />
+                      <TrendingUp className="text-orange-600" />
                       Trending
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/hot">
-                      <Flame />
+                      <Flame className="text-green-400" />
                       Hot
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/suggest-jobs">
-                      <Lightbulb />
+                      <Lightbulb className="text-yellow-500" />
                       Suggest Jobs
                     </Link>
                   </DropdownMenuItem>
