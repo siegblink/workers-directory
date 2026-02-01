@@ -181,7 +181,7 @@ export default function WorkerDashboardPage() {
                 className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800"
                 asChild
               >
-                <Link href="/dashboard/promote">Promote Now</Link>
+                <Link href="/dashboard/promote">Get Prioritized Now</Link>
               </Button>
             </div>
           </CardContent>
