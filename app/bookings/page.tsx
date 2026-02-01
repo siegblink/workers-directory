@@ -133,7 +133,7 @@ export default function BookingsPage() {
 
           <div className="flex gap-2">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[45]">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -186,7 +186,7 @@ export default function BookingsPage() {
             mockBookings.map((booking) => (
               <Card
                 key={booking.id}
-                className="hover:shadow-lg transition-shadow min-h-[194px]"
+                className="hover:shadow-lg transition-shadow min-h-48.5"
               >
                 <CardContent>
                   <div className="flex flex-col md:flex-row gap-6">
