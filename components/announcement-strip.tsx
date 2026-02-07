@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAnnouncement } from "@/contexts/announcement-context";
+import { cn } from "@/lib/utils";
 
 export function AnnouncementStrip() {
   const { isVisible, setIsVisible } = useAnnouncement();
@@ -10,8 +11,6 @@ export function AnnouncementStrip() {
   const handleDismiss = () => {
     setIsVisible(false);
   };
-
-  if (!isVisible) return null;
 
   const announcements = [
     "Plumber needed in Cebu City",
@@ -47,7 +46,12 @@ export function AnnouncementStrip() {
   );
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-60 h-10 bg-muted border-b overflow-hidden">
+    <div
+      className={cn(
+        "fixed top-0 left-0 right-0 z-60 h-10 bg-muted border-b overflow-hidden",
+        !isVisible && "hidden",
+      )}
+    >
       <div className="relative h-full z-0">
         {/* Marquee content wrapper */}
         <div className="flex h-full items-center animate-marquee">

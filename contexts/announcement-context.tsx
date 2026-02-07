@@ -15,41 +15,61 @@ const AnnouncementContext = createContext<AnnouncementContextType | undefined>(
   undefined,
 );
 
+function setCookie(name: string, value: string) {
+  if ("cookieStore" in window) {
+    cookieStore.set({
+      name,
+      value,
+      path: "/",
+      expires: Date.now() + 31536000 * 1000,
+      sameSite: "lax",
+    });
+  } else {
+    // biome-ignore lint/suspicious/noDocumentCookie: fallback for browsers without Cookie Store API
+    document.cookie = `${name}=${value}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+}
+
 export function AnnouncementProvider({
   children,
+  initialDismissed = false,
 }: {
   children: React.ReactNode;
+  initialDismissed?: boolean;
 }) {
-  // Optimistic initial state (show by default)
-  // This prevents layout shift on initial render
-  const [isVisible, setIsVisibleState] = useState(true);
+  const [isVisible, setIsVisibleState] = useState(!initialDismissed);
   // Track whether the announcement strip is rendered on the current page
   const [isOnHomePage, setIsOnHomePage] = useState(false);
 
-  // Sync with localStorage on mount
+  // One-time migration: if localStorage says dismissed but no cookie exists yet,
+  // set the cookie so future SSR loads are flash-free
   useEffect(() => {
     try {
       const dismissed = localStorage.getItem("announcements-dismissed");
       if (dismissed === "true") {
         setIsVisibleState(false);
+        // Set cookie if it doesn't exist yet (migration from localStorage-only)
+        if (!document.cookie.includes("announcements-dismissed=true")) {
+          setCookie("announcements-dismissed", "true");
+        }
       }
     } catch {
       // Silently fail if localStorage is unavailable (e.g., private browsing)
-      // Component will show by default
     }
   }, []);
 
-  // Wrapper function that updates both state and localStorage
+  // Wrapper function that updates state, localStorage, and cookie
   function setIsVisible(visible: boolean) {
     setIsVisibleState(visible);
+    const dismissed = visible ? "false" : "true";
+
     try {
-      localStorage.setItem(
-        "announcements-dismissed",
-        visible ? "false" : "true",
-      );
+      localStorage.setItem("announcements-dismissed", dismissed);
     } catch {
       // Silently fail if localStorage is unavailable
     }
+
+    setCookie("announcements-dismissed", dismissed);
   }
 
   // Calculate announcement height based on visibility AND page context
@@ -74,10 +94,12 @@ export function AnnouncementProvider({
 // Custom hook to use the announcement context
 export function useAnnouncement() {
   const context = useContext(AnnouncementContext);
+
   if (context === undefined) {
     throw new Error(
       "useAnnouncement must be used within an AnnouncementProvider",
     );
   }
+
   return context;
 }

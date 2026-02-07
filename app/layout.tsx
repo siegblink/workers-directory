@@ -1,5 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import type React from "react";
 import { Suspense } from "react";
 import { ConditionalLayout } from "@/components/conditional-layout";
@@ -28,11 +29,15 @@ export const metadata: Metadata = {
     "Find trusted service workers in your area. Connect with verified plumbers, electricians, cleaners, and more",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialDismissed =
+    cookieStore.get("announcements-dismissed")?.value === "true";
+
   return (
     <html
       lang="en"
@@ -46,7 +51,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AnnouncementProvider>
+          <AnnouncementProvider initialDismissed={initialDismissed}>
             <Suspense fallback={<div>Loading...</div>}>
               <ConditionalLayout>{children}</ConditionalLayout>
             </Suspense>
