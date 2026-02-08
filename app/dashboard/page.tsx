@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Clock,
   Crown,
-  DollarSign,
   Star,
   TrendingUp,
   XCircle,
@@ -22,8 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 
 const mockStats = {
-  totalEarnings: 12450,
-  thisMonth: 3200,
+  totalBookings: 347,
+  thisMonthBookings: 28,
   pendingBookings: 5,
   completedJobs: 342,
   averageRating: 4.8,
@@ -192,17 +191,17 @@ export default function WorkerDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Earnings
+                Total Bookings
               </CardTitle>
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <Calendar className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                ${mockStats.totalEarnings.toLocaleString()}
+                {mockStats.totalBookings.toLocaleString()}
               </div>
               <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 mt-1">
-                <TrendingUp className="w-3 h-3" />
-                +${mockStats.thisMonth} this month
+                <TrendingUp className="w-3 h-3" />+{mockStats.thisMonthBookings}{" "}
+                this month
               </p>
             </CardContent>
           </Card>
@@ -281,7 +280,7 @@ export default function WorkerDashboardPage() {
                 <Card key={request.id}>
                   <CardContent>
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-4 flex-1">
                         <Avatar className="w-16 h-16">
                           <AvatarImage
                             src={request.customer.avatar || "/placeholder.svg"}
@@ -323,7 +322,7 @@ export default function WorkerDashboardPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end justify-between gap-4">
+                      <div className="flex flex-col items-end justify-between gap-4 flex-1">
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground mb-1">
                             Estimated Earnings
@@ -338,7 +337,7 @@ export default function WorkerDashboardPage() {
                             Accept
                           </Button>
                           <Button variant="outline" className="bg-transparent">
-                            <XCircle className="w-4 h-4 mr-2" />
+                            <XCircle />
                             Decline
                           </Button>
                         </div>
@@ -372,7 +371,7 @@ export default function WorkerDashboardPage() {
                 <Card key={job.id}>
                   <CardContent>
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-4 flex-1">
                         <Avatar className="w-16 h-16">
                           <AvatarImage
                             src={job.customer.avatar || "/placeholder.svg"}
@@ -414,7 +413,7 @@ export default function WorkerDashboardPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end justify-between gap-4">
+                      <div className="flex flex-col items-end justify-between gap-4 flex-1">
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground mb-1">
                             Earnings
