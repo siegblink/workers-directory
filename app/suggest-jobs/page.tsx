@@ -627,7 +627,7 @@ export default function SuggestJobsPage() {
                           <span className="text-muted-foreground text-sm">
                             {formatTimeAgo(suggestion.created_at)}
                           </span>
-                          {getStatusBadge(suggestion.status)}
+
                         </div>
 
                         {suggestion.location && (
