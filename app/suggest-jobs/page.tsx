@@ -70,7 +70,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Solar Panel Installer",
     description:
       "Growing demand for renewable energy. Many homeowners looking for solar installation services.",
-    location: null,
+    location: "Makati, Metro Manila",
     user_id: "u1",
     upvotes: 42,
     status: "approved",
@@ -86,7 +86,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     id: "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
     job_title: "Pet Groomer",
     description: null,
-    location: null,
+    location: "Cebu City",
     user_id: null,
     upvotes: 35,
     status: "pending",
@@ -99,7 +99,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Personal Chef",
     description:
       "Busy professionals and families need meal prep services. This could be a popular category.",
-    location: null,
+    location: "Quezon City",
     user_id: "u2",
     upvotes: 28,
     status: "implemented",
@@ -129,7 +129,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Home Organizer",
     description:
       "Professional organizing services for closets, garages, and entire homes.",
-    location: null,
+    location: "Davao City",
     user_id: "u3",
     upvotes: 19,
     status: "approved",
@@ -145,7 +145,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     id: "f6a7b8c9-d0e1-4f5a-3b4c-5d6e7f8a9b0c",
     job_title: "Drone Photographer",
     description: null,
-    location: null,
+    location: "Tagaytay",
     user_id: "u4",
     upvotes: 15,
     status: "pending",
@@ -175,7 +175,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Smart Home Installer",
     description:
       "Installation and setup of smart home devices, security systems, and automation.",
-    location: null,
+    location: "Pasig, Metro Manila",
     user_id: "u5",
     upvotes: 8,
     status: "approved",
@@ -204,7 +204,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Plant Care Consultant",
     description:
       "Professional plant care, diagnosis, and maintenance for indoor and outdoor gardens.",
-    location: null,
+    location: "Taguig, Metro Manila",
     user_id: "u6",
     upvotes: 3,
     status: "pending",
@@ -221,7 +221,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Home Theater Installer",
     description:
       "Professional setup of home entertainment systems, projectors, and sound systems.",
-    location: null,
+    location: "Muntinlupa",
     user_id: "u7",
     upvotes: 18,
     status: "approved",
@@ -588,7 +588,7 @@ export default function SuggestJobsPage() {
                   key={suggestion.id}
                   className="hover:shadow-md transition-shadow"
                 >
-                  <CardContent className="p-4">
+                  <CardContent>
                     <div className="flex items-start gap-4">
                       {/* User Avatar */}
                       <Avatar className="h-10 w-10 shrink-0">
@@ -620,6 +620,13 @@ export default function SuggestJobsPage() {
                           </span>
                           {getStatusBadge(suggestion.status)}
                         </div>
+
+                        {suggestion.location && (
+                          <div className="flex items-center gap-1 text-muted-foreground text-sm mb-1">
+                            <MapPin className="h-3 w-3" />
+                            <span>{suggestion.location}</span>
+                          </div>
+                        )}
 
                         <h3 className="text-lg font-semibold text-foreground mb-1">
                           {suggestion.job_title}
