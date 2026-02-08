@@ -191,7 +191,7 @@ export default function BookingsPage() {
                 <CardContent>
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Worker Info */}
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-4 flex-1">
                       <Avatar className="w-16 h-16">
                         <AvatarImage
                           src={booking.worker.avatar || "/placeholder.svg"}
@@ -221,10 +221,10 @@ export default function BookingsPage() {
                     </div>
 
                     {/* Booking Details */}
-                    <div className="flex-1 space-y-3">
+                    <div className="flex-1 space-y-2 flex-1">
                       <div className="flex items-start gap-2 text-sm">
                         <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
-                        <div>
+                        <div className="flex gap-4">
                           <p className="font-medium text-foreground">
                             {booking.date}
                           </p>
@@ -249,7 +249,7 @@ export default function BookingsPage() {
                     </div>
 
                     {/* Amount & Actions */}
-                    <div className="flex flex-col items-end justify-between gap-4">
+                    <div className="flex flex-col items-end justify-between gap-4 flex-1">
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground mb-1">
                           Total Amount
