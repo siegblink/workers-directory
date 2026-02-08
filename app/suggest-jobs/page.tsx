@@ -6,6 +6,7 @@ import {
   Check,
   Lightbulb,
   MapPin,
+  Search,
   Send,
   ThumbsUp,
   User,
@@ -567,7 +568,15 @@ export default function SuggestJobsPage() {
 
         {/* Suggestions Feed */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Community Suggestions</h2>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="text-2xl font-bold">Community Suggestions</h2>
+            <InputGroup className="max-w-64">
+              <InputGroupAddon>
+                <Search className="h-4 w-4" />
+              </InputGroupAddon>
+              <InputGroupInput placeholder="Search suggestions..." />
+            </InputGroup>
+          </div>
 
           {suggestions.length === 0 ? (
             <Empty>
