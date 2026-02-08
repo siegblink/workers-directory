@@ -16,7 +16,6 @@ import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -363,19 +362,6 @@ export default function SuggestJobsPage() {
     return date.toLocaleDateString();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <Badge variant="default">Approved</Badge>;
-      case "implemented":
-        return <Badge className="bg-green-600">Implemented</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>;
-      default:
-        return <Badge variant="secondary">Pending</Badge>;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -627,7 +613,6 @@ export default function SuggestJobsPage() {
                           <span className="text-muted-foreground text-sm">
                             {formatTimeAgo(suggestion.created_at)}
                           </span>
-
                         </div>
 
                         {suggestion.location && (

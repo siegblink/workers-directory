@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { AnnouncementStrip } from "@/components/announcement-strip";
+import { HeroSection } from "@/components/home/hero-section";
+import { SuggestionBoxSection } from "@/components/home/suggestion-box-section";
+import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAnnouncement } from "@/contexts/announcement-context";
 import { directories } from "@/lib/constants/directories";
@@ -32,11 +35,11 @@ export default function HomePage() {
     <>
       <AnnouncementStrip />
       <div className="min-h-screen flex flex-col">
+        {/* Hero */}
+        <HeroSection announcementHeight={announcementHeight} />
+
         {/* Directories */}
-        <section
-          className="max-w-7xl mx-auto px-4 pb-5 sm:px-6 lg:px-8"
-          style={{ paddingTop: `${announcementHeight + 64 + 24}px` }}
-        >
+        <section className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="text-2xl text-foreground mb-10">
             Featured Directories
           </h2>
@@ -121,6 +124,12 @@ export default function HomePage() {
             </div>
           </nav>
         </section>
+
+        {/* Testimonials */}
+        <TestimonialsSection />
+
+        {/* Suggestion Box */}
+        <SuggestionBoxSection />
       </div>
     </>
   );

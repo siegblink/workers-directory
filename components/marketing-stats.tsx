@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Star, Users, Zap } from "lucide-react";
+import { CheckCircle, ShieldCheck, Star, Users, Zap } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
 
 export function MarketingStats() {
@@ -28,6 +28,10 @@ export function MarketingStats() {
       <Pill variant="rose" size="lg">
         <Zap className="fill-current" />
         &lt;30 min Response
+      </Pill>
+      <Pill variant="teal" size="lg">
+        <ShieldCheck />
+        Verified & Insured
       </Pill>
     </div>
   );

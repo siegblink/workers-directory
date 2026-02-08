@@ -22,6 +22,7 @@ const pillVariants = cva(
         violet:
           "bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/20",
         rose: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+        teal: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/20",
       },
       size: {
         sm: "text-xs px-2 py-0.5 gap-1 [&>svg]:size-3",

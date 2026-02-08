@@ -203,6 +203,13 @@
   }
 }
 
+@utility scrollbar-hide {
+  scrollbar-width: none; /* Firefox & modern browsers */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
+}
+
 /* Marquee animation for announcement strip */
 @keyframes marquee {
   from {
@@ -223,6 +230,28 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
+    animation: none;
+  }
+}
+
+/* Fade-in entrance animation for hero section */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
     animation: none;
   }
 }
