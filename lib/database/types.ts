@@ -200,6 +200,7 @@ export interface JobSuggestion {
   id: string; // UUID
   job_title: string;
   description: string | null;
+  location: string | null;
   user_id: string | null; // UUID
   upvotes: number;
   status: JobSuggestionStatus;

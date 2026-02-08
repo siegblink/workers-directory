@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Check,
   Lightbulb,
+  MapPin,
   Send,
   ThumbsUp,
   User,
@@ -44,6 +45,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobSuggestionWithUser } from "@/lib/database/types";
@@ -64,6 +70,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Solar Panel Installer",
     description:
       "Growing demand for renewable energy. Many homeowners looking for solar installation services.",
+    location: null,
     user_id: "u1",
     upvotes: 42,
     status: "approved",
@@ -79,6 +86,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     id: "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
     job_title: "Pet Groomer",
     description: null,
+    location: null,
     user_id: null,
     upvotes: 35,
     status: "pending",
@@ -91,6 +99,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Personal Chef",
     description:
       "Busy professionals and families need meal prep services. This could be a popular category.",
+    location: null,
     user_id: "u2",
     upvotes: 28,
     status: "implemented",
@@ -107,6 +116,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Mobile Car Detailer",
     description:
       "On-site car cleaning and detailing services. Convenient for busy car owners.",
+    location: null,
     user_id: null,
     upvotes: 23,
     status: "pending",
@@ -119,6 +129,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Home Organizer",
     description:
       "Professional organizing services for closets, garages, and entire homes.",
+    location: null,
     user_id: "u3",
     upvotes: 19,
     status: "approved",
@@ -134,6 +145,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     id: "f6a7b8c9-d0e1-4f5a-3b4c-5d6e7f8a9b0c",
     job_title: "Drone Photographer",
     description: null,
+    location: null,
     user_id: "u4",
     upvotes: 15,
     status: "pending",
@@ -150,6 +162,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "E-bike Repair Technician",
     description:
       "Electric bikes are becoming popular. Need specialized repair services.",
+    location: null,
     user_id: null,
     upvotes: 12,
     status: "pending",
@@ -162,6 +175,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Smart Home Installer",
     description:
       "Installation and setup of smart home devices, security systems, and automation.",
+    location: null,
     user_id: "u5",
     upvotes: 8,
     status: "approved",
@@ -177,6 +191,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     id: "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
     job_title: "Aquarium Maintenance Specialist",
     description: null,
+    location: null,
     user_id: null,
     upvotes: 5,
     status: "rejected",
@@ -189,6 +204,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Plant Care Consultant",
     description:
       "Professional plant care, diagnosis, and maintenance for indoor and outdoor gardens.",
+    location: null,
     user_id: "u6",
     upvotes: 3,
     status: "pending",
@@ -205,6 +221,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     job_title: "Home Theater Installer",
     description:
       "Professional setup of home entertainment systems, projectors, and sound systems.",
+    location: null,
     user_id: "u7",
     upvotes: 18,
     status: "approved",
@@ -220,6 +237,7 @@ const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
     id: "f2a3b4c5-d6e7-4f5a-9b0c-1d2e3f4a5b6c",
     job_title: "Furniture Assembly Specialist",
     description: null,
+    location: null,
     user_id: null,
     upvotes: 50,
     status: "implemented",
@@ -239,6 +257,10 @@ const suggestionSchema = z.object({
     .string()
     .min(3, { message: "Job title must be at least 3 characters" })
     .max(100, { message: "Job title must be less than 100 characters" }),
+  location: z
+    .string()
+    .max(100, { message: "Location must be less than 100 characters" })
+    .optional(),
   description: z
     .string()
     .max(500, { message: "Description must be less than 500 characters" })
@@ -262,6 +284,7 @@ export default function SuggestJobsPage() {
     resolver: zodResolver(suggestionSchema),
     defaultValues: {
       jobTitle: "",
+      location: "",
       description: "",
     },
   });
@@ -302,6 +325,7 @@ export default function SuggestJobsPage() {
         id: generateUUID(),
         job_title: values.jobTitle,
         description: values.description || null,
+        location: values.location || null,
         user_id: null,
         upvotes: 0,
         status: "pending",
@@ -446,6 +470,32 @@ export default function SuggestJobsPage() {
                             )}
                         </Command>
                       </div>
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </Field>
+                  )}
+                />
+
+                {/* Location (Optional) */}
+                <Controller
+                  control={form.control}
+                  name="location"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel htmlFor="location">
+                        Location (Optional)
+                      </FieldLabel>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <MapPin className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="location"
+                          placeholder="e.g., Manila, Cebu, Davao..."
+                          {...field}
+                          disabled={form.formState.isSubmitting}
+                          aria-invalid={!!fieldState.error}
+                        />
+                      </InputGroup>
                       <FieldError>{fieldState.error?.message}</FieldError>
                     </Field>
                   )}
