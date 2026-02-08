@@ -182,13 +182,13 @@ export function Navigation() {
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/hot">
-                <Flame className="text-green-400" />
+                <Flame className="text-yellow-500" />
                 Hot
               </Link>
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/suggest-jobs">
-                <Lightbulb className="text-yellow-500" />
+                <Lightbulb className="text-green-400" />
                 Suggest Jobs
               </Link>
             </Button>
