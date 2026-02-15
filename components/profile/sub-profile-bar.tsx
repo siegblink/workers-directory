@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-import { useSubProfile } from "@/contexts/sub-profile-context";
+import { MAX_PROFILES, useSubProfile } from "@/contexts/sub-profile-context";
 
 type SubProfileBarProps = {
   onCreateClick: () => void;
@@ -29,6 +29,9 @@ export function SubProfileBar({
     setActiveSubProfileId,
     renameSubProfile,
   } = useSubProfile();
+
+  const totalProfiles = (hasMainProfile ? 1 : 0) + subProfiles.length;
+  const atProfileLimit = totalProfiles >= MAX_PROFILES;
 
   const [renamingProfile, setRenamingProfile] = useState<{
     id: string;
@@ -51,13 +54,14 @@ export function SubProfileBar({
   return (
     <>
       <div className="mt-6 overflow-x-auto -mx-4 px-4">
-        <nav className="flex items-center gap-2 pb-2 min-w-max">
+        <nav className="flex items-center gap-2 py-1 min-w-max">
           {hasMainProfile && (
             <>
               {/* Main Profile tab */}
               <Button
                 variant={activeSubProfileId === null ? "secondary" : "outline"}
-                size="sm"
+                size="default"
+                className="focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 onClick={() => setActiveSubProfileId(null)}
               >
                 Main Profile
@@ -65,23 +69,29 @@ export function SubProfileBar({
 
               {/* Sub-profile tabs */}
               {subProfiles.map((sp) => (
-                <div key={sp.id} className="flex items-center">
+                <div key={sp.id} className="flex items-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                   <Button
                     variant={
                       activeSubProfileId === sp.id ? "secondary" : "outline"
                     }
-                    size="sm"
-                    className="rounded-r-none"
+                    size="default"
+                    className="rounded-r-none focus-visible:ring-0"
                     onClick={() => setActiveSubProfileId(sp.id)}
                   >
-                    {sp.directoryLabel}
+                    {sp.directoryLabel.length > 20 ? (
+                      <span className="max-w-[20ch] overflow-hidden whitespace-nowrap block mask-[linear-gradient(to_right,black_80%,transparent)]">
+                        {sp.directoryLabel}
+                      </span>
+                    ) : (
+                      sp.directoryLabel
+                    )}
                   </Button>
                   <Button
                     variant={
                       activeSubProfileId === sp.id ? "secondary" : "outline"
                     }
-                    size="icon-sm"
-                    className="rounded-l-none border-l-0"
+                    size="icon"
+                    className="rounded-l-none border-l-0 focus-visible:ring-0"
                     aria-label={`Rename ${sp.directoryLabel} sub-profile`}
                     onClick={() => openRenameDialog(sp.id, sp.directoryLabel)}
                   >
@@ -93,10 +103,17 @@ export function SubProfileBar({
           )}
 
           {/* Create button */}
-          <Button variant="outline" size="sm" onClick={onCreateClick}>
-            <Plus />
-            {hasMainProfile ? "Create Sub-Profile" : "Create Profile"}
-          </Button>
+          {!atProfileLimit && (
+            <Button
+              variant="outline"
+              size="default"
+              className="focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onClick={onCreateClick}
+            >
+              <Plus />
+              {hasMainProfile ? "Create Sub-Profile" : "Create Profile"}
+            </Button>
+          )}
         </nav>
       </div>
 
@@ -127,6 +144,9 @@ export function SubProfileBar({
               autoFocus
             />
           </InputGroup>
+          <p className="text-sm text-muted-foreground">
+            Only the first 20 characters will be shown on the profile tab.
+          </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenamingProfile(null)}>
               Cancel

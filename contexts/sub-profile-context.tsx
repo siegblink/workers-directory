@@ -35,6 +35,8 @@ const SubProfileContext = createContext<SubProfileContextType | undefined>(
   undefined,
 );
 
+export const MAX_PROFILES = 20;
+
 const STORAGE_KEY = "sub-profiles";
 const ACTIVE_KEY = "sub-profiles-active";
 const MAIN_PROFILE_KEY = "has-main-profile";
@@ -100,7 +102,11 @@ export function SubProfileProvider({
     if (id) {
       const profile = subProfiles.find((p) => p.id === id);
       if (profile) {
-        toast(`Switched to ${profile.directoryLabel} sub-profile`);
+        const label =
+          profile.directoryLabel.length > 20
+            ? `${profile.directoryLabel.slice(0, 20)}…`
+            : profile.directoryLabel;
+        toast(`Switched to ${label} sub-profile`);
       }
     } else {
       toast("Switched to Main Profile");
@@ -111,6 +117,13 @@ export function SubProfileProvider({
     directoryId: DirectoryId,
     directoryLabel: string,
   ): SubProfile {
+    const totalProfiles = (hasMainProfile ? 1 : 0) + subProfiles.length;
+    if (totalProfiles >= MAX_PROFILES) {
+      toast.error(`You can have at most ${MAX_PROFILES} profiles.`);
+      setPendingDirectory(null);
+      return null as unknown as SubProfile;
+    }
+
     const newProfile = generateSubProfileMockData(directoryId, directoryLabel);
     const updated = [...subProfiles, newProfile];
     setSubProfiles(updated);
