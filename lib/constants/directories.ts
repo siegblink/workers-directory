@@ -11,7 +11,7 @@ import {
   Wrench,
 } from "lucide-react";
 
-export interface Directory {
+export type Directory = {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -20,7 +20,7 @@ export interface Directory {
   description?: string;
   iconColor: string;
   bgColor: string;
-}
+};
 
 export const directories: Directory[] = [
   {

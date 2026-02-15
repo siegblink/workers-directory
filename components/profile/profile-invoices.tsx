@@ -43,7 +43,7 @@ export function ProfileInvoices({ invoices }: ProfileInvoicesProps) {
           <CardTitle>Invoices</CardTitle>
           <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              ${paidAmount.toLocaleString()} paid of $
+              ₱{paidAmount.toLocaleString()} paid of ₱
               {totalAmount.toLocaleString()} total
             </p>
             <Button variant="outline" size="sm" asChild>
@@ -82,7 +82,7 @@ export function ProfileInvoices({ invoices }: ProfileInvoicesProps) {
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold text-foreground">
-                    ${invoice.amount}
+                    ₱{invoice.amount}
                   </p>
                 </div>
               </div>

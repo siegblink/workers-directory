@@ -1,21 +1,20 @@
 "use client";
 
 import { Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useSubProfile } from "@/contexts/sub-profile-context";
+import { directories } from "@/lib/constants/directories";
+import type { DirectoryId } from "@/lib/types/sub-profile";
 
 const benefits = [
   {
@@ -41,7 +40,7 @@ const benefits = [
   },
 ];
 
-const professions = [
+const jobTitles = [
   "Plumber",
   "Electrician",
   "Cleaner",
@@ -50,29 +49,50 @@ const professions = [
   "Handyman",
   "HVAC Technician",
   "Landscaper",
-  "Other",
+  "Roofer",
+  "Mason",
+  "Welder",
+  "Locksmith",
+  "Pest Control Technician",
+  "Appliance Repair Technician",
+  "General Contractor",
 ];
 
 export default function BecomeWorkerPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    profession: "",
+    profileLabel: "",
+    jobTitle: "",
     experience: "",
-    hourlyRate: "",
     bio: "",
     skills: [] as string[],
     agreeToTerms: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { addSubProfile, pendingDirectory } = useSubProfile();
+
+  const isSubProfileFlow = searchParams.get("from") === "sub-profile";
+  const directoryParam = searchParams.get("directory");
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (step === 2 && (!formData.profileLabel || !formData.jobTitle)) return;
     if (step < 3) {
       setStep(step + 1);
+    } else if (isSubProfileFlow && directoryParam) {
+      // Sub-profile creation flow: add profile and redirect
+      const dir = directories.find((d) => d.id === directoryParam);
+      const label = dir?.label ?? pendingDirectory?.label ?? directoryParam;
+      addSubProfile(directoryParam as DirectoryId, label);
+      toast(`${label} sub-profile created`);
+      router.push("/profile");
     } else {
-      // Handle final submission
+      // Default flow
       console.log("Form submitted:", formData);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,7 +100,7 @@ export default function BecomeWorkerPage() {
         // Landing Page
         <div>
           {/* Hero Section */}
-          <section className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 text-white py-20 px-4">
+          <section className="bg-linear-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 text-white py-20 px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-6 text-balance">
                 Become a Worker
@@ -213,24 +233,39 @@ export default function BecomeWorkerPage() {
                 {step === 2 && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="profession">Profession</Label>
-                      <Select
-                        value={formData.profession}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, profession: value })
+                      <Label htmlFor="profileLabel">Profile Label</Label>
+                      <Input
+                        id="profileLabel"
+                        type="text"
+                        placeholder="e.g., John's Plumbing Services"
+                        value={formData.profileLabel}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            profileLabel: e.target.value,
+                          })
                         }
-                      >
-                        <SelectTrigger id="profession">
-                          <SelectValue placeholder="Select your profession" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {professions.map((prof) => (
-                            <SelectItem key={prof} value={prof}>
-                              {prof}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        required
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        A short name for your worker profile that customers will
+                        see.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="jobTitle">Job Title</Label>
+                      <Combobox
+                        id="jobTitle"
+                        value={formData.jobTitle}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, jobTitle: value })
+                        }
+                        options={jobTitles}
+                        placeholder="Select or type your job title"
+                        searchPlaceholder="Search job titles…"
+                        emptyMessage="No matching title — press Escape to use your search text."
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -248,26 +283,6 @@ export default function BecomeWorkerPage() {
                         }
                         required
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                      <Input
-                        id="hourlyRate"
-                        type="number"
-                        placeholder="e.g., 45"
-                        value={formData.hourlyRate}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            hourlyRate: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Set your hourly rate. You can change this later.
-                      </p>
                     </div>
 
                     <div className="space-y-2">

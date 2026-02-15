@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { DirectorySelectionDialog } from "@/components/profile/directory-selection-dialog";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
 import { ProfileBookingsPanel } from "@/components/profile/profile-bookings-panel";
@@ -27,6 +28,8 @@ import {
   ProfileTestimonials,
   type Review,
 } from "@/components/profile/profile-testimonials";
+import { SubProfileBar } from "@/components/profile/sub-profile-bar";
+import { useSubProfile } from "@/contexts/sub-profile-context";
 import type {
   ProfileAboutFormValues,
   ProfileAvailabilityFormValues,
@@ -313,22 +316,60 @@ export default function ProfilePage() {
       ? (sectionSlug as ProfileSection)
       : "profile";
 
+  const { subProfiles, activeSubProfileId } = useSubProfile();
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Main profile editable state
   const [profile, setProfile] = useState(mockProfile);
   const [bio, setBio] = useState(mockBio);
   const [skills, setSkills] = useState(mockSkills);
   const [availability, setAvailability] = useState(mockAvailability);
 
+  // Determine data source
+  const activeSubProfile = activeSubProfileId
+    ? subProfiles.find((sp) => sp.id === activeSubProfileId)
+    : null;
+
+  const currentProfile = activeSubProfile
+    ? activeSubProfile.profileData
+    : profile;
+  const currentBio = activeSubProfile ? activeSubProfile.bio : bio;
+  const currentSkills = activeSubProfile ? activeSubProfile.skills : skills;
+  const currentAvailability = activeSubProfile
+    ? activeSubProfile.availability
+    : availability;
+  const currentPortfolio = activeSubProfile
+    ? activeSubProfile.portfolio
+    : mockPortfolio;
+  const currentReviews = activeSubProfile
+    ? activeSubProfile.reviews
+    : mockReviews;
+  const currentBookings = activeSubProfile
+    ? activeSubProfile.bookings
+    : mockBookings;
+  const currentBookmarked = activeSubProfile
+    ? activeSubProfile.bookmarkedWorkers
+    : mockBookmarked;
+  const currentConversations = activeSubProfile
+    ? activeSubProfile.conversations
+    : mockConversations;
+  const currentInvoices = activeSubProfile
+    ? activeSubProfile.invoices
+    : mockInvoices;
+
   async function handleHeaderSave(data: ProfileHeaderFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    setProfile((prev) => ({
-      ...prev,
-      name: data.name,
-      statusEmoji: data.statusEmoji,
-      statusText: data.statusText,
-      profession: data.profession,
-      location: data.location,
-      hourlyRate: data.hourlyRate,
-    }));
+    if (!activeSubProfile) {
+      setProfile((prev) => ({
+        ...prev,
+        name: data.name,
+        statusEmoji: data.statusEmoji,
+        statusText: data.statusText,
+        profession: data.profession,
+        location: data.location,
+        hourlyRate: data.hourlyRate,
+      }));
+    }
     console.log("Header saved:", data);
   }
 
@@ -339,14 +380,18 @@ export default function ProfilePage() {
 
   async function handleAboutSave(data: ProfileAboutFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    setBio(data.bio);
-    setSkills(data.skills);
+    if (!activeSubProfile) {
+      setBio(data.bio);
+      setSkills(data.skills);
+    }
     console.log("About saved:", data);
   }
 
   async function handleAvailabilitySave(data: ProfileAvailabilityFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    setAvailability(data);
+    if (!activeSubProfile) {
+      setAvailability(data);
+    }
     console.log("Availability saved:", data);
   }
 
@@ -355,45 +400,58 @@ export default function ProfilePage() {
       case "profile":
         return (
           <>
-            <ProfileAbout bio={bio} skills={skills} onSave={handleAboutSave} />
+            <ProfileAbout
+              bio={currentBio}
+              skills={currentSkills}
+              onSave={handleAboutSave}
+            />
             <ProfileAvailability
-              availability={availability}
+              availability={currentAvailability}
               onSave={handleAvailabilitySave}
             />
           </>
         );
       case "messages":
-        return <ProfileMessagesPanel conversations={mockConversations} />;
+        return <ProfileMessagesPanel conversations={currentConversations} />;
       case "bookings":
         return (
           <ProfileBookingsPanel
-            bookings={mockBookings}
-            bookmarkedWorkers={mockBookmarked}
+            bookings={currentBookings}
+            bookmarkedWorkers={currentBookmarked}
           />
         );
       case "gallery":
-        return <ProfileGallery portfolio={mockPortfolio} />;
+        return <ProfileGallery portfolio={currentPortfolio} />;
       case "reviews":
         return (
           <ProfileTestimonials
-            rating={profile.rating}
-            reviewCount={profile.reviews}
-            reviews={mockReviews}
+            rating={currentProfile.rating}
+            reviewCount={currentProfile.reviews}
+            reviews={currentReviews}
           />
         );
       case "invoices":
-        return <ProfileInvoices invoices={mockInvoices} />;
+        return <ProfileInvoices invoices={currentInvoices} />;
     }
   }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-        {/* Profile Header - unchanged */}
+        {/* Profile Header */}
         <ProfileHeader
-          profile={profile}
+          profile={currentProfile}
           onSave={handleHeaderSave}
           onAvatarChange={handleAvatarChange}
+        />
+
+        {/* Sub-profile bar */}
+        <SubProfileBar onCreateClick={() => setDialogOpen(true)} />
+
+        {/* Directory selection dialog */}
+        <DirectorySelectionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
         />
 
         {/* Mobile sidebar nav */}
