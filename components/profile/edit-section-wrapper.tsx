@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 
-interface EditSectionWrapperProps {
+type EditSectionWrapperProps = {
   title: string;
+  label?: string;
   isEditing: boolean;
   onEdit: () => void;
   onCancel: () => void;
   onSave: () => void;
   isSaving: boolean;
   children: React.ReactNode;
-}
+};
 
 export function EditSectionWrapper({
   title,
+  label,
   isEditing,
   onEdit,
   onCancel,
@@ -27,8 +29,13 @@ export function EditSectionWrapper({
   return (
     <Card className="mb-6">
       <CardContent>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex flex-col gap-6">
+            {label && (
+              <p className="leading-relaxed text-muted-foreground">{label}</p>
+            )}
+            <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+          </div>
           {isEditing ? (
             <div className="flex gap-2">
               <Button

@@ -24,13 +24,19 @@ import {
 } from "@/lib/schemas/profile";
 import { EditSectionWrapper } from "./edit-section-wrapper";
 
-interface ProfileAboutProps {
+type ProfileAboutProps = {
   bio: string;
   skills: string[];
+  profileLabel?: string;
   onSave: (data: ProfileAboutFormValues) => Promise<void>;
-}
+};
 
-export function ProfileAbout({ bio, skills, onSave }: ProfileAboutProps) {
+export function ProfileAbout({
+  bio,
+  skills,
+  profileLabel,
+  onSave,
+}: ProfileAboutProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [newSkill, setNewSkill] = useState("");
 
@@ -97,6 +103,7 @@ export function ProfileAbout({ bio, skills, onSave }: ProfileAboutProps) {
   return (
     <EditSectionWrapper
       title="About Me"
+      label={profileLabel}
       isEditing={isEditing}
       onEdit={handleEdit}
       onCancel={handleCancel}

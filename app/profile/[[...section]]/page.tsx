@@ -419,6 +419,11 @@ export default function ProfilePage() {
             <ProfileAbout
               bio={currentBio}
               skills={currentSkills}
+              profileLabel={
+                activeSubProfile
+                  ? activeSubProfile.directoryLabel
+                  : "Main Profile"
+              }
               onSave={handleAboutSave}
             />
             <ProfileAvailability
@@ -450,7 +455,10 @@ export default function ProfilePage() {
         return <ProfileInvoices invoices={currentInvoices} />;
       case "settings":
         return activeSubProfile ? (
-          <ProfileSettings key={activeSubProfile.id} subProfile={activeSubProfile} />
+          <ProfileSettings
+            key={activeSubProfile.id}
+            subProfile={activeSubProfile}
+          />
         ) : null;
     }
   }
