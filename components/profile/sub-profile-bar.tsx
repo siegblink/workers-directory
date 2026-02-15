@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,25 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { useSubProfile } from "@/contexts/sub-profile-context";
 
 type SubProfileBarProps = {
   onCreateClick: () => void;
+  hasMainProfile?: boolean;
 };
 
-export function SubProfileBar({ onCreateClick }: SubProfileBarProps) {
+export function SubProfileBar({
+  onCreateClick,
+  hasMainProfile = true,
+}: SubProfileBarProps) {
   const {
     subProfiles,
     activeSubProfileId,
     setActiveSubProfileId,
-    removeSubProfile,
     renameSubProfile,
   } = useSubProfile();
 
@@ -55,62 +52,50 @@ export function SubProfileBar({ onCreateClick }: SubProfileBarProps) {
     <>
       <div className="mt-6 overflow-x-auto -mx-4 px-4">
         <nav className="flex items-center gap-2 pb-2 min-w-max">
-          {/* Main Profile tab */}
-          <Button
-            variant={activeSubProfileId === null ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => setActiveSubProfileId(null)}
-          >
-            Main Profile
-          </Button>
-
-          {/* Sub-profile tabs */}
-          {subProfiles.map((sp) => (
-            <div key={sp.id} className="flex items-center">
+          {hasMainProfile && (
+            <>
+              {/* Main Profile tab */}
               <Button
-                variant={activeSubProfileId === sp.id ? "secondary" : "outline"}
+                variant={activeSubProfileId === null ? "secondary" : "outline"}
                 size="sm"
-                className="rounded-r-none"
-                onClick={() => setActiveSubProfileId(sp.id)}
+                onClick={() => setActiveSubProfileId(null)}
               >
-                {sp.directoryLabel}
+                Main Profile
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+
+              {/* Sub-profile tabs */}
+              {subProfiles.map((sp) => (
+                <div key={sp.id} className="flex items-center">
+                  <Button
+                    variant={
+                      activeSubProfileId === sp.id ? "secondary" : "outline"
+                    }
+                    size="sm"
+                    className="rounded-r-none"
+                    onClick={() => setActiveSubProfileId(sp.id)}
+                  >
+                    {sp.directoryLabel}
+                  </Button>
                   <Button
                     variant={
                       activeSubProfileId === sp.id ? "secondary" : "outline"
                     }
                     size="icon-sm"
                     className="rounded-l-none border-l-0"
-                    aria-label={`Options for ${sp.directoryLabel} sub-profile`}
-                  >
-                    <Ellipsis />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onSelect={() => openRenameDialog(sp.id, sp.directoryLabel)}
+                    aria-label={`Rename ${sp.directoryLabel} sub-profile`}
+                    onClick={() => openRenameDialog(sp.id, sp.directoryLabel)}
                   >
                     <Pencil />
-                    Rename
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onSelect={() => removeSubProfile(sp.id)}
-                  >
-                    <Trash2 />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
+                  </Button>
+                </div>
+              ))}
+            </>
+          )}
 
           {/* Create button */}
           <Button variant="outline" size="sm" onClick={onCreateClick}>
             <Plus />
-            Create Sub-Profile
+            {hasMainProfile ? "Create Sub-Profile" : "Create Profile"}
           </Button>
         </nav>
       </div>

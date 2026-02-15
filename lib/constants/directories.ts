@@ -29,7 +29,7 @@ export const directories: Directory[] = [
     icon: Wrench,
     href: "/search",
     isComingSoon: false,
-    description: "Find verified service professionals",
+    description: "Become a worker",
     iconColor: "text-orange-500",
     bgColor: "bg-orange-500/15",
   },

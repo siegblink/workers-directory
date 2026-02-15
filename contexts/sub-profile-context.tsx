@@ -11,6 +11,8 @@ type PendingDirectory = {
   label: string;
 } | null;
 
+type PendingProfileType = "main" | "sub";
+
 type SubProfileContextType = {
   subProfiles: SubProfile[];
   activeSubProfileId: string | null;
@@ -23,6 +25,10 @@ type SubProfileContextType = {
   renameSubProfile: (id: string, newLabel: string) => void;
   pendingDirectory: PendingDirectory;
   setPendingDirectory: (dir: PendingDirectory) => void;
+  pendingProfileType: PendingProfileType;
+  setPendingProfileType: (type: PendingProfileType) => void;
+  hasMainProfile: boolean;
+  setHasMainProfile: (value: boolean) => void;
 };
 
 const SubProfileContext = createContext<SubProfileContextType | undefined>(
@@ -31,6 +37,7 @@ const SubProfileContext = createContext<SubProfileContextType | undefined>(
 
 const STORAGE_KEY = "sub-profiles";
 const ACTIVE_KEY = "sub-profiles-active";
+const MAIN_PROFILE_KEY = "has-main-profile";
 
 export function SubProfileProvider({
   children,
@@ -43,6 +50,9 @@ export function SubProfileProvider({
   >(null);
   const [pendingDirectory, setPendingDirectory] =
     useState<PendingDirectory>(null);
+  const [pendingProfileType, setPendingProfileType] =
+    useState<PendingProfileType>("sub");
+  const [hasMainProfile, setHasMainProfileState] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Hydrate from localStorage on mount
@@ -56,6 +66,10 @@ export function SubProfileProvider({
       const storedActive = localStorage.getItem(ACTIVE_KEY);
       if (storedActive) {
         setActiveSubProfileIdState(storedActive);
+      }
+      const storedMainProfile = localStorage.getItem(MAIN_PROFILE_KEY);
+      if (storedMainProfile === "true") {
+        setHasMainProfileState(true);
       }
     } catch {
       // Silently fail if localStorage is unavailable
@@ -115,6 +129,19 @@ export function SubProfileProvider({
     }
   }
 
+  function setHasMainProfile(value: boolean) {
+    setHasMainProfileState(value);
+    try {
+      if (value) {
+        localStorage.setItem(MAIN_PROFILE_KEY, "true");
+      } else {
+        localStorage.removeItem(MAIN_PROFILE_KEY);
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+
   function renameSubProfile(id: string, newLabel: string) {
     const updated = subProfiles.map((p) =>
       p.id === id ? { ...p, directoryLabel: newLabel } : p,
@@ -132,6 +159,10 @@ export function SubProfileProvider({
     renameSubProfile,
     pendingDirectory,
     setPendingDirectory,
+    pendingProfileType,
+    setPendingProfileType,
+    hasMainProfile: isHydrated ? hasMainProfile : false,
+    setHasMainProfile,
   };
 
   return (

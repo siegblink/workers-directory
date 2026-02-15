@@ -48,16 +48,18 @@ export interface ProfileData {
   responseTime: string;
 }
 
-interface ProfileHeaderProps {
+type ProfileHeaderProps = {
   profile: ProfileData;
   onSave: (data: ProfileHeaderFormValues) => Promise<void>;
   onAvatarChange: (file: File) => Promise<void>;
-}
+  hasMainProfile?: boolean;
+};
 
 export function ProfileHeader({
   profile,
   onSave,
   onAvatarChange,
+  hasMainProfile = true,
 }: ProfileHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -370,20 +372,28 @@ export function ProfileHeader({
                           Verified
                         </Pill>
                       )}
-                      •
-                      <span className="text-sm text-muted-foreground">
-                        {profile.profession}
-                      </span>
+                      {hasMainProfile && (
+                        <>
+                          •
+                          <span className="text-sm text-muted-foreground">
+                            {profile.profession}
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{profile.rating}</span>
-                        <span className="text-muted-foreground">
-                          ({profile.reviews} reviews)
-                        </span>
-                      </div>
+                      {hasMainProfile && (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                          <span className="font-semibold">
+                            {profile.rating}
+                          </span>
+                          <span className="text-muted-foreground">
+                            ({profile.reviews} reviews)
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <MapPin className="w-4 h-4" />
                         {profile.location}
@@ -395,21 +405,23 @@ export function ProfileHeader({
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleEdit}
-                    className="w-full md:w-auto"
-                  >
-                    <Pencil />
-                    Edit
-                  </Button>
+                  {hasMainProfile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEdit}
+                      className="w-full md:w-auto"
+                    >
+                      <Pencil />
+                      Edit
+                    </Button>
+                  )}
                 </>
               )}
             </div>
 
-            {/* Stats - visible only when not editing */}
-            {!isEditing && (
+            {/* Stats - visible only when not editing and profile exists */}
+            {!isEditing && hasMainProfile && (
               <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
                 <div>
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">

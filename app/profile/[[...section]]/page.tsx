@@ -1,5 +1,6 @@
 "use client";
 
+import { User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { DirectorySelectionDialog } from "@/components/profile/directory-selection-dialog";
@@ -29,6 +30,14 @@ import {
   type Review,
 } from "@/components/profile/profile-testimonials";
 import { SubProfileBar } from "@/components/profile/sub-profile-bar";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { useSubProfile } from "@/contexts/sub-profile-context";
 import type {
   ProfileAboutFormValues,
@@ -316,7 +325,7 @@ export default function ProfilePage() {
       ? (sectionSlug as ProfileSection)
       : "profile";
 
-  const { subProfiles, activeSubProfileId } = useSubProfile();
+  const { subProfiles, activeSubProfileId, hasMainProfile } = useSubProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Main profile editable state
@@ -435,6 +444,8 @@ export default function ProfilePage() {
     }
   }
 
+  const dialogProfileType = hasMainProfile ? "sub" : "main";
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
@@ -443,30 +454,55 @@ export default function ProfilePage() {
           profile={currentProfile}
           onSave={handleHeaderSave}
           onAvatarChange={handleAvatarChange}
+          hasMainProfile={hasMainProfile}
         />
 
         {/* Sub-profile bar */}
-        <SubProfileBar onCreateClick={() => setDialogOpen(true)} />
+        <SubProfileBar
+          onCreateClick={() => setDialogOpen(true)}
+          hasMainProfile={hasMainProfile}
+        />
 
         {/* Directory selection dialog */}
         <DirectorySelectionDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
+          profileType={dialogProfileType}
         />
 
-        {/* Mobile sidebar nav */}
-        <div className="md:hidden mt-6">
-          <ProfileSidebar activeSection={activeSection} />
-        </div>
+        {hasMainProfile ? (
+          <>
+            {/* Mobile sidebar nav */}
+            <div className="md:hidden mt-6">
+              <ProfileSidebar activeSection={activeSection} />
+            </div>
 
-        {/* Sidebar + Detail Panel */}
-        <div className="flex gap-6 mt-6">
-          {/* Desktop sidebar */}
-          <ProfileSidebar activeSection={activeSection} />
+            {/* Sidebar + Detail Panel */}
+            <div className="flex gap-6 mt-6">
+              {/* Desktop sidebar */}
+              <ProfileSidebar activeSection={activeSection} />
 
-          {/* Detail panel */}
-          <div className="flex-1 min-w-0 space-y-6">{renderDetailPanel()}</div>
-        </div>
+              {/* Detail panel */}
+              <div className="flex-1 min-w-0 space-y-6">
+                {renderDetailPanel()}
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Empty state for new accounts */
+          <Empty className="mt-6">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <User />
+              </EmptyMedia>
+              <EmptyTitle>No Profile Yet</EmptyTitle>
+              <EmptyDescription>
+                Create your profile to get started.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button onClick={() => setDialogOpen(true)}>Create Profile</Button>
+          </Empty>
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import { Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubProfile } from "@/contexts/sub-profile-context";
-import { directories } from "@/lib/constants/directories";
 import type { DirectoryId } from "@/lib/types/sub-profile";
 
 const benefits = [
@@ -65,28 +64,38 @@ export default function BecomeWorkerPage() {
     jobTitle: "",
     experience: "",
     bio: "",
-    skills: [] as string[],
     agreeToTerms: false,
   });
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { addSubProfile, pendingDirectory } = useSubProfile();
+  const { addSubProfile, setHasMainProfile } = useSubProfile();
 
-  const isSubProfileFlow = searchParams.get("from") === "sub-profile";
+  const fromParam = searchParams.get("from");
+  const isSubProfileFlow = fromParam === "sub-profile";
+  const isMainProfileFlow = fromParam === "main-profile";
   const directoryParam = searchParams.get("directory");
+
+  useEffect(() => {
+    if (isMainProfileFlow) {
+      setFormData((prev) => ({ ...prev, profileLabel: "Main" }));
+    }
+  }, [isMainProfileFlow]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (step === 2 && (!formData.profileLabel || !formData.jobTitle)) return;
     if (step < 3) {
       setStep(step + 1);
+    } else if (isMainProfileFlow && directoryParam) {
+      // Main profile creation flow
+      setHasMainProfile(true);
+      toast("Profile created successfully");
+      router.push("/profile");
     } else if (isSubProfileFlow && directoryParam) {
       // Sub-profile creation flow: add profile and redirect
-      const dir = directories.find((d) => d.id === directoryParam);
-      const label = dir?.label ?? pendingDirectory?.label ?? directoryParam;
-      addSubProfile(directoryParam as DirectoryId, label);
-      toast(`${label} sub-profile created`);
+      addSubProfile(directoryParam as DirectoryId, formData.profileLabel);
+      toast(`${formData.profileLabel} sub-profile created`);
       router.push("/profile");
     } else {
       // Default flow
@@ -245,11 +254,13 @@ export default function BecomeWorkerPage() {
                             profileLabel: e.target.value,
                           })
                         }
+                        disabled={isMainProfileFlow}
                         required
                       />
                       <p className="text-sm text-muted-foreground">
-                        A short name for your worker profile that customers will
-                        see.
+                        {isMainProfileFlow
+                          ? "Your first profile is always labeled 'Main'."
+                          : "A short name for your worker profile that customers will see."}
                       </p>
                     </div>
 
@@ -303,48 +314,6 @@ export default function BecomeWorkerPage() {
 
                 {step === 3 && (
                   <>
-                    <div className="space-y-2">
-                      <Label>Skills & Specializations</Label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          "Emergency Repairs",
-                          "Installations",
-                          "Maintenance",
-                          "Inspections",
-                          "Renovations",
-                          "Consultations",
-                        ].map((skill) => (
-                          <div key={skill} className="flex items-center gap-2">
-                            <Checkbox
-                              id={skill}
-                              checked={formData.skills.includes(skill)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setFormData({
-                                    ...formData,
-                                    skills: [...formData.skills, skill],
-                                  });
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    skills: formData.skills.filter(
-                                      (s) => s !== skill,
-                                    ),
-                                  });
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={skill}
-                              className="font-normal cursor-pointer"
-                            >
-                              {skill}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-3">
                       <h4 className="font-semibold text-foreground">
                         What's Next?
