@@ -7,9 +7,11 @@ import {
   DollarSign,
   MapPin,
   MessageSquare,
+  Share2,
   Shield,
   Star,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -140,6 +142,22 @@ export function WorkerProfileHeader({
                     className={`${isBookmarked ? "fill-current" : ""}`}
                   />
                   {isBookmarked ? "Saved" : "Save"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    try {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copied to clipboard!");
+                    } catch {
+                      toast.error("Failed to copy link");
+                    }
+                  }}
+                  className="w-full md:w-auto justify-start"
+                >
+                  <Share2 />
+                  Share
                 </Button>
               </div>
             </div>
