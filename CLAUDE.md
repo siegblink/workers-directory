@@ -198,6 +198,39 @@ const formatTimeAgo = (dateString: string) => {
 };
 ```
 
+### Type Definitions
+- **Always use `type` aliases** instead of `interface` for defining object shapes, props, and data models
+- `type` is more versatile (supports unions, intersections, mapped types) and avoids accidental declaration merging
+- **Exception**: When extending a third-party `interface` that requires declaration merging (rare)
+
+**Good:**
+```typescript
+type UserProfile = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+type ProfileCardProps = {
+  user: UserProfile;
+  showAvatar?: boolean;
+};
+```
+
+**Bad:**
+```typescript
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface ProfileCardProps {
+  user: UserProfile;
+  showAvatar?: boolean;
+}
+```
+
 ### Component Pattern with shadcn/ui
 ```typescript
 import { Button } from "@/components/ui/button"
