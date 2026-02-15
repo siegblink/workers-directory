@@ -18,8 +18,6 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     pathname === "/verification-pending";
 
   const appPages = [
-    "/profile",
-    "/profile/gallery",
     "/dashboard",
     "/bookings",
     "/credits",
@@ -30,7 +28,9 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
 
   // Pages that should hide only the footer (keep navigation)
   const hideFooterPages =
-    appPages.includes(pathname) || pathname.startsWith("/worker/");
+    appPages.includes(pathname) ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/worker/");
 
   return (
     <>

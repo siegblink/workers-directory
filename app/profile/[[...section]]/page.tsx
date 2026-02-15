@@ -1,8 +1,10 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import { useState } from "react";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
+import { ProfileBookingsPanel } from "@/components/profile/profile-bookings-panel";
 import {
   type PortfolioItem,
   ProfileGallery,
@@ -11,7 +13,16 @@ import {
   type ProfileData,
   ProfileHeader,
 } from "@/components/profile/profile-header";
-import { ProfileTabs } from "@/components/profile/profile-tabs";
+import {
+  type Invoice,
+  ProfileInvoices,
+} from "@/components/profile/profile-invoices";
+import { ProfileMessagesPanel } from "@/components/profile/profile-messages-panel";
+import {
+  type ProfileSection,
+  ProfileSidebar,
+  validSections,
+} from "@/components/profile/profile-sidebar";
 import {
   ProfileTestimonials,
   type Review,
@@ -116,6 +127,24 @@ const mockReviews: Review[] = [
       "Great service, arrived on time and did excellent work. Would hire again.",
     avatar: "/placeholder.svg?height=40&width=40",
   },
+  {
+    id: 4,
+    author: "Emily T.",
+    rating: 5,
+    date: "1 month ago",
+    comment:
+      "Jane transformed our messy garage into an organized dream. She brought her own labeling system and bins. Absolutely worth every penny!",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: 5,
+    author: "Carlos D.",
+    rating: 4,
+    date: "1 month ago",
+    comment:
+      "Very professional and thorough move-out cleaning. Landlord approved the apartment on first inspection. Will definitely book again for our next move.",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
 ];
 
 const mockBookings = [
@@ -134,6 +163,30 @@ const mockBookings = [
     date: "Dec 20, 2024",
     status: "Upcoming",
     amount: 220,
+  },
+  {
+    id: 3,
+    worker: "Mike Davis",
+    service: "Deep Cleaning",
+    date: "Jan 5, 2025",
+    status: "Completed",
+    amount: 150,
+  },
+  {
+    id: 4,
+    worker: "Emily Chen",
+    service: "Interior Painting",
+    date: "Jan 12, 2025",
+    status: "Cancelled",
+    amount: 400,
+  },
+  {
+    id: 5,
+    worker: "David Wilson",
+    service: "Home Organization",
+    date: "Jan 25, 2025",
+    status: "Upcoming",
+    amount: 200,
   },
 ];
 
@@ -204,14 +257,68 @@ const mockConversations = [
   },
 ];
 
+const mockInvoices: Invoice[] = [
+  {
+    id: 1,
+    invoiceNumber: "INV-001",
+    client: "John Smith",
+    service: "Plumbing Repair",
+    date: "Dec 15, 2024",
+    amount: 180,
+    status: "Paid",
+  },
+  {
+    id: 2,
+    invoiceNumber: "INV-002",
+    client: "Sarah Johnson",
+    service: "Electrical Wiring",
+    date: "Dec 20, 2024",
+    amount: 220,
+    status: "Pending",
+  },
+  {
+    id: 3,
+    invoiceNumber: "INV-003",
+    client: "Mike Davis",
+    service: "Deep Cleaning",
+    date: "Nov 28, 2024",
+    amount: 150,
+    status: "Paid",
+  },
+  {
+    id: 4,
+    invoiceNumber: "INV-004",
+    client: "Emily Chen",
+    service: "Interior Painting",
+    date: "Nov 10, 2024",
+    amount: 400,
+    status: "Overdue",
+  },
+  {
+    id: 5,
+    invoiceNumber: "INV-005",
+    client: "David Wilson",
+    service: "Home Organization",
+    date: "Oct 25, 2024",
+    amount: 200,
+    status: "Paid",
+  },
+];
+
 export default function ProfilePage() {
+  const params = useParams<{ section?: string[] }>();
+  const sectionSlug = params.section?.[0];
+  const activeSection: ProfileSection =
+    sectionSlug && validSections.includes(sectionSlug as ProfileSection)
+      ? (sectionSlug as ProfileSection)
+      : "profile";
+
   const [profile, setProfile] = useState(mockProfile);
   const [bio, setBio] = useState(mockBio);
   const [skills, setSkills] = useState(mockSkills);
   const [availability, setAvailability] = useState(mockAvailability);
 
-  const handleHeaderSave = async (data: ProfileHeaderFormValues) => {
-    // Simulate API call
+  async function handleHeaderSave(data: ProfileHeaderFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setProfile((prev) => ({
       ...prev,
@@ -223,64 +330,85 @@ export default function ProfilePage() {
       hourlyRate: data.hourlyRate,
     }));
     console.log("Header saved:", data);
-  };
+  }
 
-  const handleAvatarChange = async (file: File) => {
-    // Simulate API call for avatar upload
+  async function handleAvatarChange(file: File) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log("Avatar uploaded:", file.name);
-  };
+  }
 
-  const handleAboutSave = async (data: ProfileAboutFormValues) => {
+  async function handleAboutSave(data: ProfileAboutFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setBio(data.bio);
     setSkills(data.skills);
     console.log("About saved:", data);
-  };
+  }
 
-  const handleAvailabilitySave = async (
-    data: ProfileAvailabilityFormValues,
-  ) => {
+  async function handleAvailabilitySave(data: ProfileAvailabilityFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setAvailability(data);
     console.log("Availability saved:", data);
-  };
+  }
+
+  function renderDetailPanel() {
+    switch (activeSection) {
+      case "profile":
+        return (
+          <>
+            <ProfileAbout bio={bio} skills={skills} onSave={handleAboutSave} />
+            <ProfileAvailability
+              availability={availability}
+              onSave={handleAvailabilitySave}
+            />
+          </>
+        );
+      case "messages":
+        return <ProfileMessagesPanel conversations={mockConversations} />;
+      case "bookings":
+        return (
+          <ProfileBookingsPanel
+            bookings={mockBookings}
+            bookmarkedWorkers={mockBookmarked}
+          />
+        );
+      case "gallery":
+        return <ProfileGallery portfolio={mockPortfolio} />;
+      case "reviews":
+        return (
+          <ProfileTestimonials
+            rating={profile.rating}
+            reviewCount={profile.reviews}
+            reviews={mockReviews}
+          />
+        );
+      case "invoices":
+        return <ProfileInvoices invoices={mockInvoices} />;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-        {/* Profile Header */}
+        {/* Profile Header - unchanged */}
         <ProfileHeader
           profile={profile}
           onSave={handleHeaderSave}
           onAvatarChange={handleAvatarChange}
         />
 
-        {/* Gallery Section */}
-        <ProfileGallery portfolio={mockPortfolio} />
+        {/* Mobile sidebar nav */}
+        <div className="md:hidden mt-6">
+          <ProfileSidebar activeSection={activeSection} />
+        </div>
 
-        {/* About Section */}
-        <ProfileAbout bio={bio} skills={skills} onSave={handleAboutSave} />
+        {/* Sidebar + Detail Panel */}
+        <div className="flex gap-6 mt-6">
+          {/* Desktop sidebar */}
+          <ProfileSidebar activeSection={activeSection} />
 
-        {/* Testimonials Section */}
-        <ProfileTestimonials
-          rating={profile.rating}
-          reviewCount={profile.reviews}
-          reviews={mockReviews}
-        />
-
-        {/* Availability Section */}
-        <ProfileAvailability
-          availability={availability}
-          onSave={handleAvailabilitySave}
-        />
-
-        {/* Tabs Section */}
-        <ProfileTabs
-          bookings={mockBookings}
-          bookmarkedWorkers={mockBookmarked}
-          conversations={mockConversations}
-        />
+          {/* Detail panel */}
+          <div className="flex-1 min-w-0 space-y-6">{renderDetailPanel()}</div>
+        </div>
       </div>
     </div>
   );

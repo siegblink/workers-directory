@@ -28,17 +28,17 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
-export interface PortfolioItem {
+export type PortfolioItem = {
   id: number;
   image: string;
   title: string;
   description: string;
   price?: number;
-}
+};
 
-interface ProfileGalleryProps {
+type ProfileGalleryProps = {
   portfolio: PortfolioItem[];
-}
+};
 
 export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
@@ -51,7 +51,7 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Gallery</h2>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/profile/gallery">
+              <Link href="/profile/gallery/edit">
                 <Pencil />
                 Edit
               </Link>
@@ -69,7 +69,7 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
             </EmptyHeader>
             <EmptyContent>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/profile/gallery">
+                <Link href="/profile/gallery/edit">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Gallery Items
                 </Link>
@@ -99,7 +99,7 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                 View All ({portfolio.length})
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/profile/gallery">
+                <Link href="/profile/gallery/edit">
                   <Pencil />
                   Edit
                 </Link>

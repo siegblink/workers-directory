@@ -44,30 +44,27 @@ export default function EditGalleryPage() {
   const [items, setItems] = useState<GalleryItem[]>(mockPortfolio);
   const [isEditingItem, setIsEditingItem] = useState(false);
 
-  const handleItemUpdate = async (
-    index: number,
-    data: GalleryItemFormValues,
-  ) => {
+  async function handleItemUpdate(index: number, data: GalleryItemFormValues) {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, ...data } : item)),
     );
-  };
+  }
 
-  const handleItemDelete = (index: number) => {
+  function handleItemDelete(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
-  };
+  }
 
-  const handleItemAdd = async (
+  async function handleItemAdd(
     data: GalleryItemFormValues,
     imagePreview: string,
-  ) => {
+  ) {
     const newItem: GalleryItem = {
       id: Date.now(),
       image: imagePreview,
       ...data,
     };
     setItems((prev) => [...prev, newItem]);
-  };
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,11 +73,11 @@ export default function EditGalleryPage() {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => router.push("/profile")}
+          onClick={() => router.push("/profile/gallery")}
           className="mb-6"
         >
           <ArrowLeft />
-          Back to profile
+          Back to gallery
         </Button>
 
         {/* Two-Column Grid Layout */}
