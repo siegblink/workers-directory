@@ -106,6 +106,14 @@ The application uses Supabase for authentication with cookie-based session manag
 - **Fonts**: Geist Sans and Geist Mono via `next/font/google`
 - **Base Color**: Neutral (defined in `components.json`)
 
+### Icons (Lucide React)
+- **Do not add explicit size classes** (e.g., `className="h-4 w-4"`) to Lucide icons inside shadcn/ui components that already manage icon sizing. These components apply automatic sizing via CSS:
+  - `Button` → `size-4`
+  - `InputGroupAddon` / `InputGroupButton` → `size-4`
+  - `Alert` → `size-4`
+  - `EmptyMedia variant="icon"` → `size-6`
+- Only add explicit size classes when the icon is **outside** a shadcn/ui container (e.g., in a plain `<div>`) or when you need to **override** the default size (use `size-*` classes like `size-8` to properly override, not `h-*`/`w-*`).
+
 ### Path Aliases
 
 ```typescript
@@ -166,6 +174,28 @@ const { data, error } = await supabase.auth.signInWithPassword({ email, password
 import { createClient } from "@/lib/supabase/server"
 const supabase = await createClient()
 const { data: { user } } = await supabase.auth.getUser()
+```
+
+### Function Declarations
+- **Always use `function` declarations** for named functions — do not assign arrow functions to `const`
+- This makes functions visually distinct from variables when scanning code
+- **Exception**: When a function is memoized with `useMemo`, `useCallback`, or similar React hooks, `const` assignment is required
+
+**Good:**
+```typescript
+function formatTimeAgo(dateString: string) {
+  // ...
+}
+
+// Memoized — const is fine here
+const filteredItems = useMemo(() => items.filter(...), [items]);
+```
+
+**Bad:**
+```typescript
+const formatTimeAgo = (dateString: string) => {
+  // ...
+};
 ```
 
 ### Component Pattern with shadcn/ui
