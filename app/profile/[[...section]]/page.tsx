@@ -20,6 +20,7 @@ import {
   ProfileInvoices,
 } from "@/components/profile/profile-invoices";
 import { ProfileMessagesPanel } from "@/components/profile/profile-messages-panel";
+import { ProfileSettings } from "@/components/profile/profile-settings";
 import {
   type ProfileSection,
   ProfileSidebar,
@@ -319,13 +320,19 @@ const mockInvoices: Invoice[] = [
 
 export default function ProfilePage() {
   const params = useParams<{ section?: string[] }>();
+  const { subProfiles, activeSubProfileId, hasMainProfile } = useSubProfile();
+
   const sectionSlug = params.section?.[0];
-  const activeSection: ProfileSection =
+  const resolvedSection: ProfileSection =
     sectionSlug && validSections.includes(sectionSlug as ProfileSection)
       ? (sectionSlug as ProfileSection)
       : "profile";
+  // Settings is only valid when a sub-profile is active
+  const activeSection: ProfileSection =
+    resolvedSection === "settings" && !activeSubProfileId
+      ? "profile"
+      : resolvedSection;
 
-  const { subProfiles, activeSubProfileId, hasMainProfile } = useSubProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Main profile editable state
@@ -441,6 +448,10 @@ export default function ProfilePage() {
         );
       case "invoices":
         return <ProfileInvoices invoices={currentInvoices} />;
+      case "settings":
+        return activeSubProfile ? (
+          <ProfileSettings key={activeSubProfile.id} subProfile={activeSubProfile} />
+        ) : null;
     }
   }
 

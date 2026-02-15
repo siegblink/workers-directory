@@ -69,7 +69,10 @@ export function SubProfileBar({
 
               {/* Sub-profile tabs */}
               {subProfiles.map((sp) => (
-                <div key={sp.id} className="flex items-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <div
+                  key={sp.id}
+                  className="flex items-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                >
                   <Button
                     variant={
                       activeSubProfileId === sp.id ? "secondary" : "outline"

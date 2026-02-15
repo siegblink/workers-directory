@@ -1,18 +1,29 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import {
   CalendarDays,
   FileText,
   Images,
   MessageSquare,
+  Settings,
   Star,
   User,
 } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useSubProfile } from "@/contexts/sub-profile-context";
 
-const sidebarItems = [
+type SidebarItem = {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  href: string;
+};
+
+const sidebarItems: SidebarItem[] = [
   { key: "profile", label: "Profile", icon: User, href: "/profile" },
   {
     key: "messages",
@@ -34,24 +45,53 @@ const sidebarItems = [
     icon: FileText,
     href: "/profile/invoices",
   },
-] as const;
+];
 
-export const validSections = sidebarItems.map((item) => item.key);
+const settingsItem: SidebarItem = {
+  key: "settings",
+  label: "Settings",
+  icon: Settings,
+  href: "/profile/settings",
+};
 
-export type ProfileSection = (typeof sidebarItems)[number]["key"];
+export type ProfileSection =
+  | "profile"
+  | "messages"
+  | "bookings"
+  | "gallery"
+  | "reviews"
+  | "invoices"
+  | "settings";
+
+export const validSections: ProfileSection[] = [
+  "profile",
+  "messages",
+  "bookings",
+  "gallery",
+  "reviews",
+  "invoices",
+  "settings",
+];
 
 type ProfileSidebarProps = {
   activeSection: ProfileSection;
 };
 
 export function ProfileSidebar({ activeSection }: ProfileSidebarProps) {
+  const { activeSubProfileId } = useSubProfile();
+
+  const visibleItems = useMemo(
+    () => (activeSubProfileId ? [...sidebarItems, settingsItem] : sidebarItems),
+    [activeSubProfileId],
+  );
+
   return (
     <>
       {/* Desktop sidebar */}
       <Card className="hidden md:block w-56 shrink-0 sticky top-20 self-start">
         <CardContent className="p-2">
           <nav className="flex flex-col gap-1">
-            {sidebarItems.map((item) => (
+            {visibleItems.map((item) => (
               <Button
                 key={item.key}
                 variant={activeSection === item.key ? "secondary" : "ghost"}
@@ -71,7 +111,7 @@ export function ProfileSidebar({ activeSection }: ProfileSidebarProps) {
       {/* Mobile horizontal nav */}
       <div className="md:hidden overflow-x-auto -mx-4 px-4">
         <nav className="flex gap-2 pb-2 min-w-max">
-          {sidebarItems.map((item) => (
+          {visibleItems.map((item) => (
             <Button
               key={item.key}
               variant={activeSection === item.key ? "secondary" : "outline"}
