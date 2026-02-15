@@ -1,21 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  AlertCircle,
-  Check,
-  Lightbulb,
-  MapPin,
-  Search,
-  Send,
-  ThumbsUp,
-  User,
-} from "lucide-react";
+import { AlertCircle, Check, Lightbulb, MapPin, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
+import { CommunitySuggestionsFeed } from "@/components/suggest-jobs/community-suggestions-feed";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,13 +24,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
   Field,
   FieldError,
   FieldGroup,
@@ -55,13 +39,13 @@ import { Textarea } from "@/components/ui/textarea";
 import type { JobSuggestionWithUser } from "@/lib/database/types";
 
 // Simple UUID generator for creating new suggestion IDs
-const generateUUID = () => {
+function generateUUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-};
+}
 
 // Mock data for job suggestions
 const MOCK_SUGGESTIONS: JobSuggestionWithUser[] = [
@@ -293,7 +277,7 @@ export default function SuggestJobsPage() {
 
   // Autocomplete with mock data (debounced)
   useEffect(() => {
-    const fetchAutocomplete = () => {
+    function fetchAutocomplete() {
       if (!jobTitleValue || jobTitleValue.length < 2) {
         setAutocompleteResults([]);
         return;
@@ -309,13 +293,13 @@ export default function SuggestJobsPage() {
 
       setAutocompleteResults(filtered);
       setAutocompleteLoading(false);
-    };
+    }
 
     const timer = setTimeout(fetchAutocomplete, 300);
     return () => clearTimeout(timer);
   }, [jobTitleValue]);
 
-  const onSubmit = async (values: SuggestionFormValues) => {
+  async function onSubmit(values: SuggestionFormValues) {
     setSubmitError(null);
     setSubmitSuccess(false);
 
@@ -348,19 +332,7 @@ export default function SuggestJobsPage() {
           : "Failed to submit suggestion. Please try again.",
       );
     }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return "just now";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  };
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -553,102 +525,7 @@ export default function SuggestJobsPage() {
         </Card>
 
         {/* Suggestions Feed */}
-        <div>
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <h2 className="text-2xl font-bold">Community Suggestions</h2>
-            <InputGroup className="max-w-64">
-              <InputGroupAddon>
-                <Search className="h-4 w-4" />
-              </InputGroupAddon>
-              <InputGroupInput placeholder="Search suggestions..." />
-            </InputGroup>
-          </div>
-
-          {suggestions.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Lightbulb className="h-8 w-8 text-primary" />
-                </EmptyMedia>
-                <EmptyTitle>No suggestions yet</EmptyTitle>
-                <EmptyDescription>
-                  Be the first to suggest a job category!
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className="space-y-4">
-              {suggestions.map((suggestion) => (
-                <Card
-                  key={suggestion.id}
-                  className="hover:shadow-md transition-shadow"
-                >
-                  <CardContent>
-                    <div className="flex items-start gap-4">
-                      {/* User Avatar */}
-                      <Avatar className="h-10 w-10 shrink-0">
-                        {suggestion.user?.profile_pic_url ? (
-                          <AvatarImage
-                            src={suggestion.user.profile_pic_url}
-                            alt={`${suggestion.user.firstname} ${suggestion.user.lastname}`}
-                          />
-                        ) : null}
-                        <AvatarFallback>
-                          {suggestion.user ? (
-                            `${suggestion.user.firstname?.[0] || ""}${suggestion.user.lastname?.[0] || ""}`
-                          ) : (
-                            <User className="h-5 w-5" />
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-medium text-foreground">
-                            {suggestion.user
-                              ? `${suggestion.user.firstname} ${suggestion.user.lastname}`
-                              : "Anonymous"}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            {formatTimeAgo(suggestion.created_at)}
-                          </span>
-                        </div>
-
-                        {suggestion.location && (
-                          <div className="flex items-center gap-1 text-muted-foreground text-sm mb-1">
-                            <MapPin className="h-3 w-3" />
-                            <span>{suggestion.location}</span>
-                          </div>
-                        )}
-
-                        <h3 className="text-lg font-semibold text-foreground mb-1">
-                          {suggestion.job_title}
-                        </h3>
-
-                        {suggestion.description && (
-                          <p className="text-muted-foreground text-sm line-clamp-2">
-                            {suggestion.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Upvote Button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-muted-foreground hover:text-primary"
-                      >
-                        <ThumbsUp />
-                        {suggestion.upvotes}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+        <CommunitySuggestionsFeed suggestions={suggestions} />
       </div>
     </div>
   );
