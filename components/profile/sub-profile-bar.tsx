@@ -17,11 +17,13 @@ import { MAX_PROFILES, useSubProfile } from "@/contexts/sub-profile-context";
 type SubProfileBarProps = {
   onCreateClick: () => void;
   hasMainProfile?: boolean;
+  notifications?: Record<string, boolean>;
 };
 
 export function SubProfileBar({
   onCreateClick,
   hasMainProfile = true,
+  notifications = {},
 }: SubProfileBarProps) {
   const {
     subProfiles,
@@ -58,48 +60,57 @@ export function SubProfileBar({
           {hasMainProfile && (
             <>
               {/* Main Profile tab */}
-              <Button
-                variant={activeSubProfileId === null ? "secondary" : "outline"}
-                size="default"
-                className="focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                onClick={() => setActiveSubProfileId(null)}
-              >
-                Main Profile
-              </Button>
+              <span className="relative">
+                <Button
+                  variant={
+                    activeSubProfileId === null ? "secondary" : "outline"
+                  }
+                  size="default"
+                  className="focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onClick={() => setActiveSubProfileId(null)}
+                >
+                  Main Profile
+                </Button>
+                {notifications.main && (
+                  <span className="absolute top-2 right-2 size-2.5 rounded-full bg-primary" />
+                )}
+              </span>
 
               {/* Sub-profile tabs */}
               {subProfiles.map((sp) => (
-                <div
-                  key={sp.id}
-                  className="flex items-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
-                >
-                  <Button
-                    variant={
-                      activeSubProfileId === sp.id ? "secondary" : "outline"
-                    }
-                    size="default"
-                    className="rounded-r-none focus-visible:ring-0"
-                    onClick={() => setActiveSubProfileId(sp.id)}
-                  >
-                    {sp.directoryLabel.length > 20 ? (
-                      <span className="max-w-[20ch] overflow-hidden whitespace-nowrap block mask-[linear-gradient(to_right,black_80%,transparent)]">
-                        {sp.directoryLabel}
-                      </span>
-                    ) : (
-                      sp.directoryLabel
-                    )}
-                  </Button>
-                  <Button
-                    variant={
-                      activeSubProfileId === sp.id ? "secondary" : "outline"
-                    }
-                    size="icon"
-                    className="rounded-l-none border-l-0 focus-visible:ring-0"
-                    aria-label={`Rename ${sp.directoryLabel} sub-profile`}
-                    onClick={() => openRenameDialog(sp.id, sp.directoryLabel)}
-                  >
-                    <Pencil />
-                  </Button>
+                <div key={sp.id} className="relative">
+                  <div className="flex items-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <Button
+                      variant={
+                        activeSubProfileId === sp.id ? "secondary" : "outline"
+                      }
+                      size="default"
+                      className="rounded-r-none focus-visible:ring-0"
+                      onClick={() => setActiveSubProfileId(sp.id)}
+                    >
+                      {sp.directoryLabel.length > 20 ? (
+                        <span className="max-w-[20ch] overflow-hidden whitespace-nowrap block mask-[linear-gradient(to_right,black_80%,transparent)]">
+                          {sp.directoryLabel}
+                        </span>
+                      ) : (
+                        sp.directoryLabel
+                      )}
+                    </Button>
+                    <Button
+                      variant={
+                        activeSubProfileId === sp.id ? "secondary" : "outline"
+                      }
+                      size="icon"
+                      className="rounded-l-none border-l-0 focus-visible:ring-0"
+                      aria-label={`Rename ${sp.directoryLabel} sub-profile`}
+                      onClick={() => openRenameDialog(sp.id, sp.directoryLabel)}
+                    >
+                      <Pencil />
+                    </Button>
+                  </div>
+                  {notifications[sp.id] && (
+                    <span className="absolute top-2 right-12 size-2.5 rounded-full bg-primary" />
+                  )}
                 </div>
               ))}
             </>

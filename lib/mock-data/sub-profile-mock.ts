@@ -251,6 +251,7 @@ function generateReviews(services: string[]) {
     date: `${i + 1} week${i > 0 ? "s" : ""} ago`,
     comment: `Excellent ${services[i % services.length]?.toLowerCase() ?? "service"}! Very professional and thorough. Would definitely recommend.`,
     avatar: "/placeholder.svg?height=40&width=40",
+    isNew: i < 2,
   }));
 }
 

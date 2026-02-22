@@ -121,6 +121,7 @@ const mockReviews: Review[] = [
     comment:
       "Jane did an amazing job with our kitchen! Everything was spotless and she was very professional.",
     avatar: "/placeholder.svg?height=40&width=40",
+    isNew: true,
   },
   {
     id: 2,
@@ -130,6 +131,7 @@ const mockReviews: Review[] = [
     comment:
       "Highly recommend! She organized our entire closet system and it looks incredible.",
     avatar: "/placeholder.svg?height=40&width=40",
+    isNew: true,
   },
   {
     id: 3,
@@ -386,6 +388,31 @@ export default function ProfilePage() {
     ? activeSubProfile.invoices
     : mockInvoices;
 
+  // Notification counts for the active profile
+  const unreadMessagesCount = currentConversations.reduce(
+    (sum, c) => sum + c.unread,
+    0,
+  );
+  const newReviewsCount = currentReviews.filter((r) => r.isNew).length;
+
+  // Per-profile notification indicators for the SubProfileBar dots
+  function hasNewItems(
+    conversations: typeof mockConversations,
+    reviews: Review[],
+  ) {
+    return (
+      conversations.some((c) => c.unread > 0) || reviews.some((r) => r.isNew)
+    );
+  }
+
+  const notifications: Record<string, boolean> = {};
+  if (hasMainProfile) {
+    notifications.main = hasNewItems(mockConversations, mockReviews);
+  }
+  for (const sp of subProfiles) {
+    notifications[sp.id] = hasNewItems(sp.conversations, sp.reviews);
+  }
+
   async function handleHeaderSave(data: ProfileHeaderFormValues) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     if (!activeSubProfile) {
@@ -493,6 +520,7 @@ export default function ProfilePage() {
         <SubProfileBar
           onCreateClick={() => setDialogOpen(true)}
           hasMainProfile={hasMainProfile}
+          notifications={notifications}
         />
 
         {/* Directory selection dialog */}
@@ -506,13 +534,21 @@ export default function ProfilePage() {
           <>
             {/* Mobile sidebar nav */}
             <div className="md:hidden mt-6">
-              <ProfileSidebar activeSection={activeSection} />
+              <ProfileSidebar
+                activeSection={activeSection}
+                unreadMessagesCount={unreadMessagesCount}
+                newReviewsCount={newReviewsCount}
+              />
             </div>
 
             {/* Sidebar + Detail Panel */}
             <div className="flex gap-6 mt-6">
               {/* Desktop sidebar */}
-              <ProfileSidebar activeSection={activeSection} />
+              <ProfileSidebar
+                activeSection={activeSection}
+                unreadMessagesCount={unreadMessagesCount}
+                newReviewsCount={newReviewsCount}
+              />
 
               {/* Detail panel */}
               <div className="flex-1 min-w-0 space-y-6">

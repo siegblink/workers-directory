@@ -12,6 +12,7 @@ export type Review = {
   date: string;
   comment: string;
   avatar: string;
+  isNew?: boolean;
 };
 
 type ProfileTestimonialsProps = {
