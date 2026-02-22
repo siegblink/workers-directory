@@ -131,7 +131,7 @@ export function ProfileBookingsPanel({
                             {worker.rating}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            &middot; ${worker.hourlyRate}/hr
+                            &middot; ₱{worker.hourlyRate}/hr
                           </span>
                         </div>
                       </div>

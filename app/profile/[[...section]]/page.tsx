@@ -59,7 +59,7 @@ const mockProfile: ProfileData = {
   reviews: 23,
   location: "New York, NY",
   joinedDate: "March 2023",
-  hourlyRate: 50,
+  hourlyRate: 500,
   completedJobs: 45,
   responseTime: "Within 2 hours",
 };
@@ -209,7 +209,7 @@ const mockBookmarked = [
     name: "Mike Davis",
     profession: "Cleaner",
     rating: 4.7,
-    hourlyRate: 35,
+    hourlyRate: 350,
     avatar: "/placeholder.svg?height=60&width=60",
   },
   {
@@ -217,7 +217,7 @@ const mockBookmarked = [
     name: "Lisa Brown",
     profession: "Painter",
     rating: 4.9,
-    hourlyRate: 50,
+    hourlyRate: 500,
     avatar: "/placeholder.svg?height=60&width=60",
   },
 ];

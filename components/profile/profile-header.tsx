@@ -287,7 +287,7 @@ export function ProfileHeader({
                         render={({ field, fieldState }) => (
                           <Field data-invalid={!!fieldState.error}>
                             <FieldLabel htmlFor="hourlyRate">
-                              Hourly Rate ($)
+                              Hourly Rate (₱)
                             </FieldLabel>
                             <InputGroup>
                               <InputGroupInput
@@ -429,7 +429,7 @@ export function ProfileHeader({
                     <span className="text-sm">Hourly Rate</span>
                   </div>
                   <p className="text-2xl font-bold text-foreground">
-                    ${profile.hourlyRate}
+                    ₱{profile.hourlyRate}
                   </p>
                 </div>
                 <div>

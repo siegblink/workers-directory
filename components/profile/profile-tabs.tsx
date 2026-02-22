@@ -206,7 +206,7 @@ export function ProfileTabs({
                             {worker.rating}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            • ${worker.hourlyRate}/hr
+                            • ₱{worker.hourlyRate}/hr
                           </span>
                         </div>
                       </div>
