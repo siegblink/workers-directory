@@ -372,28 +372,26 @@ export function ProfileHeader({
                           Verified
                         </Pill>
                       )}
-                      {hasMainProfile && (
-                        <>
-                          •
-                          <span className="text-sm text-muted-foreground">
-                            {profile.profession}
-                          </span>
-                        </>
-                      )}
+                      <span className={hasMainProfile ? "contents" : "hidden"}>
+                        •
+                        <span className="text-sm text-muted-foreground">
+                          {profile.profession}
+                        </span>
+                      </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      {hasMainProfile && (
-                        <div className="flex items-center gap-1">
-                          <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">
-                            {profile.rating}
-                          </span>
-                          <span className="text-muted-foreground">
-                            ({profile.reviews} reviews)
-                          </span>
-                        </div>
-                      )}
+                      <div
+                        className={
+                          hasMainProfile ? "flex items-center gap-1" : "hidden"
+                        }
+                      >
+                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold">{profile.rating}</span>
+                        <span className="text-muted-foreground">
+                          ({profile.reviews} reviews)
+                        </span>
+                      </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <MapPin className="w-4 h-4" />
                         {profile.location}
@@ -405,53 +403,55 @@ export function ProfileHeader({
                     </div>
                   </div>
 
-                  {hasMainProfile && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEdit}
-                      className="w-full md:w-auto"
-                    >
-                      <Pencil />
-                      Edit
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEdit}
+                    className={hasMainProfile ? "w-full md:w-auto" : "hidden"}
+                  >
+                    <Pencil />
+                    Edit
+                  </Button>
                 </>
               )}
             </div>
 
             {/* Stats - visible only when not editing and profile exists */}
-            {!isEditing && hasMainProfile && (
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
-                <div>
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <DollarSign className="w-4 h-4" />
-                    <span className="text-sm">Hourly Rate</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">
-                    ₱{profile.hourlyRate}
-                  </p>
+            <div
+              className={
+                !isEditing && hasMainProfile
+                  ? "grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border"
+                  : "hidden"
+              }
+            >
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-sm">Hourly Rate</span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-sm">Jobs Completed</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">
-                    {profile.completedJobs}
-                  </p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm">Response Time</span>
-                  </div>
-                  <p className="text-lg font-bold text-foreground">
-                    {profile.responseTime}
-                  </p>
-                </div>
+                <p className="text-2xl font-bold text-foreground">
+                  ₱{profile.hourlyRate}
+                </p>
               </div>
-            )}
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm">Jobs Completed</span>
+                </div>
+                <p className="text-2xl font-bold text-foreground">
+                  {profile.completedJobs}
+                </p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">Response Time</span>
+                </div>
+                <p className="text-lg font-bold text-foreground">
+                  {profile.responseTime}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>

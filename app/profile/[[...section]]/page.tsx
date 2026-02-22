@@ -2,7 +2,7 @@
 
 import { User } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { DirectorySelectionDialog } from "@/components/profile/directory-selection-dialog";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
@@ -320,7 +320,20 @@ const mockInvoices: Invoice[] = [
 
 export default function ProfilePage() {
   const params = useParams<{ section?: string[] }>();
-  const { subProfiles, activeSubProfileId, hasMainProfile } = useSubProfile();
+  const context = useSubProfile();
+
+  // Gate context values behind useLayoutEffect to prevent hydration mismatch.
+  // The SubProfileProvider persists in the root layout, so on back-navigation
+  // its state (isHydrated=true) is already populated from localStorage. But
+  // the cached RSC payload was rendered with server defaults (all false/empty).
+  // Starting with server-safe defaults and syncing before paint ensures the
+  // first render matches the server exactly, with no visible flash.
+  const [synced, setSynced] = useState(false);
+  useLayoutEffect(() => setSynced(true), []);
+
+  const hasMainProfile = synced ? context.hasMainProfile : false;
+  const subProfiles = synced ? context.subProfiles : [];
+  const activeSubProfileId = synced ? context.activeSubProfileId : null;
 
   const sectionSlug = params.section?.[0];
   const resolvedSection: ProfileSection =
