@@ -21,18 +21,21 @@ Built with Next.js 16 · Supabase · shadcn/ui
 ## Features
 
 ### For Customers
+
 - **Smart Service Discovery** - Search and filter verified service workers by category, location, and ratings
 - **Seamless Booking** - Real-time booking with calendar availability and instant confirmations
 - **Direct Messaging** - In-app messaging to communicate with service providers
 - **Review & Rate** - Share your experience and help others make informed decisions
 
 ### For Service Workers
+
 - **Professional Dashboard** - Comprehensive dashboard to manage bookings, schedules, and earnings
 - **Profile Showcase** - Build your reputation with detailed profiles, ratings, and reviews
 - **Flexible Availability** - Set your own schedule and pricing
 - **Customer Management** - Track bookings and communicate with clients efficiently
 
 ### Platform Features
+
 - **Secure Authentication** - Email/password authentication powered by Supabase
 - **Dark Mode** - Beautiful dark/light theme support for comfortable viewing
 - **Responsive Design** - Seamless experience across desktop, tablet, and mobile devices
@@ -61,12 +64,14 @@ Built with Next.js 16 · Supabase · shadcn/ui
 ### Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd direktory
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
@@ -74,6 +79,7 @@ Built with Next.js 16 · Supabase · shadcn/ui
 3. **Set up environment variables**
 
    Create a `.env.local` file in the root directory:
+
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -82,6 +88,7 @@ Built with Next.js 16 · Supabase · shadcn/ui
    > **Note:** Never commit your `.env.local` file. It's already included in `.gitignore`.
 
 4. **Run the development server**
+
    ```bash
    bun dev
    ```
@@ -153,6 +160,7 @@ The application uses Supabase for authentication with cookie-based session manag
 ### Protected Routes
 
 The following routes require authentication:
+
 - `/dashboard` - Worker dashboard
 - `/bookings` - Booking management
 - `/messages` - Messaging system
@@ -165,12 +173,12 @@ Unauthenticated users are automatically redirected to `/login`.
 
 ```typescript
 // Client Component
-import { createClient } from "@/lib/supabase/client"
-const supabase = createClient()
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 // Server Component / Server Action
-import { createClient } from "@/lib/supabase/server"
-const supabase = await createClient()
+import { createClient } from "@/lib/supabase/server";
+const supabase = await createClient();
 ```
 
 ## Adding shadcn/ui Components
@@ -190,10 +198,10 @@ Components will be automatically added to the `components/ui/` directory.
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
+| Variable                        | Description            | Required |
+| ------------------------------- | ---------------------- | -------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL   | Yes      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes      |
 
 ## Deployment
 
@@ -252,6 +260,7 @@ Follow the conventional commits specification:
 ```
 
 **Types:**
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation changes
@@ -261,6 +270,7 @@ Follow the conventional commits specification:
 - `chore:` - Build process or dependency updates
 
 **Example:**
+
 ```
 feat: add error validation for identifier fields
 
@@ -269,6 +279,7 @@ feat: add error validation for identifier fields
 ```
 
 **Guidelines:**
+
 - Use present tense in the commit message ("add" not "added")
 - Use past tense in the commit body when describing what changed
 - Wrap code references in backticks
@@ -288,6 +299,7 @@ Have questions or found a bug?
 ## Acknowledgments
 
 Built with love using:
+
 - [Next.js](https://nextjs.org/) - The React Framework for the Web
 - [Supabase](https://supabase.com/) - Open source Firebase alternative
 - [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed components

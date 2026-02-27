@@ -6,10 +6,8 @@
     "dev": "bun --bun next dev",
     "build": "bun --bun next build",
     "start": "bun --bun next start",
-    "format": "biome check .",
-    "format:write": "biome check --write .",
-    "format:check": "biome check --diagnostic-level=error .",
-    "format:unsafe": "biome check --write --unsafe ."
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -68,11 +66,11 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.6",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "oxfmt": "^0.35.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",

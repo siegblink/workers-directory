@@ -13,7 +13,7 @@ All commands use **Bun** as the official package manager:
 - `bun dev` - Start development server on http://localhost:3000
 - `bun run build` - Build production bundle
 - `bun start` - Start production server
-- `bun format:write` - Format code and fix linting/type errors (use this instead of `bun run lint`)
+- `bun fmt` - Format code with oxfmt
 
 ## Package Management
 
@@ -29,6 +29,7 @@ All commands use **Bun** as the official package manager:
 ## Architecture
 
 ### Tech Stack
+
 - **Framework**: Next.js 15 (App Router)
 - **React**: 19.1.0
 - **Language**: TypeScript 5
@@ -81,6 +82,7 @@ proxy.ts               - Next.js 16 proxy for auth
 The application uses Supabase for authentication with cookie-based session management.
 
 **Protected Routes** (require authentication):
+
 - `/dashboard` - Worker dashboard
 - `/bookings` - Booking management
 - `/messages` - Messaging system
@@ -88,12 +90,14 @@ The application uses Supabase for authentication with cookie-based session manag
 - `/profile` - User profile
 
 **Proxy Flow**:
+
 1. `proxy.ts` calls `updateSession()` from `lib/supabase/middleware.ts`
 2. Session is validated via `supabase.auth.getUser()`
 3. Unauthenticated users are redirected to `/login` for protected routes
 4. Runs on Node.js runtime (Next.js 16 proxy behavior)
 
 **Client vs Server Authentication**:
+
 - **Client-side**: Use `createClient()` from `lib/supabase/client.ts` in Client Components
 - **Server-side**: Use `createClient()` from `lib/supabase/server.ts` in Server Components, Server Actions, and Route Handlers
 - **Important**: Never store the server client in a global variable (Fluid compute compatibility)
@@ -107,6 +111,7 @@ The application uses Supabase for authentication with cookie-based session manag
 - **Base Color**: Neutral (defined in `components.json`)
 
 ### Icons (Lucide React)
+
 - **Do not add explicit size classes** (e.g., `className="h-4 w-4"`) to Lucide icons inside shadcn/ui components that already manage icon sizing. These components apply automatic sizing via CSS:
   - `Button` → `size-4`
   - `InputGroupAddon` / `InputGroupButton` → `size-4`
@@ -126,20 +131,25 @@ The application uses Supabase for authentication with cookie-based session manag
 ## Framework & Runtime Considerations
 
 ### React 19
+
 This project uses **React 19**, which includes behavioral changes from React 18:
+
 - Automatic batching improvements
 - Enhanced concurrent rendering features
 - New hooks and APIs
 - Be aware of potential breaking changes when referencing React 18 documentation
 
 ### Next.js 15
+
 This project uses **Next.js 15 with App Router exclusively**:
+
 - **No Pages Router**: All routes use the App Router paradigm
 - **Server Components by default**: Components are Server Components unless explicitly marked with `"use client"`
 - **Always specify `"use client"`** for components that use browser APIs, React hooks, or interactive features
 - Nested layouts and loading states are handled via `layout.tsx` and `loading.tsx` files
 
 ### Component Rendering Strategy
+
 - **Default**: Server Components (for static content, data fetching, SEO)
 - **Client Components**: Use `"use client"` directive when you need:
   - React hooks (useState, useEffect, etc.)
@@ -150,38 +160,50 @@ This project uses **Next.js 15 with App Router exclusively**:
 ## Key Implementation Patterns
 
 ### Client Components
+
 Use `"use client"` directive for:
+
 - Components using React hooks (useState, useEffect, etc.)
 - Components using browser APIs
 - Interactive UI components
 - Supabase client-side authentication
 
 ### Server Components (Default)
+
 Prefer Server Components when possible for:
+
 - Static content rendering
 - Data fetching
 - SEO-critical pages
 - Initial page loads
 
 ### Authentication Pattern
+
 ```typescript
 // Client Component
-import { createClient } from "@/lib/supabase/client"
-const supabase = createClient()
-const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
+const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+});
 
 // Server Component / Server Action
-import { createClient } from "@/lib/supabase/server"
-const supabase = await createClient()
-const { data: { user } } = await supabase.auth.getUser()
+import { createClient } from "@/lib/supabase/server";
+const supabase = await createClient();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 ```
 
 ### Function Declarations
+
 - **Always use `function` declarations** for named functions — do not assign arrow functions to `const`
 - This makes functions visually distinct from variables when scanning code
 - **Exception**: When a function is memoized with `useMemo`, `useCallback`, or similar React hooks, `const` assignment is required
 
 **Good:**
+
 ```typescript
 function formatTimeAgo(dateString: string) {
   // ...
@@ -192,6 +214,7 @@ const filteredItems = useMemo(() => items.filter(...), [items]);
 ```
 
 **Bad:**
+
 ```typescript
 const formatTimeAgo = (dateString: string) => {
   // ...
@@ -199,11 +222,13 @@ const formatTimeAgo = (dateString: string) => {
 ```
 
 ### Type Definitions
+
 - **Always use `type` aliases** instead of `interface` for defining object shapes, props, and data models
 - `type` is more versatile (supports unions, intersections, mapped types) and avoids accidental declaration merging
 - **Exception**: When extending a third-party `interface` that requires declaration merging (rare)
 
 **Good:**
+
 ```typescript
 type UserProfile = {
   id: string;
@@ -218,6 +243,7 @@ type ProfileCardProps = {
 ```
 
 **Bad:**
+
 ```typescript
 interface UserProfile {
   id: string;
@@ -232,14 +258,16 @@ interface ProfileCardProps {
 ```
 
 ### Component Pattern with shadcn/ui
+
 ```typescript
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 ```
 
 ## Environment Variables
 
 Required environment variables (should be in `.env.local`):
+
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
@@ -248,27 +276,32 @@ Required environment variables (should be in `.env.local`):
 ### Vercel Configuration
 
 This project is configured to use **Bun runtime on Vercel** for improved performance:
+
 - **Runtime**: Bun 1.x (managed by Vercel)
 - **Configuration**: `vercel.json`
 - **Performance**: ~28% faster compared to Node.js for CPU-bound rendering workloads
 - **Status**: Public Beta (as of October 2025)
 
 **Deploy using:**
+
 - **CLI**: `bunx vercel deploy` or `bun i -g vercel && vercel deploy`
 - **Git Integration**: Push to your connected repository (recommended)
 
 **Local development with Vercel CLI:**
+
 ```bash
 bunx vercel dev
 ```
 
 **Runtime Verification:**
 After deployment, verify Bun runtime is active by checking deployment logs or adding to a server component:
+
 ```typescript
 console.log("Runtime:", process.versions.bun);
 ```
 
 **Limitations (Public Beta):**
+
 - Automatic source maps not yet supported
 - Byte-code caching not yet supported
 - Metrics on `node:http/https` not yet available
@@ -291,6 +324,7 @@ console.log("Runtime:", process.versions.bun);
   - Database connection strings with credentials
 
 **If credentials are accidentally exposed:**
+
 1. Immediately inform the team for urgent discussion
 2. Remove them from git history if already committed
 3. Update `.gitignore` to prevent future exposure
@@ -298,12 +332,15 @@ console.log("Runtime:", process.versions.bun);
 ## Common Tasks
 
 ### Adding a New shadcn/ui Component
+
 ```bash
 npx shadcn@latest add [component-name]
 ```
+
 Components will be added to `components/ui/` directory.
 
 ### Creating a New Protected Page
+
 1. Create page under `/app/[page-name]/page.tsx`
 2. Add route to `protectedPaths` array in `lib/supabase/middleware.ts:48`
 3. Implement authentication check in the page component if needed
@@ -313,15 +350,26 @@ Components will be added to `components/ui/` directory.
 All forms in this project use **React Hook Form** with **Zod** validation and follow specific shadcn/ui patterns consistently used throughout the codebase.
 
 #### Required Imports
+
 ```typescript
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Spinner } from "@/components/ui/spinner"
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupButton,
+} from "@/components/ui/input-group";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 ```
 
 #### Form Patterns - MUST Follow These Exactly
@@ -330,6 +378,7 @@ import { Spinner } from "@/components/ui/spinner"
 All form fields MUST use the `Controller` component from React Hook Form. Do NOT use the `register` method.
 
 **2. Form Structure**
+
 - Wrap all fields in `<FieldGroup>`
 - Each field must be wrapped in `<Field data-invalid={!!fieldState.error}>`
 - Use `<FieldLabel htmlFor="fieldId">` for labels
@@ -338,6 +387,7 @@ All form fields MUST use the `Controller` component from React Hook Form. Do NOT
 - Global errors use `<Alert variant="destructive">`
 
 **3. Text Input Pattern**
+
 ```typescript
 <Controller
   control={form.control}
@@ -362,6 +412,7 @@ All form fields MUST use the `Controller` component from React Hook Form. Do NOT
 ```
 
 **4. Password Input Pattern (with show/hide toggle)**
+
 ```typescript
 const [showPassword, setShowPassword] = useState(false);
 
@@ -402,6 +453,7 @@ const [showPassword, setShowPassword] = useState(false);
 ```
 
 **5. Checkbox Pattern (Remember Me, Terms)**
+
 ```typescript
 <Controller
   control={form.control}
@@ -421,6 +473,7 @@ const [showPassword, setShowPassword] = useState(false);
 ```
 
 **6. Submit Button Pattern**
+
 ```typescript
 <Button
   type="submit"
@@ -440,6 +493,7 @@ const [showPassword, setShowPassword] = useState(false);
 ```
 
 **7. Global Error Display**
+
 ```typescript
 {error && (
   <Alert variant="destructive">
@@ -450,9 +504,11 @@ const [showPassword, setShowPassword] = useState(false);
 ```
 
 #### Complete Form Example
+
 See `/app/login/page.tsx`, `/app/signup/page.tsx`, `/app/forgot-password/page.tsx`, or `/app/reset-password/page.tsx` for complete working examples.
 
 #### Important Requirements
+
 - ✅ **ALWAYS use Controller**: Never use the `register` method
 - ✅ **Disable during submission**: All inputs and buttons must be disabled when `form.formState.isSubmitting` is true
 - ✅ **Accessibility**: All inputs must have `aria-invalid={!!fieldState.error}` attribute
@@ -462,6 +518,7 @@ See `/app/login/page.tsx`, `/app/signup/page.tsx`, `/app/forgot-password/page.ts
 - ✅ **Horizontal checkboxes**: Use `orientation="horizontal"` for inline checkbox layouts
 
 ### Theme Customization
+
 - Global styles: `app/globals.css`
 - CSS variables for light/dark themes defined in `:root` and `.dark`
 - Use `className` utilities from `lib/utils.ts` (cn function)
@@ -469,6 +526,7 @@ See `/app/login/page.tsx`, `/app/signup/page.tsx`, `/app/forgot-password/page.ts
 ## Database & Backend
 
 This project uses Supabase for:
+
 - User authentication (email/password)
 - Database (PostgreSQL)
 - Real-time subscriptions (potential use)

@@ -34,10 +34,10 @@ Complete guide for connecting your Direktory app to Supabase (both local and pro
 
 This project supports two Supabase environments:
 
-| Environment | Purpose | URL | Data |
-|------------|---------|-----|------|
-| **Production** | Live app, real data | `https://project-ref.supabase.co` | Real user data |
-| **Local** | Development, testing | `http://127.0.0.1:54321` | Test data only |
+| Environment    | Purpose              | URL                               | Data           |
+| -------------- | -------------------- | --------------------------------- | -------------- |
+| **Production** | Live app, real data  | `https://project-ref.supabase.co` | Real user data |
+| **Local**      | Development, testing | `http://127.0.0.1:54321`          | Test data only |
 
 **Current Default**: Production
 
@@ -124,37 +124,37 @@ Create a test API endpoint to verify you can fetch data from Supabase:
 Create `app/api/test-supabase/route.ts`:
 
 ```typescript
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Test: Fetch categories from database
     const { data: categories, error } = await supabase
-      .from('categories')
-      .select('*')
-      .limit(5)
+      .from("categories")
+      .select("*")
+      .limit(5);
 
     if (error) {
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500 }
-      )
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Supabase connection successful!',
+      message: "Supabase connection successful!",
       categories,
-      count: categories?.length || 0
-    })
+      count: categories?.length || 0,
+    });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Failed to connect to Supabase' },
-      { status: 500 }
-    )
+      { success: false, error: "Failed to connect to Supabase" },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -198,6 +198,7 @@ export default async function Home() {
 2. If using page component, visit: http://localhost:3000
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -211,6 +212,7 @@ export default async function Home() {
 ```
 
 **Troubleshooting:**
+
 - ❌ `relation "categories" does not exist` → Run migrations or check table name
 - ❌ `Invalid API key` → Check your `.env.local` has correct keys
 - ❌ `Failed to fetch` → Verify Supabase is running (local) or URL is correct (production)
@@ -273,6 +275,7 @@ supabase start
 ```
 
 **Output:**
+
 ```
 Started supabase local development setup.
 
@@ -314,6 +317,7 @@ npm run dev
 ### Step 6: Test Local Connection
 
 **Test with Supabase Studio:**
+
 1. Visit http://localhost:54323
 2. Navigate to "Table Editor"
 3. Check if `categories` table exists
@@ -322,9 +326,11 @@ npm run dev
 **Test with API Route:**
 
 Use the same test endpoint from the Production setup (see Step 3 in Production Setup), or visit:
+
 - http://localhost:3000/api/test-supabase
 
 **Quick CLI Test:**
+
 ```bash
 # Connect to local database
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
@@ -337,6 +343,7 @@ SELECT * FROM categories LIMIT 5;
 ```
 
 **Add Sample Categories (if table is empty):**
+
 ```bash
 # Create seed file
 cat > supabase/seed.sql << 'EOF'
@@ -428,22 +435,22 @@ cp .env.local .env.local.backup
 Add this to any page to check which environment is active:
 
 ```typescript
-console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 ```
 
 Or create a status endpoint:
 
 ```typescript
 // app/api/supabase-status/route.ts
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
 
 export async function GET() {
   return NextResponse.json({
-    environment: process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost')
-      ? 'local'
-      : 'production',
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL
-  })
+    environment: process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("localhost")
+      ? "local"
+      : "production",
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
 }
 ```
 
@@ -513,11 +520,13 @@ supabase db reset
 ### Issue: Connection Refused
 
 **Symptoms:**
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:54321
 ```
 
 **Solution:**
+
 ```bash
 # Check if Supabase is running
 supabase status
@@ -533,10 +542,12 @@ supabase start
 ### Issue: Wrong Database Being Used
 
 **Symptoms:**
+
 - Tables not found
 - Different data than expected
 
 **Solution:**
+
 ```bash
 # Check environment variables
 cat .env.local | grep NEXT_PUBLIC_SUPABASE_URL
@@ -554,6 +565,7 @@ npm run dev
 ### Issue: Environment Variables Not Updating
 
 **Solution:**
+
 ```bash
 # 1. Restart dev server (Ctrl+C, then npm run dev)
 # 2. Clear cache
@@ -569,11 +581,13 @@ npm run dev
 ### Issue: Supabase Won't Start
 
 **Symptoms:**
+
 ```
 Error: Docker not running
 ```
 
 **Solution:**
+
 ```bash
 # 1. Start Docker Desktop
 # 2. Wait for Docker to be ready
@@ -589,11 +603,13 @@ supabase start
 ### Issue: Migration Conflicts
 
 **Symptoms:**
+
 ```
 Error: migration already applied
 ```
 
 **Solution:**
+
 ```bash
 # Reset local database
 supabase db reset
@@ -605,11 +621,13 @@ supabase db reset
 ### Issue: Authentication Errors
 
 **Symptoms:**
+
 ```
 Error: Invalid JWT
 ```
 
 **Solution:**
+
 ```bash
 # 1. Check keys match environment
 # Production uses production keys
@@ -643,6 +661,7 @@ npm run dev
 ### Database Changes
 
 ✅ **DO:**
+
 - Always test migrations locally first
 - Pull production schema regularly
 - Keep migrations in version control
@@ -650,6 +669,7 @@ npm run dev
 - Document major schema changes
 
 ❌ **DON'T:**
+
 - Make manual changes in production database
 - Skip testing migrations locally
 - Delete migration files
@@ -658,23 +678,25 @@ npm run dev
 
 ### Environment Safety
 
-| Task | Local | Production |
-|------|-------|------------|
-| Developing new features | ✅ Yes | ❌ No |
-| Testing migrations | ✅ Yes | ⚠️ After local |
-| Adding seed data | ✅ Yes | ❌ No |
-| Experimenting | ✅ Yes | ❌ No |
-| User testing | ❌ No | ✅ Yes |
-| Real data operations | ❌ No | ✅ Yes |
+| Task                    | Local  | Production     |
+| ----------------------- | ------ | -------------- |
+| Developing new features | ✅ Yes | ❌ No          |
+| Testing migrations      | ✅ Yes | ⚠️ After local |
+| Adding seed data        | ✅ Yes | ❌ No          |
+| Experimenting           | ✅ Yes | ❌ No          |
+| User testing            | ❌ No  | ✅ Yes         |
+| Real data operations    | ❌ No  | ✅ Yes         |
 
 ### Security
 
 🔒 **Keep These Secret:**
+
 - `SUPABASE_SERVICE_ROLE_KEY` - Full database access
 - `POSTGRES_PASSWORD` - Direct database access
 - `SUPABASE_JWT_SECRET` - Token signing key
 
 ✅ **Safe to Share:**
+
 - `NEXT_PUBLIC_SUPABASE_URL` - Public URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Public anonymous key (has RLS)
 
@@ -761,12 +783,12 @@ npm run lint                    # Run ESLint
 
 ### URLs
 
-| Service | Local | Production |
-|---------|-------|------------|
-| App | http://localhost:3000 | https://your-app.vercel.app |
-| Supabase Studio | http://localhost:54323 | https://supabase.com/dashboard |
-| API | http://127.0.0.1:54321 | https://your-project-ref.supabase.co |
-| Database | 127.0.0.1:54322 | your-region.pooler.supabase.com:5432 |
+| Service         | Local                  | Production                           |
+| --------------- | ---------------------- | ------------------------------------ |
+| App             | http://localhost:3000  | https://your-app.vercel.app          |
+| Supabase Studio | http://localhost:54323 | https://supabase.com/dashboard       |
+| API             | http://127.0.0.1:54321 | https://your-project-ref.supabase.co |
+| Database        | 127.0.0.1:54322        | your-region.pooler.supabase.com:5432 |
 
 ### Switch Checklist
 

@@ -18,10 +18,13 @@ autocompleteCategoriesByName(
 ### Example 1: Basic Autocomplete
 
 ```typescript
-import { autocompleteCategoriesByName } from '@/lib/database'
+import { autocompleteCategoriesByName } from "@/lib/database";
 
 // User types "plu"
-const { data: categories, error } = await autocompleteCategoriesByName('plu', 10)
+const { data: categories, error } = await autocompleteCategoriesByName(
+  "plu",
+  10,
+);
 
 // Returns:
 // [
@@ -168,21 +171,21 @@ export function CategoryCommandSearch() {
 
 ```typescript
 // app/api/categories/autocomplete/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { autocompleteCategoriesByName } from '@/lib/database'
+import { NextRequest, NextResponse } from "next/server";
+import { autocompleteCategoriesByName } from "@/lib/database";
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const query = searchParams.get('q') || ''
-  const limit = parseInt(searchParams.get('limit') || '10')
+  const searchParams = request.nextUrl.searchParams;
+  const query = searchParams.get("q") || "";
+  const limit = parseInt(searchParams.get("limit") || "10");
 
-  const { data, error } = await autocompleteCategoriesByName(query, limit)
+  const { data, error } = await autocompleteCategoriesByName(query, limit);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ categories: data })
+  return NextResponse.json({ categories: data });
 }
 
 // Client usage:
@@ -194,53 +197,56 @@ export async function GET(request: NextRequest) {
 
 ```typescript
 // hooks/use-category-autocomplete.ts
-import { useState, useEffect } from 'react'
-import { autocompleteCategoriesByName } from '@/lib/database'
-import type { Category } from '@/lib/database'
+import { useState, useEffect } from "react";
+import { autocompleteCategoriesByName } from "@/lib/database";
+import type { Category } from "@/lib/database";
 
-export function useCategoryAutocomplete(searchText: string, limit: number = 10) {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+export function useCategoryAutocomplete(
+  searchText: string,
+  limit: number = 10,
+) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     const fetchCategories = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       try {
         const { data, error: fetchError } = await autocompleteCategoriesByName(
           searchText,
-          limit
-        )
+          limit,
+        );
 
         if (isMounted) {
           if (fetchError) {
-            setError(fetchError)
+            setError(fetchError);
           } else {
-            setCategories(data || [])
+            setCategories(data || []);
           }
-          setLoading(false)
+          setLoading(false);
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Unknown error'))
-          setLoading(false)
+          setError(err instanceof Error ? err : new Error("Unknown error"));
+          setLoading(false);
         }
       }
-    }
+    };
 
-    const timer = setTimeout(fetchCategories, 300)
+    const timer = setTimeout(fetchCategories, 300);
 
     return () => {
-      isMounted = false
-      clearTimeout(timer)
-    }
-  }, [searchText, limit])
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [searchText, limit]);
 
-  return { categories, loading, error }
+  return { categories, loading, error };
 }
 
 // Usage in component:
@@ -373,22 +379,22 @@ interface Category {
 ## Error Handling
 
 ```typescript
-const { data, error } = await autocompleteCategoriesByName('plumber')
+const { data, error } = await autocompleteCategoriesByName("plumber");
 
 if (error) {
-  console.error('Failed to fetch categories:', error)
+  console.error("Failed to fetch categories:", error);
   // Show error message to user
-  return
+  return;
 }
 
 // Use data safely
-const categories = data || []
+const categories = data || [];
 ```
 
 ## Integration with Search Filters
 
 ```typescript
-import { searchWorkers, autocompleteCategoriesByName } from '@/lib/database'
+import { searchWorkers, autocompleteCategoriesByName } from "@/lib/database";
 
 // User selects category from autocomplete
 const handleCategorySelect = async (category: Category) => {
@@ -396,16 +402,17 @@ const handleCategorySelect = async (category: Category) => {
   const { data: workers } = await searchWorkers({
     category_id: category.id,
     is_available: true,
-    min_rating: 4.0
-  })
+    min_rating: 4.0,
+  });
 
   // Display filtered workers
-}
+};
 ```
 
 ---
 
 **Related Files:**
+
 - [queries/categories.ts](./queries/categories.ts) - Category query functions
 - [FILTERS.md](./FILTERS.md) - Complete filter documentation
 - [types.ts](./types.ts) - Type definitions

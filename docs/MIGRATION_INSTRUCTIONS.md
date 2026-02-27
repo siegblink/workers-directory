@@ -1,14 +1,17 @@
 # Database Migration Instructions
 
 ## Overview
+
 This guide explains how to apply the user profile enhancement migration to your Supabase production database.
 
 ## What This Migration Does
+
 - Updates the `handle_new_auth_user` trigger to populate `firstname` and `lastname` fields from user metadata during signup
 - Migrates existing users' names from `auth.users` metadata to the `public.users` table
 - Enables the navigation component to display user avatars and names from the database
 
 ## Current Status
+
 ✅ **Code Changes**: Navigation component updated with graceful fallback
 ✅ **Migration File**: Created at `supabase/migrations/20251025120000_update_user_trigger.sql`
 ⚠️ **Database**: Migration not yet applied to production
@@ -96,11 +99,13 @@ WHERE u.id = au.id
 After applying the migration:
 
 1. **Check Existing Users**
+
    ```sql
    SELECT id, firstname, lastname, email
    FROM public.users
    LIMIT 10;
    ```
+
    Verify that `firstname` and `lastname` are populated
 
 2. **Test New Signup**
@@ -123,16 +128,19 @@ After applying the migration:
 ## Troubleshooting
 
 ### Migration Fails
+
 - Check that you have proper permissions
 - Verify the `auth.users` table is accessible
 - Ensure RLS policies allow the update
 
 ### Names Not Appearing
+
 - Verify the migration ran successfully
 - Check that user metadata has `first_name` and `last_name` fields
 - Inspect the browser console for any errors
 
 ### Users Still See Fallback
+
 - Clear browser cache and reload
 - Check that the profile fetch is succeeding (no console errors)
 - Verify database RLS policies allow reading from `users` table
@@ -140,6 +148,7 @@ After applying the migration:
 ## Support
 
 If you encounter issues:
+
 1. Check the browser console for errors
 2. Verify the migration SQL executed without errors
 3. Test with a fresh signup to isolate the issue
@@ -148,6 +157,7 @@ If you encounter issues:
 ## Next Steps
 
 After successfully applying the migration:
+
 1. Monitor user signups to ensure names are being saved
 2. Consider adding profile picture upload functionality
 3. Update other components that might benefit from database profile data

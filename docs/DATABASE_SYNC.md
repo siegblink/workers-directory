@@ -42,6 +42,7 @@ The following tables are now in your local database:
 ## Current Environment
 
 **Active Connection**: PRODUCTION (as set in .env.local)
+
 - Your Next.js app is still connected to production
 - Local database now has the same schema structure (but empty data)
 
@@ -52,12 +53,14 @@ To switch to using your local database:
 1. **Open `.env.local`**
 
 2. **Comment out production URLs** (lines 2-14):
+
    ```bash
    # NEXT_PUBLIC_SUPABASE_URL="https://[username].supabase.co"
    # NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
    ```
 
 3. **Uncomment local URLs** (lines 20-30):
+
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
    NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
@@ -106,6 +109,7 @@ If you want to add test data to your local database, create a file at:
 `supabase/seed.sql`
 
 Then run:
+
 ```bash
 supabase db reset
 ```

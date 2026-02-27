@@ -1,6 +1,7 @@
 # Advanced Worker Search & Filter Documentation
 
 The `searchWorkers()` function now supports advanced filtering by:
+
 - Location (text search and radius-based)
 - Category (single or multiple)
 - Price range (hourly rate)
@@ -15,12 +16,12 @@ The `searchWorkers()` function now supports advanced filtering by:
 ```typescript
 interface Worker {
   // ... existing fields
-  hourly_rate: number | null          // Hourly rate in base currency
-  location: string | null              // City/area name
-  latitude: number | null              // GPS coordinate for radius search
-  longitude: number | null             // GPS coordinate for radius search
-  availability_schedule: Json | null   // Weekly schedule object
-  is_available: boolean | null         // Current availability status
+  hourly_rate: number | null; // Hourly rate in base currency
+  location: string | null; // City/area name
+  latitude: number | null; // GPS coordinate for radius search
+  longitude: number | null; // GPS coordinate for radius search
+  availability_schedule: Json | null; // Weekly schedule object
+  is_available: boolean | null; // Current availability status
 }
 ```
 
@@ -47,40 +48,40 @@ The `availability_schedule` field stores a JSON object with the following struct
 ```typescript
 interface WorkerFilters extends PaginationOptions {
   // Category filters
-  category_id?: number              // Single category ID
-  category_ids?: number[]           // Multiple category IDs (OR condition)
+  category_id?: number; // Single category ID
+  category_ids?: number[]; // Multiple category IDs (OR condition)
 
   // Status & availability
-  status?: WorkerStatus             // 'available' | 'busy' | 'unavailable'
-  is_available?: boolean            // Current availability flag
+  status?: WorkerStatus; // 'available' | 'busy' | 'unavailable'
+  is_available?: boolean; // Current availability flag
 
   // Skills & search
-  skills?: string                   // Search in skills field
-  search?: string                   // Full-text search (name, skills, location)
+  skills?: string; // Search in skills field
+  search?: string; // Full-text search (name, skills, location)
 
   // Rating filters
-  min_rating?: number               // Minimum average rating (0-5)
-  max_rating?: number               // Maximum average rating (0-5)
+  min_rating?: number; // Minimum average rating (0-5)
+  max_rating?: number; // Maximum average rating (0-5)
 
   // Price range filters
-  min_hourly_rate?: number          // Minimum hourly rate
-  max_hourly_rate?: number          // Maximum hourly rate
+  min_hourly_rate?: number; // Minimum hourly rate
+  max_hourly_rate?: number; // Maximum hourly rate
 
   // Location filters
-  location?: string                 // City/area name search
-  latitude?: number                 // For radius-based search
-  longitude?: number                // For radius-based search
-  radius?: number                   // Search radius in kilometers
+  location?: string; // City/area name search
+  latitude?: number; // For radius-based search
+  longitude?: number; // For radius-based search
+  radius?: number; // Search radius in kilometers
 
   // Availability filters
-  available_on?: string             // ISO date string (future feature)
-  available_days?: string[]         // ['monday', 'tuesday', ...]
-  available_time?: string           // 'morning', 'afternoon', 'evening' (future)
+  available_on?: string; // ISO date string (future feature)
+  available_days?: string[]; // ['monday', 'tuesday', ...]
+  available_time?: string; // 'morning', 'afternoon', 'evening' (future)
 
   // Pagination & sorting
-  page?: number
-  limit?: number
-  sort?: SortOptions
+  page?: number;
+  limit?: number;
+  sort?: SortOptions;
 }
 ```
 
@@ -89,15 +90,15 @@ interface WorkerFilters extends PaginationOptions {
 ### Example 1: Search by Location and Price Range
 
 ```typescript
-import { searchWorkers } from '@/lib/database'
+import { searchWorkers } from "@/lib/database";
 
 const { data: workers } = await searchWorkers({
-  location: 'New York',
+  location: "New York",
   min_hourly_rate: 50,
   max_hourly_rate: 150,
   page: 1,
-  limit: 20
-})
+  limit: 20,
+});
 ```
 
 ### Example 2: Radius-Based Location Search
@@ -105,11 +106,11 @@ const { data: workers } = await searchWorkers({
 ```typescript
 // Find workers within 10km of coordinates
 const { data: workers } = await searchWorkers({
-  latitude: 40.7128,    // NYC coordinates
-  longitude: -74.0060,
-  radius: 10,           // 10 kilometers
-  min_rating: 4.0
-})
+  latitude: 40.7128, // NYC coordinates
+  longitude: -74.006,
+  radius: 10, // 10 kilometers
+  min_rating: 4.0,
+});
 ```
 
 ### Example 3: Category and Rating Filter
@@ -120,8 +121,8 @@ const { data: workers } = await searchWorkers({
   category_ids: [1, 2], // Plumber & Electrician category IDs
   min_rating: 4.5,
   is_available: true,
-  sort: { column: 'created_at', ascending: false }
-})
+  sort: { column: "created_at", ascending: false },
+});
 ```
 
 ### Example 4: Availability by Day
@@ -129,10 +130,10 @@ const { data: workers } = await searchWorkers({
 ```typescript
 // Find workers available on weekends
 const { data: workers } = await searchWorkers({
-  available_days: ['saturday', 'sunday'],
-  location: 'Los Angeles',
-  status: 'available'
-})
+  available_days: ["saturday", "sunday"],
+  location: "Los Angeles",
+  status: "available",
+});
 ```
 
 ### Example 5: Full-Text Search with Filters
@@ -140,12 +141,12 @@ const { data: workers } = await searchWorkers({
 ```typescript
 // Search for "plumber" with price filter
 const { data: workers } = await searchWorkers({
-  search: 'plumber',        // Searches name, skills, location
+  search: "plumber", // Searches name, skills, location
   max_hourly_rate: 100,
   is_available: true,
   page: 1,
-  limit: 10
-})
+  limit: 10,
+});
 ```
 
 ### Example 6: Combined Advanced Filters
@@ -153,7 +154,7 @@ const { data: workers } = await searchWorkers({
 ```typescript
 // Complex search: skilled workers nearby with good ratings
 const { data: workers } = await searchWorkers({
-  search: 'certified',
+  search: "certified",
   latitude: 34.0522,
   longitude: -118.2437,
   radius: 15,
@@ -161,9 +162,9 @@ const { data: workers } = await searchWorkers({
   min_hourly_rate: 30,
   max_hourly_rate: 80,
   is_available: true,
-  available_days: ['monday', 'wednesday', 'friday'],
-  sort: { column: 'created_at', ascending: false }
-})
+  available_days: ["monday", "wednesday", "friday"],
+  sort: { column: "created_at", ascending: false },
+});
 ```
 
 ## Category Queries
@@ -173,39 +174,39 @@ New category management functions are available in `queries/categories.ts`:
 ### Get All Categories
 
 ```typescript
-import { getAllCategories } from '@/lib/database'
+import { getAllCategories } from "@/lib/database";
 
-const { data: categories } = await getAllCategories()
+const { data: categories } = await getAllCategories();
 ```
 
 ### Get Categories with Worker Count
 
 ```typescript
-import { getCategoriesWithWorkerCount } from '@/lib/database'
+import { getCategoriesWithWorkerCount } from "@/lib/database";
 
-const { data: categories } = await getCategoriesWithWorkerCount()
+const { data: categories } = await getCategoriesWithWorkerCount();
 // Returns: [{ id: 1, name: 'Plumber', worker_count: 45 }, ...]
 ```
 
 ### Get Popular Categories
 
 ```typescript
-import { getPopularCategories } from '@/lib/database'
+import { getPopularCategories } from "@/lib/database";
 
-const { data: popular } = await getPopularCategories(5) // Top 5
+const { data: popular } = await getPopularCategories(5); // Top 5
 // Returns categories sorted by booking count
 ```
 
 ### Search Categories
 
 ```typescript
-import { searchCategories } from '@/lib/database'
+import { searchCategories } from "@/lib/database";
 
 const { data: categories } = await searchCategories({
-  search: 'electric',
+  search: "electric",
   page: 1,
-  limit: 10
-})
+  limit: 10,
+});
 ```
 
 ### Manage Worker Categories
@@ -215,25 +216,26 @@ import {
   getWorkerCategories,
   addWorkerCategory,
   removeWorkerCategory,
-  updateWorkerCategories
-} from '@/lib/database'
+  updateWorkerCategories,
+} from "@/lib/database";
 
 // Get categories for a worker
-const { data: categories } = await getWorkerCategories(workerId)
+const { data: categories } = await getWorkerCategories(workerId);
 
 // Add a category
-await addWorkerCategory(workerId, categoryId)
+await addWorkerCategory(workerId, categoryId);
 
 // Remove a category
-await removeWorkerCategory(workerId, categoryId)
+await removeWorkerCategory(workerId, categoryId);
 
 // Replace all categories
-await updateWorkerCategories(workerId, [1, 2, 3])
+await updateWorkerCategories(workerId, [1, 2, 3]);
 ```
 
 ## Filter Implementation Details
 
 ### SQL-Based Filters (Applied at Database Level)
+
 - `status` - Worker status
 - `is_available` - Availability flag
 - `skills` - Skills text search
@@ -242,12 +244,14 @@ await updateWorkerCategories(workerId, [1, 2, 3])
 - `search` - Full-text search across multiple fields
 
 ### Post-Query Filters (Applied in Application)
+
 - `category_id` / `category_ids` - Category filtering
 - `min_rating` / `max_rating` - Rating range
 - `latitude` / `longitude` / `radius` - Geolocation filtering
 - `available_days` - Weekly schedule filtering
 
 Post-query filters are applied after fetching from the database because they require:
+
 1. Computed values (ratings are calculated from related tables)
 2. Complex joins (categories are in a separate many-to-many table)
 3. Geographic calculations (Haversine formula for distance)
@@ -262,11 +266,11 @@ function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
-  const R = 6371 // Earth's radius in kilometers
+  const R = 6371; // Earth's radius in kilometers
   // ... Haversine calculation
-  return distance
+  return distance;
 }
 ```
 
@@ -279,11 +283,11 @@ All search results support pagination:
 ```typescript
 const result = await searchWorkers({
   // ... filters
-  page: 2,      // Page number (starts at 1)
-  limit: 20     // Results per page
-})
+  page: 2, // Page number (starts at 1)
+  limit: 20, // Results per page
+});
 
-console.log(result.pagination)
+console.log(result.pagination);
 // {
 //   page: 2,
 //   limit: 20,
@@ -299,10 +303,10 @@ Sort results by any worker field:
 ```typescript
 const { data: workers } = await searchWorkers({
   sort: {
-    column: 'hourly_rate',
-    ascending: true
-  }
-})
+    column: "hourly_rate",
+    ascending: true,
+  },
+});
 
 // Common sort options:
 // - 'created_at' (newest/oldest)
@@ -359,25 +363,25 @@ Potential improvements to consider:
 ## API Response Format
 
 ```typescript
-type SearchResult = PaginatedResponse<WorkerWithDetails>
+type SearchResult = PaginatedResponse<WorkerWithDetails>;
 
 interface PaginatedResponse<T> {
-  data: T[]
+  data: T[];
   pagination: {
-    page: number
-    limit: number
-    total: number
-    total_pages: number
-  }
-  error: Error | null
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
+  };
+  error: Error | null;
 }
 
 interface WorkerWithDetails extends Worker {
-  user?: User
-  categories?: Category[]
-  ratings?: Rating[]
-  average_rating?: number
-  total_bookings?: number
+  user?: User;
+  categories?: Category[];
+  ratings?: Rating[];
+  average_rating?: number;
+  total_bookings?: number;
 }
 ```
 
@@ -386,10 +390,10 @@ interface WorkerWithDetails extends Worker {
 All query functions return an error object if something goes wrong:
 
 ```typescript
-const { data, error } = await searchWorkers(filters)
+const { data, error } = await searchWorkers(filters);
 
 if (error) {
-  console.error('Search failed:', error)
+  console.error("Search failed:", error);
   // Handle error appropriately
 }
 ```
@@ -411,6 +415,7 @@ Example test cases to implement:
 ---
 
 For more information, see:
+
 - [lib/database/types.ts](./types.ts) - Type definitions
 - [lib/database/queries/workers.ts](./queries/workers.ts) - Worker queries
 - [lib/database/queries/categories.ts](./queries/categories.ts) - Category queries

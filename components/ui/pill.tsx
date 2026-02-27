@@ -38,8 +38,7 @@ const pillVariants = cva(
 );
 
 interface PillProps
-  extends React.ComponentProps<"span">,
-    VariantProps<typeof pillVariants> {
+  extends React.ComponentProps<"span">, VariantProps<typeof pillVariants> {
   asChild?: boolean;
   dot?: boolean;
 }

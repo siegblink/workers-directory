@@ -16,6 +16,7 @@ supabase db reset
 ```
 
 **Expected output**:
+
 ```
 Resetting local database...
 Applying migration 20251022140056_optimize_queries_and_add_auth_id.sql...
@@ -62,6 +63,7 @@ supabase db push
    - Click "Run"
 
 3. **Verify**
+
    ```sql
    -- Check view exists
    SELECT COUNT(*) FROM workers_with_details;
@@ -92,29 +94,29 @@ AND u.auth_id IS NULL;
 ### Test 1: Search Workers
 
 ```typescript
-import { searchWorkers } from '@/lib/database'
+import { searchWorkers } from "@/lib/database";
 
-const result = await searchWorkers({ limit: 20 })
-console.log(`Found ${result.data.length} workers`)
+const result = await searchWorkers({ limit: 20 });
+console.log(`Found ${result.data.length} workers`);
 // Should return quickly (< 500ms)
 ```
 
 ### Test 2: Top Rated Workers
 
 ```typescript
-import { getTopRatedWorkers } from '@/lib/database'
+import { getTopRatedWorkers } from "@/lib/database";
 
-const result = await getTopRatedWorkers(10)
-console.log(`Top 10 workers:`, result.data)
+const result = await getTopRatedWorkers(10);
+console.log(`Top 10 workers:`, result.data);
 ```
 
 ### Test 3: Categories with Count
 
 ```typescript
-import { getCategoriesWithWorkerCount } from '@/lib/database'
+import { getCategoriesWithWorkerCount } from "@/lib/database";
 
-const result = await getCategoriesWithWorkerCount()
-console.log(`Categories:`, result.data)
+const result = await getCategoriesWithWorkerCount();
+console.log(`Categories:`, result.data);
 ```
 
 ---
@@ -124,6 +126,7 @@ console.log(`Categories:`, result.data)
 ### Error: "relation workers_with_details does not exist"
 
 **Solution**:
+
 ```bash
 supabase db reset
 ```
@@ -131,6 +134,7 @@ supabase db reset
 ### Error: "function get_top_rated_workers does not exist"
 
 **Solution**: Migration not applied
+
 ```bash
 # Check migration status
 ls supabase/migrations/
@@ -144,6 +148,7 @@ supabase db reset
 ### Error: "column auth_id does not exist"
 
 **Solution**:
+
 ```bash
 # For local
 supabase db reset
@@ -154,6 +159,7 @@ supabase db reset
 ### Slow Performance Still
 
 **Check**:
+
 ```sql
 -- Make sure indexes exist
 \di users_auth_id
@@ -166,13 +172,14 @@ EXPLAIN ANALYZE SELECT * FROM workers_with_details LIMIT 10;
 
 ## 📊 Expected Performance
 
-| Operation | Before | After |
-|-----------|--------|-------|
-| Search 100 workers | 5-10s | < 500ms |
-| Top 10 rated | 3-5s | < 200ms |
-| 20 categories | 1-2s | < 100ms |
+| Operation          | Before | After   |
+| ------------------ | ------ | ------- |
+| Search 100 workers | 5-10s  | < 500ms |
+| Top 10 rated       | 3-5s   | < 200ms |
+| 20 categories      | 1-2s   | < 100ms |
 
 If your times are much higher, check:
+
 1. Migration applied correctly
 2. Indexes created
 3. View exists
@@ -204,6 +211,7 @@ supabase db reset
 ---
 
 **Quick Commands**:
+
 ```bash
 # Apply locally
 supabase db reset
