@@ -2,7 +2,7 @@
 
 import { Briefcase, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CompactFilterPanel } from "@/components/compact-filter-panel";
 import { MarketingStats } from "@/components/marketing-stats";
@@ -29,9 +29,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import type { Worker as WorkerCardWorker } from "@/components/worker/worker-card";
 import { WorkerCard } from "@/components/worker/worker-card";
+import { searchWorkers } from "@/lib/database/queries/workers";
+import type { WorkerWithDetails } from "@/lib/database/types";
 
-// Mock data generator
 const professions = [
   "Plumber",
   "Electrician",
@@ -45,123 +47,49 @@ const professions = [
   "Locksmith",
 ];
 
-const locations = [
-  { city: "Capitol Site", state: "Cebu City" },
-  { city: "Lahug", state: "Cebu City" },
-  { city: "Mabolo", state: "Cebu City" },
-  { city: "Banilad", state: "Cebu City" },
-  { city: "Talamban", state: "Cebu City" },
-  { city: "IT Park", state: "Cebu City" },
-  { city: "Guadalupe", state: "Cebu City" },
-  { city: "Kasambagan", state: "Cebu City" },
-  { city: "Busay", state: "Cebu City" },
-  { city: "Cebu Business Park", state: "Cebu City" },
-];
-
-const firstNames = [
-  "John",
-  "Sarah",
-  "Michael",
-  "Emily",
-  "David",
-  "Jessica",
-  "Robert",
-  "Amanda",
-  "James",
-  "Lisa",
-  "William",
-  "Jennifer",
-  "Daniel",
-  "Maria",
-  "Thomas",
-  "Karen",
-  "Christopher",
-  "Nancy",
-  "Matthew",
-  "Linda",
-];
-
-const lastNames = [
-  "Smith",
-  "Johnson",
-  "Williams",
-  "Brown",
-  "Jones",
-  "Garcia",
-  "Miller",
-  "Davis",
-  "Rodriguez",
-  "Martinez",
-  "Anderson",
-  "Taylor",
-  "Thomas",
-  "Moore",
-  "Jackson",
-  "Martin",
-  "Lee",
-  "Thompson",
-  "White",
-  "Harris",
-];
-
-// Seeded random number generator for deterministic results
-function seededRandom(seed: number) {
-  const x = Math.sin(seed++) * 10000;
-  return x - Math.floor(x);
+function toWorkerCardShape(w: WorkerWithDetails): WorkerCardWorker {
+  return {
+    id: w.id,
+    name: w.user ? `${w.user.firstname} ${w.user.lastname}` : "Worker",
+    profession:
+      w.categories?.[0]?.name ??
+      w.skills?.split(",")?.[0]?.trim() ??
+      "Worker",
+    rating: w.average_rating ?? 0,
+    reviews: w.ratings?.length ?? 0,
+    hourlyRateMin: w.hourly_rate ?? 0,
+    hourlyRateMax: w.hourly_rate ?? 0,
+    location: w.location ?? "",
+    distance: "",
+    avatar: w.user?.profile_pic_url ?? "",
+    isOnline: w.is_available ?? false,
+    verified: false,
+    yearsExperience: 0,
+    jobsCompleted: w.total_bookings ?? 0,
+    responseTime: 0,
+  };
 }
 
-function generateMockWorkers(count: number) {
-  return Array.from({ length: count }, (_, i) => {
-    // Use index as seed for deterministic random values
-    const seed = i * 7; // Multiply by prime for better distribution
-    const profession =
-      professions[Math.floor(seededRandom(seed) * professions.length)];
-    const location =
-      locations[Math.floor(seededRandom(seed + 1) * locations.length)];
-    const firstName =
-      firstNames[Math.floor(seededRandom(seed + 2) * firstNames.length)];
-    const lastName =
-      lastNames[Math.floor(seededRandom(seed + 3) * lastNames.length)];
-    const rating = Number((3.5 + seededRandom(seed + 4) * 1.5).toFixed(1));
-    const reviews = Math.floor(seededRandom(seed + 5) * 300) + 10;
-    const hourlyRateMin = Math.floor(seededRandom(seed + 6) * 100) + 50;
-    const hourlyRateMax =
-      hourlyRateMin + Math.floor(seededRandom(seed + 13) * 50) + 20;
-    const yearsExperience = Math.floor(seededRandom(seed + 7) * 20) + 1;
-    const jobsCompleted = Math.floor(seededRandom(seed + 8) * 500) + 10;
-    const distance = (seededRandom(seed + 9) * 15 + 0.5).toFixed(1);
-    const isOnline = seededRandom(seed + 10) > 0.5;
-    const verified = seededRandom(seed + 11) > 0.3;
-
-    return {
-      id: i + 1,
-      name: `${firstName} ${lastName}`,
-      profession,
-      rating,
-      reviews,
-      hourlyRateMin,
-      hourlyRateMax,
-      location: `${location.city}, ${location.state}`,
-      distance: `${distance} km`,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${firstName}${lastName}`,
-      isOnline,
-      verified,
-      yearsExperience,
-      jobsCompleted,
-      responseTime: Math.floor(seededRandom(seed + 12) * 120) + 10, // minutes
-    };
-  });
-}
-
-// Generate 30 mock workers with deterministic seed
-const allMockWorkers = generateMockWorkers(30);
+type ActiveFilters = {
+  search: string;
+  location: string;
+  priceRange: number[];
+  onlineOnly: boolean;
+  selectedRatings: number[];
+};
 
 export default function SearchPage() {
   const router = useRouter();
-  const [displayedWorkers, setDisplayedWorkers] = useState(
-    allMockWorkers.slice(0, 10),
+  const searchParams = useSearchParams();
+
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
+  const [locationQuery, setLocationQuery] = useState(
+    searchParams.get("location") ?? "",
   );
-  const [hasMore, setHasMore] = useState(true);
+  const [workers, setWorkers] = useState<WorkerCardWorker[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -169,35 +97,80 @@ export default function SearchPage() {
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [distanceRange, setDistanceRange] = useState([0, 50]);
-  const [minResponseTime, setMinResponseTime] = useState(180); // minutes
+  const [minResponseTime, setMinResponseTime] = useState(180);
   const [minJobsCompleted, setMinJobsCompleted] = useState(0);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
 
   const observerTarget = useRef<HTMLDivElement>(null);
+  const fetchingRef = useRef(false);
 
-  // Infinite scroll logic
-  const loadMore = useCallback(() => {
-    if (isLoading || !hasMore) return;
-
+  async function doFetch(
+    page: number,
+    append: boolean,
+    filters: ActiveFilters,
+  ) {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     setIsLoading(true);
 
-    // Simulate loading delay
-    setTimeout(() => {
-      const currentLength = displayedWorkers.length;
-      const nextWorkers = allMockWorkers.slice(
-        currentLength,
-        currentLength + 10,
-      );
+    const result = await searchWorkers({
+      search: filters.search || undefined,
+      location: filters.location || undefined,
+      min_hourly_rate:
+        filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
+      max_hourly_rate:
+        filters.priceRange[1] < 1000 ? filters.priceRange[1] : undefined,
+      is_available: filters.onlineOnly ? true : undefined,
+      min_rating:
+        filters.selectedRatings.length > 0
+          ? Math.min(...filters.selectedRatings)
+          : undefined,
+      page,
+      limit: 10,
+    });
 
-      if (nextWorkers.length === 0) {
-        setHasMore(false);
-      } else {
-        setDisplayedWorkers((prev) => [...prev, ...nextWorkers]);
-      }
+    if (!result.error) {
+      const mapped = result.data.map(toWorkerCardShape);
+      setWorkers((prev) => (append ? [...prev, ...mapped] : mapped));
+      setTotalCount(result.pagination.total);
+      setHasMore(page < result.pagination.total_pages);
+      setCurrentPage(page);
+    }
 
-      setIsLoading(false);
-    }, 800);
-  }, [displayedWorkers.length, isLoading, hasMore]);
+    setIsLoading(false);
+    fetchingRef.current = false;
+  }
+
+  useEffect(() => {
+    doFetch(1, false, {
+      search: searchParams.get("q") ?? "",
+      location: searchParams.get("location") ?? "",
+      priceRange: [0, 1000],
+      onlineOnly: false,
+      selectedRatings: [],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || !hasMore) return;
+    doFetch(currentPage + 1, true, {
+      search: searchQuery,
+      location: locationQuery,
+      priceRange,
+      onlineOnly,
+      selectedRatings,
+    });
+  }, [
+    isLoading,
+    hasMore,
+    currentPage,
+    searchQuery,
+    locationQuery,
+    priceRange,
+    onlineOnly,
+    selectedRatings,
+  ]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -221,7 +194,17 @@ export default function SearchPage() {
     };
   }, [loadMore]);
 
-  const clearAllFilters = () => {
+  function handleSearch() {
+    doFetch(1, false, {
+      search: searchQuery,
+      location: locationQuery,
+      priceRange,
+      onlineOnly,
+      selectedRatings,
+    });
+  }
+
+  function clearAllFilters() {
     setPriceRange([0, 1000]);
     setSelectedServices([]);
     setSelectedRatings([]);
@@ -230,9 +213,16 @@ export default function SearchPage() {
     setDistanceRange([0, 50]);
     setMinResponseTime(180);
     setMinJobsCompleted(0);
-  };
+    doFetch(1, false, {
+      search: searchQuery,
+      location: locationQuery,
+      priceRange: [0, 1000],
+      onlineOnly: false,
+      selectedRatings: [],
+    });
+  }
 
-  const handleApplyMoreFilters = (filters: {
+  function handleApplyMoreFilters(filters: {
     selectedServices: string[];
     selectedRatings: number[];
     onlineOnly: boolean;
@@ -241,7 +231,7 @@ export default function SearchPage() {
     priceRange: number[];
     minResponseTime: number;
     minJobsCompleted: number;
-  }) => {
+  }) {
     setSelectedServices(filters.selectedServices);
     setSelectedRatings(filters.selectedRatings);
     setOnlineOnly(filters.onlineOnly);
@@ -250,20 +240,26 @@ export default function SearchPage() {
     setPriceRange(filters.priceRange);
     setMinResponseTime(filters.minResponseTime);
     setMinJobsCompleted(filters.minJobsCompleted);
-  };
+    doFetch(1, false, {
+      search: searchQuery,
+      location: locationQuery,
+      priceRange: filters.priceRange,
+      onlineOnly: filters.onlineOnly,
+      selectedRatings: filters.selectedRatings,
+    });
+  }
 
-  // Count active advanced filters
-  const getActiveFiltersCount = () => {
+  function getActiveFiltersCount() {
     let count = 0;
     if (selectedServices.length > 0) count += selectedServices.length;
-    if (selectedRatings.length > 0) count += selectedRatings.length; // All ratings are in More Filters now
+    if (selectedRatings.length > 0) count += selectedRatings.length;
     if (onlineOnly) count++;
     if (verifiedOnly) count++;
     if (distanceRange[1] < 50) count++;
     if (minResponseTime < 180) count++;
     if (minJobsCompleted > 0) count++;
     return count;
-  };
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -275,23 +271,38 @@ export default function SearchPage() {
               <InputGroupAddon>
                 <Search />
               </InputGroupAddon>
-              <InputGroupInput placeholder="Search services (e.g., plumber, electrician)" />
+              <InputGroupInput
+                placeholder="Search services (e.g., plumber, electrician)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
             </InputGroup>
             <InputGroup>
               <InputGroupAddon>
                 <MapPin />
               </InputGroupAddon>
-              <InputGroupInput placeholder="Your location" />
+              <InputGroupInput
+                placeholder="Filter by worker location"
+                value={locationQuery}
+                onChange={(e) => setLocationQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
             </InputGroup>
             <InputGroup>
               <InputGroupAddon>
                 <MapPin />
               </InputGroupAddon>
-              <InputGroupInput placeholder="Worker/Service location" />
+              <InputGroupInput placeholder="Your location (coming soon)" disabled />
             </InputGroup>
           </div>
           <div className="flex gap-2">
-            <Button className="flex-1 md:flex-none" size="sm">
+            <Button
+              className="flex-1 md:flex-none"
+              size="sm"
+              onClick={handleSearch}
+              disabled={isLoading}
+            >
               <Search />
               Search
             </Button>
@@ -357,13 +368,13 @@ export default function SearchPage() {
                 Results Near You
               </h1>
               <p className="text-muted-foreground text-sm">
-                Found {allMockWorkers.length} workers in your area
+                Found {totalCount} workers in your area
               </p>
             </div>
 
             {/* Worker Cards - Single Column */}
             <div className="space-y-6">
-              {displayedWorkers.map((worker) => (
+              {workers.map((worker) => (
                 <WorkerCard key={worker.id} worker={worker} />
               ))}
             </div>
@@ -382,16 +393,16 @@ export default function SearchPage() {
             {hasMore && <div ref={observerTarget} className="h-8" />}
 
             {/* End of Results */}
-            {!hasMore && displayedWorkers.length > 0 && (
+            {!hasMore && workers.length > 0 && (
               <div className="text-center py-6">
                 <p className="text-sm text-muted-foreground">
-                  You've reached the end of the results
+                  You&apos;ve reached the end of the results
                 </p>
               </div>
             )}
 
             {/* No Results */}
-            {displayedWorkers.length === 0 && (
+            {!isLoading && workers.length === 0 && (
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -399,9 +410,9 @@ export default function SearchPage() {
                   </EmptyMedia>
                   <EmptyTitle>Turn Your Skills Into Income</EmptyTitle>
                   <EmptyDescription>
-                    We couldn't find workers matching your search. Be the first!
-                    Join our platform and connect with customers looking for
-                    professionals like you.
+                    We couldn&apos;t find workers matching your search. Be the
+                    first! Join our platform and connect with customers looking
+                    for professionals like you.
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
