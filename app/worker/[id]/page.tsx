@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookingModal } from "@/components/booking-modal";
 import { WorkerAbout } from "@/components/worker/worker-about";
+import { WorkerAvailability } from "@/components/worker/worker-availability";
 import { WorkerGallery } from "@/components/worker/worker-gallery";
 import { WorkerProfileHeader } from "@/components/worker/worker-profile-header";
 import { WorkerTestimonials } from "@/components/worker/worker-testimonials";
@@ -73,6 +74,9 @@ export default function WorkerProfilePage({
   const [worker, setWorker] = useState<WorkerWithDetails | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [availability, setAvailability] = useState<{
+    [day: string]: string;
+  } | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -88,21 +92,28 @@ export default function WorkerProfilePage({
 
       const supabase = getSupabaseClient();
 
-      const [postsResult, ratingsResult] = await Promise.all([
-        supabase
-          .from("workers_posts")
-          .select("id, title, content, media_url")
-          .eq("worker_id", id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("ratings")
-          .select(
-            "id, rating_value, review_comment, created_at, customer:users(firstname, lastname, profile_pic_url)",
-          )
-          .eq("worker_id", id)
-          .order("created_at", { ascending: false })
-          .limit(10),
-      ]);
+      const [postsResult, ratingsResult, availabilityResult] = await Promise.all(
+        [
+          supabase
+            .from("workers_posts")
+            .select("id, title, content, media_url")
+            .eq("worker_id", id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("ratings")
+            .select(
+              "id, rating_value, review_comment, created_at, customer:users(firstname, lastname, profile_pic_url)",
+            )
+            .eq("worker_id", id)
+            .order("created_at", { ascending: false })
+            .limit(10),
+          supabase
+            .from("worker_availability")
+            .select("day_of_week, hours")
+            .eq("worker_id", id)
+            .order("sort_order"),
+        ],
+      );
 
       if (postsResult.data) {
         setPortfolio(
@@ -136,6 +147,14 @@ export default function WorkerProfilePage({
               };
             }),
         );
+      }
+
+      if (availabilityResult.data && availabilityResult.data.length > 0) {
+        const schedule: { [day: string]: string } = {};
+        for (const row of availabilityResult.data) {
+          schedule[row.day_of_week] = row.hours;
+        }
+        setAvailability(schedule);
       }
 
       setLoading(false);
@@ -215,6 +234,8 @@ export default function WorkerProfilePage({
           workerId={worker.id}
           workerName={workerHeaderData.name}
         />
+
+        {availability && <WorkerAvailability availability={availability} />}
       </div>
 
       <BookingModal
