@@ -144,49 +144,66 @@ export default function BookingDetailPage({
     async function load() {
       const supabase = getSupabaseClient();
 
-      const { data } = await supabase
+      // Fetch booking base fields without joins to avoid FK inference issues
+      const { data: bookingData, error } = await supabase
         .from("bookings")
         .select(
-          `id, status, description, requested_at, accepted_at, completed_at, canceled_at,
-          worker:workers(id, profession, user:users(firstname, lastname, profile_pic_url)),
-          category:categories(name)`,
+          "id, status, description, requested_at, accepted_at, completed_at, canceled_at, worker_id, category_id",
         )
         .eq("id", id)
         .maybeSingle();
 
-      if (!data) {
+      if (error || !bookingData) {
         setNotFound(true);
         setLoading(false);
         return;
       }
 
-      const worker = Array.isArray(data.worker) ? data.worker[0] : data.worker;
-      const workerUser = worker
-        ? Array.isArray(worker.user)
-          ? worker.user[0]
-          : worker.user
-        : null;
-      const category = Array.isArray(data.category)
-        ? data.category[0]
-        : data.category;
+      // Fetch worker + their user record separately
+      const { data: workerData } = await supabase
+        .from("workers")
+        .select("id, profession, user_id")
+        .eq("id", bookingData.worker_id)
+        .maybeSingle();
+
+      let workerUser = null;
+      if (workerData?.user_id) {
+        const { data } = await supabase
+          .from("users")
+          .select("firstname, lastname, profile_pic_url")
+          .eq("id", workerData.user_id)
+          .maybeSingle();
+        workerUser = data;
+      }
+
+      // Fetch category separately
+      let categoryName: string | null = null;
+      if (bookingData.category_id) {
+        const { data: catData } = await supabase
+          .from("categories")
+          .select("name")
+          .eq("id", bookingData.category_id)
+          .maybeSingle();
+        categoryName = catData?.name ?? null;
+      }
 
       setBooking({
-        id: data.id,
-        status: data.status,
-        description: data.description,
-        requested_at: data.requested_at,
-        accepted_at: data.accepted_at,
-        completed_at: data.completed_at,
-        canceled_at: data.canceled_at,
+        id: bookingData.id,
+        status: bookingData.status,
+        description: bookingData.description,
+        requested_at: bookingData.requested_at,
+        accepted_at: bookingData.accepted_at,
+        completed_at: bookingData.completed_at,
+        canceled_at: bookingData.canceled_at,
         worker: {
-          id: worker?.id ?? "",
+          id: workerData?.id ?? "",
           name: workerUser
             ? `${workerUser.firstname} ${workerUser.lastname}`
             : "Unknown Worker",
-          profession: worker?.profession ?? "Service Provider",
+          profession: workerData?.profession ?? "Service Provider",
           avatar: workerUser?.profile_pic_url ?? "/placeholder.svg",
         },
-        category: category?.name ?? null,
+        category: categoryName,
       });
 
       setLoading(false);

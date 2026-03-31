@@ -109,13 +109,10 @@ export default function BookingsPage() {
         return;
       }
 
+      // Fetch bookings base fields without joins
       let query = supabase
         .from("bookings")
-        .select(
-          `id, status, description, requested_at,
-          worker:workers(id, profession, user:users(firstname, lastname, profile_pic_url)),
-          category:categories(name)`,
-        )
+        .select("id, status, description, requested_at, worker_id, category_id")
         .eq("customer_id", user.id);
 
       if (filterStatus === "upcoming") {
@@ -126,43 +123,73 @@ export default function BookingsPage() {
         query = query.eq("status", "canceled");
       }
 
-      query = query.order("requested_at", {
-        ascending: sortBy === "date-asc",
-      });
+      query = query.order("requested_at", { ascending: sortBy === "date-asc" });
 
-      const { data } = await query;
-
-      if (data) {
-        setBookings(
-          data.map((b) => {
-            const worker = Array.isArray(b.worker) ? b.worker[0] : b.worker;
-            const workerUser = worker
-              ? Array.isArray(worker.user)
-                ? worker.user[0]
-                : worker.user
-              : null;
-            const category = Array.isArray(b.category)
-              ? b.category[0]
-              : b.category;
-
-            return {
-              id: b.id,
-              worker: {
-                id: worker?.id ?? "",
-                name: workerUser
-                  ? `${workerUser.firstname} ${workerUser.lastname}`
-                  : "Unknown Worker",
-                profession: worker?.profession ?? "Service Provider",
-                avatar: workerUser?.profile_pic_url ?? "/placeholder.svg",
-              },
-              requestedAt: b.requested_at,
-              status: b.status,
-              description: b.description,
-              category: category?.name ?? null,
-            };
-          }),
-        );
+      const { data: bookingsData } = await query;
+      if (!bookingsData || bookingsData.length === 0) {
+        setLoading(false);
+        return;
       }
+
+      // Batch-fetch all workers referenced by these bookings
+      const workerIds = [...new Set(bookingsData.map((b) => b.worker_id).filter(Boolean))];
+      const categoryIds = [...new Set(bookingsData.map((b) => b.category_id).filter(Boolean))];
+
+      const [workersResult, categoriesResult] = await Promise.all([
+        supabase
+          .from("workers")
+          .select("id, profession, user_id")
+          .in("id", workerIds),
+        supabase
+          .from("categories")
+          .select("id, name")
+          .in("id", categoryIds),
+      ]);
+
+      // Batch-fetch all user records for those workers
+      const userIds = [
+        ...new Set(
+          (workersResult.data ?? []).map((w) => w.user_id).filter(Boolean),
+        ),
+      ];
+      const { data: usersData } = userIds.length
+        ? await supabase
+            .from("users")
+            .select("id, firstname, lastname, profile_pic_url")
+            .in("id", userIds)
+        : { data: [] };
+
+      // Build lookup maps
+      const userMap = new Map((usersData ?? []).map((u) => [u.id, u]));
+      const workerMap = new Map(
+        (workersResult.data ?? []).map((w) => [w.id, w]),
+      );
+      const categoryMap = new Map(
+        (categoriesResult.data ?? []).map((c) => [c.id, c]),
+      );
+
+      setBookings(
+        bookingsData.map((b) => {
+          const worker = workerMap.get(b.worker_id);
+          const workerUser = worker ? userMap.get(worker.user_id) : null;
+          const category = categoryMap.get(b.category_id);
+          return {
+            id: b.id,
+            worker: {
+              id: worker?.id ?? "",
+              name: workerUser
+                ? `${workerUser.firstname} ${workerUser.lastname}`
+                : "Unknown Worker",
+              profession: worker?.profession ?? "Service Provider",
+              avatar: workerUser?.profile_pic_url ?? "/placeholder.svg",
+            },
+            requestedAt: b.requested_at,
+            status: b.status,
+            description: b.description,
+            category: category?.name ?? null,
+          };
+        }),
+      );
 
       setLoading(false);
     }
