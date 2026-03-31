@@ -109,25 +109,14 @@ export default function BookingsPage() {
         return;
       }
 
-      const { data: userData } = await supabase
-        .from("users")
-        .select("id")
-        .eq("auth_id", user.id)
-        .maybeSingle();
-
-      if (!userData) {
-        setLoading(false);
-        return;
-      }
-
       let query = supabase
         .from("bookings")
         .select(
           `id, status, description, requested_at,
           worker:workers(id, profession, user:users(firstname, lastname, profile_pic_url)),
-          category:category(name)`,
+          category:categories(name)`,
         )
-        .eq("customer_id", userData.id);
+        .eq("customer_id", user.id);
 
       if (filterStatus === "upcoming") {
         query = query.in("status", ["pending", "accepted"]);

@@ -149,7 +149,7 @@ export default function BookingDetailPage({
         .select(
           `id, status, description, requested_at, accepted_at, completed_at, canceled_at,
           worker:workers(id, profession, user:users(firstname, lastname, profile_pic_url)),
-          category:category(name)`,
+          category:categories(name)`,
         )
         .eq("id", id)
         .maybeSingle();
