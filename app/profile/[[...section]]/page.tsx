@@ -426,12 +426,10 @@ export default function ProfilePage() {
         hourlyRate: data.hourlyRate,
       }));
     }
-    console.log("Header saved:", data);
   }
 
   async function handleAvatarChange(file: File) {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log("Avatar uploaded:", file.name);
   }
 
   async function handleAboutSave(data: ProfileAboutFormValues) {
@@ -440,7 +438,6 @@ export default function ProfilePage() {
       setBio(data.bio);
       setSkills(data.skills);
     }
-    console.log("About saved:", data);
   }
 
   async function handleAvailabilitySave(data: ProfileAvailabilityFormValues) {
@@ -448,7 +445,6 @@ export default function ProfilePage() {
     if (!activeSubProfile) {
       setAvailability(data);
     }
-    console.log("Availability saved:", data);
   }
 
   function renderDetailPanel() {

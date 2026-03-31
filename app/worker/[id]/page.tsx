@@ -122,7 +122,6 @@ export default function WorkerProfilePage() {
           isBookmarked={isBookmarked}
           onMessage={() => {
             // TODO: Implement message functionality
-            console.log("Message worker:", mockWorker.id);
           }}
           onBookNow={() => setBookingModalOpen(true)}
           onBookmarkToggle={setIsBookmarked}

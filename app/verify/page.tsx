@@ -120,7 +120,6 @@ export default function VerifyPage() {
       router.push("/verification-pending");
       router.refresh();
     } catch (error: unknown) {
-      console.error("Verification error:", error);
       setError(
         error instanceof Error
           ? error.message

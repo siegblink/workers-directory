@@ -97,9 +97,6 @@ export default function BecomeWorkerPage() {
       addSubProfile(directoryParam as DirectoryId, formData.profileLabel);
       toast(`${formData.profileLabel} sub-profile created`);
       router.push("/profile");
-    } else {
-      // Default flow
-      console.log("Form submitted:", formData);
     }
   }
 
