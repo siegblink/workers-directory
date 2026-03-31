@@ -109,9 +109,9 @@ export default function WorkerProfilePage({
             .limit(10),
           supabase
             .from("worker_availability")
-            .select("day_of_week, hours")
+            .select("schedule")
             .eq("worker_id", id)
-            .order("sort_order"),
+            .maybeSingle(),
         ],
       );
 
@@ -149,12 +149,22 @@ export default function WorkerProfilePage({
         );
       }
 
-      if (availabilityResult.data && availabilityResult.data.length > 0) {
-        const schedule: { [day: string]: string } = {};
-        for (const row of availabilityResult.data) {
-          schedule[row.day_of_week] = row.hours;
+      if (availabilityResult.data?.schedule) {
+        const raw = availabilityResult.data.schedule as Record<string, string>;
+        // Reconstruct in Mon–Sun order so Object.entries renders correctly
+        const ordered: { [day: string]: string } = {};
+        for (const day of [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+        ]) {
+          if (raw[day]) ordered[day] = raw[day];
         }
-        setAvailability(schedule);
+        setAvailability(ordered);
       }
 
       setLoading(false);
