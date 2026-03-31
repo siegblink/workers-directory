@@ -36,32 +36,34 @@ export type JobSuggestionStatus =
 // TABLE TYPES
 // =====================================================
 
-export interface User {
-  id: number;
-  auth_id: string | null; // UUID from auth.users table
+export type User = {
+  id: string; // UUID
+  auth_id: string | null;
   firstname: string;
   lastname: string;
   profile_pic_url: string | null;
   bio: string | null;
-  is_online: boolean;
+  city: string | null;
+  state: string | null;
   status: UserStatus;
   created_at: string;
-}
+};
 
-export interface Worker {
-  id: number;
-  worker_id: number;
-  skills: string | null;
+export type Worker = {
+  id: string; // UUID
+  user_id: string; // UUID FK → users.id
+  profession: string | null;
+  skills: string[];
+  hourly_rate_min: number | null;
+  hourly_rate_max: number | null;
+  years_experience: number | null;
+  jobs_completed: number | null;
+  response_time_minutes: number | null;
+  is_verified: boolean | null;
   status: WorkerStatus;
-  hourly_rate: number | null;
-  location: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  availability_schedule: Json | null; // JSON object for weekly schedule
-  is_available: boolean | null;
   created_at: string;
   deleted_at: string | null;
-}
+};
 
 export interface Category {
   id: number;
@@ -224,13 +226,16 @@ export interface BookingWithDetails extends Booking {
   payment?: Payment;
 }
 
-export interface WorkerWithDetails extends Worker {
+export type WorkerWithDetails = Worker & {
   user?: User;
   categories?: Category[];
   ratings?: Rating[];
+  location?: string | null; // computed from user city + state
+  is_online?: boolean;
   average_rating?: number;
+  review_count?: number;
   total_bookings?: number;
-}
+};
 
 export interface ChatWithDetails extends Chat {
   customer?: User;

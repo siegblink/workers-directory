@@ -64,7 +64,7 @@ export function useCurrentUser() {
 // WORKER HOOKS
 // =====================================================
 
-export function useWorker(workerId: number | null) {
+export function useWorker(workerId: string | null) {
   const [worker, setWorker] = useState<Worker | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -89,7 +89,7 @@ export function useWorker(workerId: number | null) {
   return { worker, loading, error };
 }
 
-export function useWorkerWithDetails(workerId: number | null) {
+export function useWorkerWithDetails(workerId: string | null) {
   const [worker, setWorker] = useState<WorkerWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

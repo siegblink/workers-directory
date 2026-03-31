@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-export interface Worker {
-  id: number;
+export type Worker = {
+  id: string;
   name: string;
   profession: string;
   rating: number;
@@ -32,14 +32,14 @@ export interface Worker {
   yearsExperience: number;
   jobsCompleted: number;
   responseTime: number;
-}
+};
 
-interface WorkerCardProps {
+type WorkerCardProps = {
   worker: Worker;
-  onMessage?: (workerId: number) => void;
-  onBook?: (workerId: number) => void;
-  onSave?: (workerId: number) => void;
-}
+  onMessage?: (workerId: string) => void;
+  onBook?: (workerId: string) => void;
+  onSave?: (workerId: string) => void;
+};
 
 export function WorkerCard({
   worker,

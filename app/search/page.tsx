@@ -51,22 +51,19 @@ function toWorkerCardShape(w: WorkerWithDetails): WorkerCardWorker {
   return {
     id: w.id,
     name: w.user ? `${w.user.firstname} ${w.user.lastname}` : "Worker",
-    profession:
-      w.categories?.[0]?.name ??
-      w.skills?.split(",")?.[0]?.trim() ??
-      "Worker",
+    profession: w.profession ?? w.categories?.[0]?.name ?? "Worker",
     rating: w.average_rating ?? 0,
-    reviews: w.ratings?.length ?? 0,
-    hourlyRateMin: w.hourly_rate ?? 0,
-    hourlyRateMax: w.hourly_rate ?? 0,
+    reviews: w.review_count ?? 0,
+    hourlyRateMin: w.hourly_rate_min ?? 0,
+    hourlyRateMax: w.hourly_rate_max ?? 0,
     location: w.location ?? "",
     distance: "",
     avatar: w.user?.profile_pic_url ?? "",
-    isOnline: w.is_available ?? false,
-    verified: false,
-    yearsExperience: 0,
-    jobsCompleted: w.total_bookings ?? 0,
-    responseTime: 0,
+    isOnline: w.is_online ?? false,
+    verified: w.is_verified ?? false,
+    yearsExperience: w.years_experience ?? 0,
+    jobsCompleted: w.jobs_completed ?? 0,
+    responseTime: w.response_time_minutes ?? 0,
   };
 }
 

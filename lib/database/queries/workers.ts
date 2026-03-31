@@ -7,9 +7,9 @@ import { executeQuery, getSupabaseClient } from "../base-query";
 import type {
   ApiResponse,
   Category,
-  Json,
   PaginatedResponse,
   User,
+  UserStatus,
   Worker,
   WorkerFilters,
   WorkerStatus,
@@ -20,29 +20,41 @@ import type {
 // TYPE DEFINITIONS
 // =====================================================
 
-interface WorkerViewRow {
-  id: number;
-  worker_id: number;
-  skills: string | null;
+type WorkerViewRow = {
+  id: string; // UUID
+  user_id: string; // UUID
+  slug: string | null;
+  profession: string | null;
+  hourly_rate_min: number | null;
+  hourly_rate_max: number | null;
+  years_experience: number | null;
+  jobs_completed: number | null;
+  response_time_minutes: number | null;
+  is_verified: boolean | null;
+  skills: string[] | null;
   status: WorkerStatus;
-  hourly_rate: number | null;
-  location: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  availability_schedule: Json | null;
-  is_available: boolean | null;
   created_at: string;
-  user_data: User | null;
+  location: string | null;
+  user_data: {
+    firstname: string;
+    lastname: string;
+    profile_pic_url: string | null;
+    bio: string | null;
+    status: string | null;
+    city: string | null;
+    state: string | null;
+  } | null;
+  is_online: boolean;
   average_rating: string;
-  total_bookings: string;
+  review_count: string;
   total_count?: number;
-}
+};
 
-interface WorkerCategoryRelation {
-  worker_id: number;
+type WorkerCategoryRelation = {
+  worker_id: string;
   category_id: number;
   category?: Category | null;
-}
+};
 
 // =====================================================
 // HELPER FUNCTIONS
@@ -52,31 +64,48 @@ interface WorkerCategoryRelation {
  * Parse worker data from database view result
  */
 function parseWorkerFromView(row: WorkerViewRow): WorkerWithDetails {
+  const ud = row.user_data;
   return {
     id: row.id,
-    worker_id: row.worker_id,
-    skills: row.skills,
+    user_id: row.user_id,
+    profession: row.profession,
+    skills: row.skills ?? [],
+    hourly_rate_min: row.hourly_rate_min,
+    hourly_rate_max: row.hourly_rate_max,
+    years_experience: row.years_experience,
+    jobs_completed: row.jobs_completed,
+    response_time_minutes: row.response_time_minutes,
+    is_verified: row.is_verified,
     status: row.status,
-    hourly_rate: row.hourly_rate,
-    location: row.location,
-    latitude: row.latitude,
-    longitude: row.longitude,
-    availability_schedule: row.availability_schedule,
-    is_available: row.is_available,
     created_at: row.created_at,
     deleted_at: null,
-    user: row.user_data ?? undefined,
+    location: row.location,
+    is_online: row.is_online,
     average_rating: parseFloat(row.average_rating) || 0,
-    total_bookings: parseInt(row.total_bookings, 10) || 0,
-    ratings: [], // Not included in view for performance
-    categories: [], // Will be fetched separately when needed
+    review_count: parseInt(row.review_count, 10) || 0,
+    user: ud
+      ? {
+          id: row.user_id,
+          auth_id: null,
+          firstname: ud.firstname,
+          lastname: ud.lastname,
+          profile_pic_url: ud.profile_pic_url,
+          bio: ud.bio,
+          status: (ud.status as UserStatus) ?? "active",
+          city: ud.city,
+          state: ud.state,
+          created_at: "",
+        }
+      : undefined,
+    ratings: [],
+    categories: [],
   };
 }
 
 /**
  * Get categories for a worker (lightweight query)
  */
-async function getWorkerCategories(workerId: number): Promise<Category[]> {
+async function getWorkerCategories(workerId: string): Promise<Category[]> {
   const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
@@ -113,7 +142,7 @@ async function getWorkerCategories(workerId: number): Promise<Category[]> {
  * Get worker by ID (basic info only)
  */
 export async function getWorkerById(
-  workerId: number,
+  workerId: string,
 ): Promise<ApiResponse<Worker>> {
   const supabase = getSupabaseClient();
 
@@ -134,7 +163,7 @@ export async function getWorkerById(
  * FIXED: No longer uses N+1 queries - single view query
  */
 export async function getWorkerWithDetails(
-  workerId: number,
+  workerId: string,
 ): Promise<ApiResponse<WorkerWithDetails>> {
   const supabase = getSupabaseClient();
 
@@ -200,30 +229,22 @@ export async function searchWorkers(
         .is("deleted_at", null);
 
       if (filters.search) {
-        fallbackQuery = fallbackQuery.or(
-          `skills.ilike.%${filters.search}%,location.ilike.%${filters.search}%`,
-        );
-      }
-      if (filters.location) {
         fallbackQuery = fallbackQuery.ilike(
-          "location",
-          `%${filters.location}%`,
+          "profession",
+          `%${filters.search}%`,
         );
       }
       if (filters.min_hourly_rate != null) {
         fallbackQuery = fallbackQuery.gte(
-          "hourly_rate",
+          "hourly_rate_min",
           filters.min_hourly_rate,
         );
       }
       if (filters.max_hourly_rate != null) {
         fallbackQuery = fallbackQuery.lte(
-          "hourly_rate",
+          "hourly_rate_max",
           filters.max_hourly_rate,
         );
-      }
-      if (filters.is_available != null) {
-        fallbackQuery = fallbackQuery.eq("is_available", filters.is_available);
       }
       if (filters.status) {
         fallbackQuery = fallbackQuery.eq("status", filters.status);
@@ -293,7 +314,7 @@ export async function searchWorkers(
         .select("worker_id, category_id")
         .in("worker_id", workerIds);
 
-      const workerCategoryMap = new Map<number, number[]>();
+      const workerCategoryMap = new Map<string, number[]>();
       categoriesData?.forEach((wc: WorkerCategoryRelation) => {
         if (!workerCategoryMap.has(wc.worker_id)) {
           workerCategoryMap.set(wc.worker_id, []);
@@ -317,31 +338,6 @@ export async function searchWorkers(
       }
     }
 
-    // Location radius filter (if provided)
-    if (filters.latitude && filters.longitude && filters.radius) {
-      const {
-        latitude: filterLat,
-        longitude: filterLon,
-        radius: filterRadius,
-      } = filters;
-      filteredWorkers = filteredWorkers.filter((worker: WorkerWithDetails) => {
-        if (!worker.latitude || !worker.longitude) return false;
-        if (
-          filterLat === undefined ||
-          filterLon === undefined ||
-          filterRadius === undefined
-        )
-          return false;
-        const distance = calculateDistance(
-          filterLat,
-          filterLon,
-          worker.latitude,
-          worker.longitude,
-        );
-        return distance <= filterRadius;
-      });
-    }
-
     return {
       data: filteredWorkers,
       pagination: {
@@ -353,29 +349,6 @@ export async function searchWorkers(
       error: null,
     };
   }) as Promise<PaginatedResponse<WorkerWithDetails>>;
-}
-
-/**
- * Calculate distance between two coordinates using Haversine formula
- * Returns distance in kilometers
- */
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
-  const R = 6371; // Earth's radius in kilometers
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
 }
 
 /**
@@ -433,7 +406,7 @@ export async function getWorkersByCategory(
       .in("worker_id", workerIds);
 
     // Map categories to workers
-    const categoryMap = new Map<number, Category[]>();
+    const categoryMap = new Map<string, Category[]>();
     categoriesData?.forEach((wc) => {
       if (!categoryMap.has(wc.worker_id)) {
         categoryMap.set(wc.worker_id, []);
@@ -499,7 +472,7 @@ export async function getTopRatedWorkers(
         .in("worker_id", workerIds);
 
       // Map categories to workers
-      const categoryMap = new Map<number, Category[]>();
+      const categoryMap = new Map<string, Category[]>();
       categoriesData?.forEach((wc) => {
         if (!categoryMap.has(wc.worker_id)) {
           categoryMap.set(wc.worker_id, []);
@@ -529,7 +502,7 @@ export async function getTopRatedWorkers(
  * Update worker status
  */
 export async function updateWorkerStatus(
-  workerId: number,
+  workerId: string,
   status: "available" | "busy" | "unavailable",
 ): Promise<ApiResponse<Worker>> {
   const supabase = getSupabaseClient();
@@ -550,7 +523,7 @@ export async function updateWorkerStatus(
  * Create worker profile
  */
 export async function createWorkerProfile(
-  userId: number,
+  userId: string,
   workerData: Partial<Worker>,
 ): Promise<ApiResponse<Worker>> {
   const supabase = getSupabaseClient();
@@ -559,7 +532,7 @@ export async function createWorkerProfile(
     const { data, error } = await supabase
       .from("workers")
       .insert({
-        worker_id: userId,
+        user_id: userId,
         ...workerData,
       })
       .select()
@@ -573,7 +546,7 @@ export async function createWorkerProfile(
  * Update worker profile
  */
 export async function updateWorkerProfile(
-  workerId: number,
+  workerId: string,
   updates: Partial<Worker>,
 ): Promise<ApiResponse<Worker>> {
   const supabase = getSupabaseClient();
@@ -594,7 +567,7 @@ export async function updateWorkerProfile(
  * Delete worker profile (soft delete)
  */
 export async function deleteWorkerProfile(
-  workerId: number,
+  workerId: string,
 ): Promise<ApiResponse<Worker>> {
   const supabase = getSupabaseClient();
 
@@ -613,14 +586,14 @@ export async function deleteWorkerProfile(
 /**
  * Check if user is a worker
  */
-export async function isUserAWorker(userId: number): Promise<boolean> {
+export async function isUserAWorker(userId: string): Promise<boolean> {
   const supabase = getSupabaseClient();
 
   try {
     const { data, error } = await supabase
       .from("workers")
       .select("id")
-      .eq("worker_id", userId)
+      .eq("user_id", userId)
       .is("deleted_at", null)
       .single();
 
