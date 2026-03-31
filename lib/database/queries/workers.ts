@@ -173,7 +173,7 @@ export async function getWorkerWithDetails(
       .from("workers_with_details")
       .select("*")
       .eq("id", workerId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       return { data: null, error };
