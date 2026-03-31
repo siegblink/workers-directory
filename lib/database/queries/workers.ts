@@ -205,9 +205,13 @@ export async function searchWorkers(
   const page = filters.page ?? 1;
   const limit = filters.limit ?? 20;
   const offset = (page - 1) * limit;
+  const empty: PaginatedResponse<WorkerWithDetails> = {
+    data: [],
+    pagination: { page, limit, total: 0, total_pages: 0 },
+    error: null,
+  };
 
-  return executeQuery(async () => {
-    // Call the optimized database function
+  try {
     const { data, error } = await supabase.rpc("search_workers_optimized", {
       search_text: filters.search || null,
       filter_status: filters.status || null,
@@ -257,11 +261,7 @@ export async function searchWorkers(
       } = await fallbackQuery.range(offset, offset + limit - 1);
 
       if (fallbackError || !fallbackData) {
-        return {
-          data: [],
-          pagination: { page, limit, total: 0, total_pages: 0 },
-          error: fallbackError,
-        };
+        return { ...empty, error: fallbackError };
       }
 
       const total = count ?? 0;
@@ -278,36 +278,21 @@ export async function searchWorkers(
 
       return {
         data: workers,
-        pagination: {
-          page,
-          limit,
-          total,
-          total_pages: Math.ceil(total / limit),
-        },
+        pagination: { page, limit, total, total_pages: Math.ceil(total / limit) },
         error: null,
       };
     }
 
-    // RPC succeeded but returned no results
-    if (!data || data.length === 0) {
-      return {
-        data: [],
-        pagination: { page, limit, total: 0, total_pages: 0 },
-        error: null,
-      };
-    }
+    if (!data || data.length === 0) return empty;
 
     // Parse all workers
     const workers = data.map(parseWorkerFromView);
     const totalCount = data[0]?.total_count || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Apply client-side filters that can't be done in SQL
-    let filteredWorkers = workers;
-
     // Category filter (if provided)
+    let filteredWorkers = workers;
     if (filters.category_id || filters.category_ids) {
-      // Fetch categories for all workers in one batch
       const workerIds = workers.map((w: WorkerWithDetails) => w.id);
       const { data: categoriesData } = await supabase
         .from("workers_categories")
@@ -340,15 +325,15 @@ export async function searchWorkers(
 
     return {
       data: filteredWorkers,
-      pagination: {
-        page,
-        limit,
-        total: totalCount,
-        total_pages: totalPages,
-      },
+      pagination: { page, limit, total: totalCount, total_pages: totalPages },
       error: null,
     };
-  }) as Promise<PaginatedResponse<WorkerWithDetails>>;
+  } catch (err) {
+    return {
+      ...empty,
+      error: err instanceof Error ? err : new Error("Unknown error"),
+    };
+  }
 }
 
 /**
