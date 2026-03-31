@@ -7,22 +7,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface Review {
+type Review = {
   id: number;
   author: string;
   rating: number;
   date: string;
   comment: string;
   avatar: string;
-}
+};
 
-interface WorkerTestimonialsProps {
+type WorkerTestimonialsProps = {
   rating: number;
   reviewCount: number;
   reviews: Review[];
-  workerId: number;
+  workerId: string;
   workerName: string;
-}
+};
 
 export function WorkerTestimonials({
   rating,

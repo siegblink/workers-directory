@@ -17,9 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pill } from "@/components/ui/pill";
 
-interface WorkerProfileHeaderProps {
+type WorkerProfileHeaderProps = {
   worker: {
-    id: number;
+    id: string;
     name: string;
     profession: string;
     rating: number;
@@ -39,7 +39,7 @@ interface WorkerProfileHeaderProps {
   onMessage?: () => void;
   onBookNow?: () => void;
   onBookmarkToggle?: (isBookmarked: boolean) => void;
-}
+};
 
 export function WorkerProfileHeader({
   worker,

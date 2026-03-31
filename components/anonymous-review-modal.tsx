@@ -36,12 +36,12 @@ const anonymousReviewSchema = z.object({
 
 type AnonymousReviewFormValues = z.infer<typeof anonymousReviewSchema>;
 
-interface AnonymousReviewModalProps {
+type AnonymousReviewModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  workerId: number;
+  workerId: string;
   workerName: string;
-}
+};
 
 export function AnonymousReviewModal({
   open,
