@@ -192,16 +192,87 @@ export async function searchWorkers(
       result_offset: offset,
     });
 
-    if (error || !data || data.length === 0) {
+    // RPC unavailable — fall back to a direct table query
+    if (error) {
+      let fallbackQuery = supabase
+        .from("workers")
+        .select("*", { count: "exact" })
+        .is("deleted_at", null);
+
+      if (filters.search) {
+        fallbackQuery = fallbackQuery.or(
+          `skills.ilike.%${filters.search}%,location.ilike.%${filters.search}%`,
+        );
+      }
+      if (filters.location) {
+        fallbackQuery = fallbackQuery.ilike(
+          "location",
+          `%${filters.location}%`,
+        );
+      }
+      if (filters.min_hourly_rate != null) {
+        fallbackQuery = fallbackQuery.gte(
+          "hourly_rate",
+          filters.min_hourly_rate,
+        );
+      }
+      if (filters.max_hourly_rate != null) {
+        fallbackQuery = fallbackQuery.lte(
+          "hourly_rate",
+          filters.max_hourly_rate,
+        );
+      }
+      if (filters.is_available != null) {
+        fallbackQuery = fallbackQuery.eq("is_available", filters.is_available);
+      }
+      if (filters.status) {
+        fallbackQuery = fallbackQuery.eq("status", filters.status);
+      }
+
+      const {
+        data: fallbackData,
+        error: fallbackError,
+        count,
+      } = await fallbackQuery.range(offset, offset + limit - 1);
+
+      if (fallbackError || !fallbackData) {
+        return {
+          data: [],
+          pagination: { page, limit, total: 0, total_pages: 0 },
+          error: fallbackError,
+        };
+      }
+
+      const total = count ?? 0;
+      const workers: WorkerWithDetails[] = (
+        fallbackData as WorkerWithDetails[]
+      ).map((row) => ({
+        ...row,
+        user: undefined,
+        categories: [],
+        ratings: [],
+        average_rating: 0,
+        total_bookings: 0,
+      }));
+
       return {
-        data: [],
+        data: workers,
         pagination: {
           page,
           limit,
-          total: 0,
-          total_pages: 0,
+          total,
+          total_pages: Math.ceil(total / limit),
         },
-        error,
+        error: null,
+      };
+    }
+
+    // RPC succeeded but returned no results
+    if (!data || data.length === 0) {
+      return {
+        data: [],
+        pagination: { page, limit, total: 0, total_pages: 0 },
+        error: null,
       };
     }
 
