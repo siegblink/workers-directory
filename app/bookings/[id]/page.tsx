@@ -6,12 +6,12 @@ import {
   CheckCircle2,
   Circle,
   Clock,
-  MapPin,
   MessageSquare,
   Star,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,68 +25,211 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { getSupabaseClient } from "@/lib/database/base-query";
 
-const mockBooking = {
-  id: 1,
+type BookingDetail = {
+  id: number;
+  status: string;
+  description: string | null;
+  requested_at: string | null;
+  accepted_at: string | null;
+  completed_at: string | null;
+  canceled_at: string | null;
   worker: {
-    name: "John Smith",
-    profession: "Plumber",
-    avatar: "/placeholder.svg?height=80&width=80",
-  },
-  date: "Dec 20, 2024",
-  time: "2:00 PM",
-  duration: 2,
-  location: "123 Main St, New York, NY 10001",
-  status: "completed",
-  amount: 90,
-  description: "Fix leaking kitchen sink and check water pressure",
-  timeline: [
-    {
-      status: "Booking Confirmed",
-      date: "Dec 18, 2024 - 3:30 PM",
-      completed: true,
-    },
-    {
-      status: "Worker En Route",
-      date: "Dec 20, 2024 - 1:45 PM",
-      completed: true,
-    },
-    {
-      status: "Service Started",
-      date: "Dec 20, 2024 - 2:00 PM",
-      completed: true,
-    },
-    {
-      status: "Service Completed",
-      date: "Dec 20, 2024 - 4:00 PM",
-      completed: true,
-    },
-    {
-      status: "Payment Processed",
-      date: "Dec 20, 2024 - 4:05 PM",
-      completed: true,
-    },
-  ],
+    id: string;
+    name: string;
+    profession: string;
+    avatar: string;
+  };
+  category: string | null;
 };
 
-export default function BookingDetailPage() {
+type TimelineStep = {
+  label: string;
+  timestamp: string | null;
+  completed: boolean;
+};
+
+function buildTimeline(booking: BookingDetail): TimelineStep[] {
+  const steps: TimelineStep[] = [
+    {
+      label: "Booking Requested",
+      timestamp: booking.requested_at,
+      completed: true,
+    },
+  ];
+
+  if (booking.canceled_at) {
+    steps.push({
+      label: "Booking Cancelled",
+      timestamp: booking.canceled_at,
+      completed: true,
+    });
+    return steps;
+  }
+
+  steps.push({
+    label: "Booking Accepted",
+    timestamp: booking.accepted_at,
+    completed: !!booking.accepted_at,
+  });
+
+  steps.push({
+    label: "Service Completed",
+    timestamp: booking.completed_at,
+    completed: !!booking.completed_at,
+  });
+
+  return steps;
+}
+
+function formatTimestamp(ts: string | null): string {
+  if (!ts) return "Pending";
+  return new Date(ts).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function getStatusColor(status: string): string {
+  switch (status) {
+    case "pending":
+    case "accepted":
+      return "bg-blue-100 text-blue-700";
+    case "completed":
+      return "bg-green-100 text-green-700";
+    case "canceled":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-secondary text-foreground";
+  }
+}
+
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "accepted":
+      return "Upcoming";
+    case "completed":
+      return "Completed";
+    case "canceled":
+      return "Cancelled";
+    default:
+      return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+}
+
+export default function BookingDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
 
+  useEffect(() => {
+    async function load() {
+      const supabase = getSupabaseClient();
+
+      const { data } = await supabase
+        .from("bookings")
+        .select(
+          `id, status, description, requested_at, accepted_at, completed_at, canceled_at,
+          worker:workers(id, profession, user:users(firstname, lastname, profile_pic_url)),
+          category:category(name)`,
+        )
+        .eq("id", id)
+        .maybeSingle();
+
+      if (!data) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      const worker = Array.isArray(data.worker) ? data.worker[0] : data.worker;
+      const workerUser = worker
+        ? Array.isArray(worker.user)
+          ? worker.user[0]
+          : worker.user
+        : null;
+      const category = Array.isArray(data.category)
+        ? data.category[0]
+        : data.category;
+
+      setBooking({
+        id: data.id,
+        status: data.status,
+        description: data.description,
+        requested_at: data.requested_at,
+        accepted_at: data.accepted_at,
+        completed_at: data.completed_at,
+        canceled_at: data.canceled_at,
+        worker: {
+          id: worker?.id ?? "",
+          name: workerUser
+            ? `${workerUser.firstname} ${workerUser.lastname}`
+            : "Unknown Worker",
+          profession: worker?.profession ?? "Service Provider",
+          avatar: workerUser?.profile_pic_url ?? "/placeholder.svg",
+        },
+        category: category?.name ?? null,
+      });
+
+      setLoading(false);
+    }
+
+    load();
+  }, [id]);
+
   const handleSubmitReview = () => {
-    // Handle review submission
     setReviewModalOpen(false);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Spinner className="size-8" />
+      </div>
+    );
+  }
+
+  if (notFound || !booking) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <h1 className="text-2xl font-bold">Booking not found</h1>
+        <p className="text-muted-foreground">
+          This booking doesn&apos;t exist or you don&apos;t have access to it.
+        </p>
+        <Button onClick={() => router.push("/bookings")}>
+          Back to Bookings
+        </Button>
+      </div>
+    );
+  }
+
+  const timeline = buildTimeline(booking);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Back Button */}
         <Link
           href="/bookings"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Bookings
@@ -95,20 +238,13 @@ export default function BookingDetailPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Booking Details
             </h1>
-            <p className="text-gray-600">Booking ID: #{mockBooking.id}</p>
+            <p className="text-muted-foreground">Booking ID: #{booking.id}</p>
           </div>
-          <Badge
-            className={
-              mockBooking.status === "completed"
-                ? "bg-green-100 text-green-700"
-                : "bg-blue-100 text-blue-700"
-            }
-          >
-            {mockBooking.status.charAt(0).toUpperCase() +
-              mockBooking.status.slice(1)}
+          <Badge className={getStatusColor(booking.status)}>
+            {getStatusLabel(booking.status)}
           </Badge>
         </div>
 
@@ -120,31 +256,39 @@ export default function BookingDetailPage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="w-20 h-20">
                     <AvatarImage
-                      src={mockBooking.worker.avatar || "/placeholder.svg"}
-                      alt={mockBooking.worker.name}
+                      src={booking.worker.avatar}
+                      alt={booking.worker.name}
                     />
                     <AvatarFallback>
-                      {mockBooking.worker.name
+                      {booking.worker.name
                         .split(" ")
                         .map((n) => n[0])
                         .join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-xl font-semibold">
-                      {mockBooking.worker.name}
+                    <h3 className="text-xl font-semibold text-foreground">
+                      {booking.worker.name}
                     </h3>
-                    <p className="text-gray-600">
-                      {mockBooking.worker.profession}
+                    <p className="text-muted-foreground">
+                      {booking.worker.profession}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" asChild>
-                    <Link href={`/worker/${mockBooking.id}`}>View Profile</Link>
-                  </Button>
-                  <Button>
-                    <MessageSquare className="w-4 h-4 mr-2" />
+                  {booking.worker.id && (
+                    <Button variant="outline" asChild>
+                      <Link href={`/worker/${booking.worker.id}`}>
+                        View Profile
+                      </Link>
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() =>
+                      router.push(`/messages?workerId=${booking.worker.id}`)
+                    }
+                  >
+                    <MessageSquare />
                     Message
                   </Button>
                 </div>
@@ -159,39 +303,38 @@ export default function BookingDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="font-medium">Date & Time</p>
-                  <p className="text-gray-600">
-                    {mockBooking.date} at {mockBooking.time}
+                  <p className="font-medium text-foreground">Requested</p>
+                  <p className="text-muted-foreground">
+                    {formatTimestamp(booking.requested_at)}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="font-medium">Duration</p>
-                  <p className="text-gray-600">{mockBooking.duration} hours</p>
+              {booking.category && (
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium text-foreground">Category</p>
+                    <p className="text-muted-foreground">{booking.category}</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="font-medium">Service Location</p>
-                  <p className="text-gray-600">{mockBooking.location}</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <p className="font-medium mb-2">Job Description</p>
-                <p className="text-gray-600 leading-relaxed">
-                  {mockBooking.description}
-                </p>
-              </div>
+              {booking.description && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="font-medium text-foreground mb-2">
+                      Job Description
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {booking.description}
+                    </p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -202,27 +345,29 @@ export default function BookingDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockBooking.timeline.map((item, index) => (
-                  <div key={item.status} className="flex gap-4">
+                {timeline.map((step, index) => (
+                  <div key={step.label} className="flex gap-4">
                     <div className="flex flex-col items-center">
-                      {item.completed ? (
+                      {step.completed ? (
                         <CheckCircle2 className="w-6 h-6 text-green-600" />
                       ) : (
-                        <Circle className="w-6 h-6 text-gray-300" />
+                        <Circle className="w-6 h-6 text-muted-foreground" />
                       )}
-                      {index < mockBooking.timeline.length - 1 && (
+                      {index < timeline.length - 1 && (
                         <div
-                          className={`w-0.5 h-12 ${item.completed ? "bg-green-600" : "bg-gray-300"}`}
+                          className={`w-0.5 h-12 ${step.completed ? "bg-green-600" : "bg-border"}`}
                         />
                       )}
                     </div>
                     <div className="flex-1 pb-8">
                       <p
-                        className={`font-medium ${item.completed ? "text-gray-900" : "text-gray-400"}`}
+                        className={`font-medium ${step.completed ? "text-foreground" : "text-muted-foreground"}`}
                       >
-                        {item.status}
+                        {step.label}
                       </p>
-                      <p className="text-sm text-gray-500">{item.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatTimestamp(step.timestamp)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -230,42 +375,16 @@ export default function BookingDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Payment Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">
-                  Service Fee ({mockBooking.duration} hours)
-                </span>
-                <span className="font-medium">${mockBooking.amount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Platform Fee</span>
-                <span className="font-medium">$0</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between text-lg">
-                <span className="font-semibold">Total Paid</span>
-                <span className="font-bold text-blue-600">
-                  ${mockBooking.amount}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          {mockBooking.status === "completed" && (
+          {/* Leave Review */}
+          {booking.status === "completed" && (
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold mb-1">
+                    <h3 className="font-semibold mb-1 text-foreground">
                       How was your experience?
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Leave a review to help other customers
                     </p>
                   </div>
@@ -285,12 +404,11 @@ export default function BookingDetailPage() {
           <DialogHeader>
             <DialogTitle>Leave a Review</DialogTitle>
             <DialogDescription>
-              Share your experience with {mockBooking.worker.name}
+              Share your experience with {booking.worker.name}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
-            {/* Rating */}
             <div className="space-y-2">
               <Label>Rating</Label>
               <div className="flex gap-2">
@@ -302,14 +420,13 @@ export default function BookingDetailPage() {
                     className="transition-transform hover:scale-110"
                   >
                     <Star
-                      className={`w-8 h-8 ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                      className={`w-8 h-8 ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
                     />
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Review Text */}
             <div className="space-y-2">
               <Label htmlFor="review">Your Review</Label>
               <Textarea
@@ -321,7 +438,6 @@ export default function BookingDetailPage() {
               />
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3">
               <Button
                 variant="outline"
