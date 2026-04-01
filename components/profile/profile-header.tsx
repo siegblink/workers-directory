@@ -5,9 +5,9 @@ import {
   Calendar,
   Camera,
   Clock,
-  DollarSign,
   MapPin,
   Pencil,
+  PhilippinePeso,
   Shield,
   Star,
 } from "lucide-react";
@@ -432,7 +432,7 @@ export function ProfileHeader({
             >
               <div>
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <DollarSign className="w-4 h-4" />
+                  <PhilippinePeso className="w-4 h-4" />
                   <span className="text-sm">Hourly Rate</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">
