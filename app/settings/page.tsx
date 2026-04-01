@@ -297,7 +297,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                  <Label htmlFor="hourlyRate">Hourly Rate (₱)</Label>
                   <Input
                     id="hourlyRate"
                     type="number"
