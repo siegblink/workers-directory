@@ -14,7 +14,7 @@ export type Json =
 // ENUMS
 // =====================================================
 
-export type BookingStatus = "pending" | "accepted" | "completed" | "canceled";
+export type BookingStatus = "pending" | "completed" | "canceled";
 export type UserStatus = "active" | "inactive" | "suspended";
 export type WorkerStatus = "available" | "busy" | "unavailable";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
