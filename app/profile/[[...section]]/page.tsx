@@ -95,7 +95,7 @@ const emptyProfile: ProfileData = {
   name: "",
   username: "",
   avatar: "/placeholder.svg",
-  statusEmoji: "✨",
+  statusEmoji: "",
   statusText: "",
   profession: "",
   isOnline: false,
@@ -200,7 +200,7 @@ export default function ProfilePage() {
     const [userResult, workerResult] = await Promise.all([
       supabase
         .from("users")
-        .select("id, firstname, lastname, profile_pic_url, bio, city, state, created_at")
+        .select("id, firstname, lastname, profile_pic_url, bio, city, state, created_at, status_emoji, status_text")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -219,6 +219,8 @@ export default function ProfilePage() {
       city: string | null;
       state: string | null;
       created_at: string;
+      status_emoji: string | null;
+      status_text: string | null;
     } | null;
 
     const wd = workerResult.data as {
@@ -271,8 +273,8 @@ export default function ProfilePage() {
       name: ud ? `${ud.firstname} ${ud.lastname}` : "",
       username: "",
       avatar: ud?.profile_pic_url ?? "/placeholder.svg",
-      statusEmoji: "✨",
-      statusText: "",
+      statusEmoji: ud?.status_emoji ?? "",
+      statusText: ud?.status_text ?? "",
       profession: wd?.profession ?? "",
       isOnline: vd?.is_online ?? false,
       verified: wd?.is_verified ?? false,
@@ -414,7 +416,7 @@ export default function ProfilePage() {
     await Promise.all([
       supabase
         .from("users")
-        .update({ firstname, lastname, city, state })
+        .update({ firstname, lastname, city, state, status_emoji: data.statusEmoji ?? "", status_text: data.statusText ?? "" })
         .eq("id", userId),
       workerId
         ? supabase

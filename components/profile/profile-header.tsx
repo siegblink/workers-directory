@@ -347,9 +347,11 @@ export function ProfileHeader({
                   <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2">
                       {profile.name}
-                      <span className="text-sm text-muted-foreground font-normal ml-2">
-                        @{profile.username}
-                      </span>
+                      {profile.username && (
+                        <span className="text-sm text-muted-foreground font-normal ml-2">
+                          @{profile.username}
+                        </span>
+                      )}
                     </h1>
                     {(profile.statusEmoji || profile.statusText) && (
                       <p className="text-sm text-muted-foreground mb-3">
