@@ -490,13 +490,13 @@ export default function MessagesPage() {
               </div>
 
               {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
+              <ScrollArea className="flex-1">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center py-12">
                     <Spinner className="size-6" />
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="p-4 space-y-4">
                     {messages.length === 0 ? (
                       <p className="text-center text-muted-foreground text-sm py-8">
                         No messages yet. Say hello!
