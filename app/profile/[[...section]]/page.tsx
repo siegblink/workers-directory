@@ -426,7 +426,7 @@ export default function ProfilePage() {
     } else if (data.profession) {
       const { data: newWorker } = await supabase
         .from("workers")
-        .insert({ user_id: userId, profession: data.profession, hourly_rate_min: data.hourlyRate })
+        .insert({ user_id: userId, profession: data.profession, hourly_rate_min: data.hourlyRate, status: "available" })
         .select("id")
         .single();
       if (newWorker) setWorkerId((newWorker as { id: string }).id);

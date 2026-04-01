@@ -172,6 +172,7 @@ export default function SettingsPage() {
           user_id: user.id,
           profession,
           hourly_rate_min: hourlyRate ? parseInt(hourlyRate, 10) : null,
+          status: "available",
         })
         .select("id")
         .single();
