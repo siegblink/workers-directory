@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +16,197 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
+  // ─── Notification preferences (local-only — no DB table) ──────────────────
   const [notifications, setNotifications] = useState({
     bookingRequests: true,
     messages: true,
     reviews: true,
     promotions: false,
   });
+
+  // ─── Profile tab state ────────────────────────────────────────────────────
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [profession, setProfession] = useState("");
+  const [bio, setBio] = useState("");
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [location, setLocation] = useState("");
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [workerId, setWorkerId] = useState<string | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+
+  // ─── Account tab state ────────────────────────────────────────────────────
+  const [email, setEmail] = useState("");
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountSuccess, setAccountSuccess] = useState(false);
+
+  // ─── Password tab state ───────────────────────────────────────────────────
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // ─── Load real data on mount ──────────────────────────────────────────────
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setEmail(user.email ?? "");
+
+      const [userResult, workerResult] = await Promise.all([
+        supabase
+          .from("users")
+          .select("firstname, lastname, bio, city, state, profile_pic_url")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("workers")
+          .select("id, profession, hourly_rate_min")
+          .eq("user_id", user.id)
+          .is("deleted_at", null)
+          .maybeSingle(),
+      ]);
+
+      const ud = userResult.data as {
+        firstname: string;
+        lastname: string;
+        bio: string | null;
+        city: string | null;
+        state: string | null;
+        profile_pic_url: string | null;
+      } | null;
+
+      const wd = workerResult.data as {
+        id: string;
+        profession: string | null;
+        hourly_rate_min: number | null;
+      } | null;
+
+      if (ud) {
+        setFirstName(ud.firstname);
+        setLastName(ud.lastname);
+        setBio(ud.bio ?? "");
+        setLocation([ud.city, ud.state].filter(Boolean).join(", "));
+        setAvatar(ud.profile_pic_url);
+      }
+
+      if (wd) {
+        setProfession(wd.profession ?? "");
+        setHourlyRate(wd.hourly_rate_min != null ? String(wd.hourly_rate_min) : "");
+        setWorkerId(wd.id);
+      }
+    }
+
+    load();
+  }, []);
+
+  // ─── Save handlers ────────────────────────────────────────────────────────
+
+  async function handleSaveProfile() {
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSuccess(false);
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setProfileError("Not authenticated.");
+      setProfileSaving(false);
+      return;
+    }
+
+    // Parse "City, State" → city / state
+    const lastComma = location.lastIndexOf(",");
+    const city =
+      lastComma >= 0 ? location.slice(0, lastComma).trim() : location.trim();
+    const state =
+      lastComma >= 0 ? location.slice(lastComma + 1).trim() : null;
+
+    const [userUpdate, workerUpdate] = await Promise.all([
+      supabase
+        .from("users")
+        .update({ firstname: firstName, lastname: lastName, bio, city, state })
+        .eq("id", user.id),
+      workerId
+        ? supabase
+            .from("workers")
+            .update({
+              profession,
+              hourly_rate_min: hourlyRate ? parseInt(hourlyRate, 10) : null,
+            })
+            .eq("id", workerId)
+        : Promise.resolve({ error: null }),
+    ]);
+
+    const err = userUpdate.error ?? (workerUpdate as { error: unknown } | null)?.error;
+    if (err) {
+      setProfileError("Failed to save. Please try again.");
+    } else {
+      setProfileSuccess(true);
+    }
+    setProfileSaving(false);
+  }
+
+  async function handleUpdateAccount() {
+    setAccountSaving(true);
+    setAccountError(null);
+    setAccountSuccess(false);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ email });
+
+    if (error) {
+      setAccountError(error.message);
+    } else {
+      setAccountSuccess(true);
+    }
+    setAccountSaving(false);
+  }
+
+  async function handleChangePassword() {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      setPasswordError(error.message);
+    } else {
+      setPasswordSuccess(true);
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    setPasswordSaving(false);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "?";
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,14 +235,13 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-6">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage
-                      src="/placeholder.svg?height=100&width=100"
-                      alt="Profile"
-                    />
-                    <AvatarFallback>JS</AvatarFallback>
+                    <AvatarImage src={avatar ?? undefined} alt="Profile" />
+                    <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <Button variant="outline">Change Photo</Button>
+                    <Button variant="outline" disabled>
+                      Change Photo
+                    </Button>
                     <p className="text-sm text-muted-foreground mt-2">
                       JPG, PNG or GIF. Max size 2MB.
                     </p>
@@ -69,17 +251,32 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" defaultValue="John" />
+                    <Input
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      disabled={profileSaving}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" defaultValue="Smith" />
+                    <Input
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      disabled={profileSaving}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="profession">Profession</Label>
-                  <Input id="profession" defaultValue="Plumber" />
+                  <Input
+                    id="profession"
+                    value={profession}
+                    onChange={(e) => setProfession(e.target.value)}
+                    disabled={profileSaving}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -87,21 +284,46 @@ export default function SettingsPage() {
                   <Textarea
                     id="bio"
                     rows={4}
-                    defaultValue="Professional plumber with over 15 years of experience."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    disabled={profileSaving}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                  <Input id="hourlyRate" type="number" defaultValue="45" />
+                  <Input
+                    id="hourlyRate"
+                    type="number"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                    disabled={profileSaving}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input id="location" defaultValue="New York, NY" />
+                  <Input
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    disabled={profileSaving}
+                    placeholder="City, State"
+                  />
                 </div>
 
-                <Button>Save Changes</Button>
+                {profileError && (
+                  <p className="text-sm text-destructive">{profileError}</p>
+                )}
+                {profileSuccess && (
+                  <p className="text-sm text-green-600 dark:text-green-400">
+                    Profile saved successfully.
+                  </p>
+                )}
+
+                <Button onClick={handleSaveProfile} disabled={profileSaving}>
+                  {profileSaving ? "Saving…" : "Save Changes"}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -163,7 +385,9 @@ export default function SettingsPage() {
                   </div>
                 ))}
 
-                <Button className="mt-6">Save Availability</Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Availability scheduling is coming soon.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -259,7 +483,9 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <Button>Save Preferences</Button>
+                <p className="text-sm text-muted-foreground">
+                  Notification preferences are coming soon.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -277,7 +503,9 @@ export default function SettingsPage() {
                     <Input
                       id="email"
                       type="email"
-                      defaultValue="john.smith@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={accountSaving}
                     />
                   </div>
 
@@ -286,11 +514,23 @@ export default function SettingsPage() {
                     <Input
                       id="phone"
                       type="tel"
-                      defaultValue="+1 (555) 123-4567"
+                      disabled
+                      placeholder="Coming soon"
                     />
                   </div>
 
-                  <Button>Update Account</Button>
+                  {accountError && (
+                    <p className="text-sm text-destructive">{accountError}</p>
+                  )}
+                  {accountSuccess && (
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      Email updated. Check your inbox to confirm the change.
+                    </p>
+                  )}
+
+                  <Button onClick={handleUpdateAccount} disabled={accountSaving}>
+                    {accountSaving ? "Saving…" : "Update Account"}
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -300,23 +540,44 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" />
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={passwordSaving}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">
                       Confirm New Password
                     </Label>
-                    <Input id="confirmPassword" type="password" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={passwordSaving}
+                    />
                   </div>
 
-                  <Button>Change Password</Button>
+                  {passwordError && (
+                    <p className="text-sm text-destructive">{passwordError}</p>
+                  )}
+                  {passwordSuccess && (
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      Password changed successfully.
+                    </p>
+                  )}
+
+                  <Button
+                    onClick={handleChangePassword}
+                    disabled={passwordSaving}
+                  >
+                    {passwordSaving ? "Saving…" : "Change Password"}
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -331,7 +592,9 @@ export default function SettingsPage() {
                     Once you delete your account, there is no going back. Please
                     be certain.
                   </p>
-                  <Button variant="destructive">Delete Account</Button>
+                  <Button variant="destructive" disabled>
+                    Delete Account
+                  </Button>
                 </CardContent>
               </Card>
             </div>
