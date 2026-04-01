@@ -11,111 +11,297 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 
-const mockStats = {
-  totalBookings: 347,
-  thisMonthBookings: 28,
-  pendingBookings: 5,
-  completedJobs: 342,
-  averageRating: 4.8,
-  totalReviews: 127,
-  responseRate: 98,
-  completionRate: 96,
+type DashboardStats = {
+  totalBookings: number;
+  thisMonthBookings: number;
+  pendingBookings: number;
+  completedJobs: number;
+  averageRating: number;
+  totalReviews: number;
+  completionRate: number;
 };
 
-const mockPendingRequests = [
-  {
-    id: 1,
-    customer: {
-      name: "Jane Doe",
-      avatar: "/placeholder.svg?height=50&width=50",
-    },
-    service: "Kitchen Sink Repair",
-    date: "Dec 22, 2024",
-    time: "2:00 PM",
-    duration: 2,
-    location: "123 Main St, New York, NY",
-    amount: 90,
-    status: "pending",
-  },
-  {
-    id: 2,
-    customer: {
-      name: "Robert Smith",
-      avatar: "/placeholder.svg?height=50&width=50",
-    },
-    service: "Bathroom Plumbing Installation",
-    date: "Dec 23, 2024",
-    time: "10:00 AM",
-    duration: 4,
-    location: "456 Oak Ave, Brooklyn, NY",
-    amount: 180,
-    status: "pending",
-  },
-];
+type DashboardBooking = {
+  id: number;
+  customer: { name: string; avatar: string };
+  category: string | null;
+  description: string | null;
+  requestedAt: string | null;
+  status: string;
+};
 
-const mockUpcomingJobs = [
-  {
-    id: 3,
-    customer: {
-      name: "Sarah Johnson",
-      avatar: "/placeholder.svg?height=50&width=50",
-    },
-    service: "Water Heater Repair",
-    date: "Dec 20, 2024",
-    time: "3:00 PM",
-    duration: 3,
-    location: "789 Pine St, Queens, NY",
-    amount: 135,
-    status: "confirmed",
-  },
-];
+type DashboardReview = {
+  id: number;
+  customerName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+};
+
+function formatBookingDate(dateString: string | null): string {
+  if (!dateString) return "Date TBD";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatBookingTime(dateString: string | null): string {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
 
 export default function WorkerDashboardPage() {
   const [verificationStatus, setVerificationStatus] = useState<
     "loading" | "verified" | "pending" | "not_verified"
   >("loading");
+  const [loading, setLoading] = useState(true);
+  const [workerId, setWorkerId] = useState<string | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [pendingBookings, setPendingBookings] = useState<DashboardBooking[]>([]);
+  const [upcomingBookings, setUpcomingBookings] = useState<DashboardBooking[]>([]);
+  const [recentReviews, setRecentReviews] = useState<DashboardReview[]>([]);
 
-  useEffect(() => {
-    const checkVerificationStatus = async () => {
-      const supabase = createClient();
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
 
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) {
-        setVerificationStatus("not_verified");
-        return;
-      }
+    if (!user) {
+      setVerificationStatus("not_verified");
+      setLoading(false);
+      return;
+    }
 
-      // Check verification status
-      const { data: verification } = await supabase
+    // Parallel: find worker record + check verification status
+    const [workerResult, verificationResult] = await Promise.all([
+      supabase
+        .from("workers")
+        .select("id")
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle(),
+      supabase
         .from("verifications")
         .select("status")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle(),
+    ]);
 
-      if (!verification) {
-        setVerificationStatus("not_verified");
-      } else if (verification.status === "approved") {
-        setVerificationStatus("verified");
-      } else {
-        setVerificationStatus("pending");
-      }
-    };
+    // Set verification banner state
+    const verification = verificationResult.data;
+    if (!verification) {
+      setVerificationStatus("not_verified");
+    } else if (verification.status === "approved") {
+      setVerificationStatus("verified");
+    } else {
+      setVerificationStatus("pending");
+    }
 
-    checkVerificationStatus();
+    // No worker profile — stop here
+    if (!workerResult.data) {
+      setLoading(false);
+      return;
+    }
+
+    const wid = workerResult.data.id as string;
+    setWorkerId(wid);
+
+    // Parallel: all bookings for stats, view data, pending, upcoming, reviews
+    const [
+      allBookingsResult,
+      viewResult,
+      pendingResult,
+      upcomingResult,
+      reviewsResult,
+    ] = await Promise.all([
+      supabase
+        .from("bookings")
+        .select("id, status, requested_at")
+        .eq("worker_id", wid),
+      supabase
+        .from("workers_with_details")
+        .select("average_rating, review_count")
+        .eq("id", wid)
+        .maybeSingle(),
+      supabase
+        .from("bookings")
+        .select("id, status, description, requested_at, customer_id, category_id")
+        .eq("worker_id", wid)
+        .eq("status", "pending")
+        .order("requested_at", { ascending: false }),
+      supabase
+        .from("bookings")
+        .select("id, status, description, requested_at, customer_id, category_id")
+        .eq("worker_id", wid)
+        .eq("status", "accepted")
+        .order("requested_at", { ascending: true }),
+      supabase
+        .from("ratings")
+        .select("id, customer_id, rating_value, review_comment, created_at")
+        .eq("worker_id", wid)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
+
+    // Compute stats
+    const allBookings = allBookingsResult.data ?? [];
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const pending = allBookings.filter((b) => b.status === "pending").length;
+    const completed = allBookings.filter((b) => b.status === "completed").length;
+    const canceled = allBookings.filter((b) => b.status === "canceled").length;
+    const thisMonth = allBookings.filter(
+      (b) => b.requested_at && b.requested_at >= monthStart,
+    ).length;
+    const nonPending = completed + canceled;
+    const completionRate = nonPending > 0 ? Math.round((completed / nonPending) * 100) : 0;
+
+    const viewData = viewResult.data;
+    setStats({
+      totalBookings: allBookings.length,
+      thisMonthBookings: thisMonth,
+      pendingBookings: pending,
+      completedJobs: completed,
+      averageRating: viewData ? parseFloat(String(viewData.average_rating)) || 0 : 0,
+      totalReviews: viewData ? parseInt(String(viewData.review_count), 10) || 0 : 0,
+      completionRate,
+    });
+
+    // Batch-resolve names for bookings + reviews
+    const pendingData = pendingResult.data ?? [];
+    const upcomingData = upcomingResult.data ?? [];
+    const reviewsData = reviewsResult.data ?? [];
+
+    const bookingCustomerIds = [
+      ...new Set([
+        ...pendingData.map((b) => b.customer_id),
+        ...upcomingData.map((b) => b.customer_id),
+      ].filter(Boolean)),
+    ];
+    const reviewCustomerIds = [
+      ...new Set(reviewsData.map((r) => r.customer_id).filter(Boolean)),
+    ];
+    const allCustomerIds = [...new Set([...bookingCustomerIds, ...reviewCustomerIds])];
+
+    const categoryIds = [
+      ...new Set([
+        ...pendingData.map((b) => b.category_id),
+        ...upcomingData.map((b) => b.category_id),
+      ].filter(Boolean)),
+    ];
+
+    const [usersResult, categoriesResult] = await Promise.all([
+      allCustomerIds.length
+        ? supabase
+            .from("users")
+            .select("id, firstname, lastname, profile_pic_url")
+            .in("id", allCustomerIds)
+        : Promise.resolve({ data: [] }),
+      categoryIds.length
+        ? supabase.from("categories").select("id, name").in("id", categoryIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const userMap = new Map(
+      (usersResult.data ?? []).map((u) => [u.id, u]),
+    );
+    const categoryMap = new Map(
+      (categoriesResult.data ?? []).map((c) => [c.id, c]),
+    );
+
+    function toBookingItem(b: {
+      id: number;
+      customer_id: string;
+      category_id: number | null;
+      description: string | null;
+      requested_at: string | null;
+      status: string;
+    }): DashboardBooking {
+      const cu = userMap.get(b.customer_id);
+      const cat = b.category_id ? categoryMap.get(b.category_id) : null;
+      return {
+        id: b.id,
+        customer: {
+          name: cu ? `${cu.firstname} ${cu.lastname}` : "Unknown Customer",
+          avatar: cu?.profile_pic_url ?? "/placeholder.svg",
+        },
+        category: cat?.name ?? null,
+        description: b.description,
+        requestedAt: b.requested_at,
+        status: b.status,
+      };
+    }
+
+    setPendingBookings(pendingData.map(toBookingItem));
+    setUpcomingBookings(upcomingData.map(toBookingItem));
+
+    setRecentReviews(
+      reviewsData.map((r) => {
+        const cu = userMap.get(r.customer_id);
+        return {
+          id: r.id,
+          customerName: cu ? `${cu.firstname} ${cu.lastname}` : "Anonymous",
+          rating: r.rating_value ?? 0,
+          comment: r.review_comment,
+          createdAt: r.created_at,
+        };
+      }),
+    );
+
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  async function handleAccept(bookingId: number) {
+    const supabase = createClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "accepted", accepted_at: new Date().toISOString() })
+      .eq("id", bookingId);
+    loadDashboard();
+  }
+
+  async function handleDecline(bookingId: number) {
+    const supabase = createClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .eq("id", bookingId);
+    loadDashboard();
+  }
+
+  async function handleCancel(bookingId: number) {
+    const supabase = createClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .eq("id", bookingId);
+    loadDashboard();
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,7 +323,7 @@ export default function WorkerDashboardPage() {
             </AlertTitle>
             <AlertDescription className="text-blue-800 dark:text-blue-200">
               Get verified to increase your visibility and receive more
-              bookings.
+              bookings.{" "}
               <Link href="/verify" className="underline hover:no-underline">
                 Verify now
               </Link>
@@ -186,364 +372,391 @@ export default function WorkerDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Bookings
-              </CardTitle>
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {mockStats.totalBookings.toLocaleString()}
-              </div>
-              <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 mt-1">
-                <TrendingUp className="w-3 h-3" />+{mockStats.thisMonthBookings}{" "}
-                this month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending Requests
-              </CardTitle>
-              <AlertCircle className="w-4 h-4 text-orange-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {mockStats.pendingBookings}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Awaiting your response
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Completed Jobs
-              </CardTitle>
-              <CheckCircle2 className="w-4 h-4 text-green-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {mockStats.completedJobs}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {mockStats.completionRate}% completion rate
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Average Rating
-              </CardTitle>
-              <Star className="w-4 h-4 text-yellow-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {mockStats.averageRating}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {mockStats.totalReviews} reviews
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="pending">
-              Pending Requests
-              {mockPendingRequests.length > 0 && (
-                <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full">
-                  {mockPendingRequests.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming Jobs</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-          </TabsList>
-
-          {/* Pending Requests Tab */}
-          <TabsContent value="pending">
-            <div className="space-y-4">
-              {mockPendingRequests.map((request) => (
-                <Card key={request.id}>
-                  <CardContent>
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex items-start gap-4 flex-1">
-                        <Avatar className="w-16 h-16">
-                          <AvatarImage
-                            src={request.customer.avatar || "/placeholder.svg"}
-                            alt={request.customer.name}
-                          />
-                          <AvatarFallback>
-                            {request.customer.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-lg text-foreground">
-                            {request.customer.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {request.service}
-                          </p>
-                          <Badge variant="secondary" className="mt-2">
-                            New Request
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>
-                            {request.date} at {request.time}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>{request.duration} hours</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {request.location}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end justify-between gap-4 flex-1">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Estimated Earnings
-                          </p>
-                          <p className="text-2xl font-bold text-foreground">
-                            ${request.amount}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 w-full md:w-auto">
-                          <Button className="bg-green-600 hover:bg-green-700">
-                            Accept
-                          </Button>
-                          <Button variant="outline" className="bg-transparent">
-                            <XCircle />
-                            Decline
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {mockPendingRequests.length === 0 && (
-                <Card>
-                  <CardContent className="text-center">
-                    <AlertCircle className="text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2 text-foreground">
-                      No Pending Requests
-                    </h3>
-                    <p className="text-muted-foreground">
-                      You're all caught up! New booking requests will appear
-                      here.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Upcoming Jobs Tab */}
-          <TabsContent value="upcoming">
-            <div className="space-y-4">
-              {mockUpcomingJobs.map((job) => (
-                <Card key={job.id}>
-                  <CardContent>
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex items-start gap-4 flex-1">
-                        <Avatar className="w-16 h-16">
-                          <AvatarImage
-                            src={job.customer.avatar || "/placeholder.svg"}
-                            alt={job.customer.name}
-                          />
-                          <AvatarFallback>
-                            {job.customer.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-lg text-foreground">
-                            {job.customer.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {job.service}
-                          </p>
-                          <Badge className="mt-2 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                            Confirmed
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>
-                            {job.date} at {job.time}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>{job.duration} hours</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {job.location}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end justify-between gap-4 flex-1">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Earnings
-                          </p>
-                          <p className="text-2xl font-bold text-foreground">
-                            ${job.amount}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 w-full md:w-auto">
-                          <Button variant="outline" asChild>
-                            <Link href={`/bookings/${job.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="text-red-600 hover:text-red-700 bg-transparent"
-                          >
-                            Cancel Job
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Performance Tab */}
-          <TabsContent value="performance">
-            <div className="grid gap-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Spinner className="size-8" />
+          </div>
+        ) : (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
-                <CardHeader>
-                  <CardTitle>Performance Metrics</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Bookings
+                  </CardTitle>
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">
-                          Response Rate
-                        </span>
-                        <span className="text-sm font-bold">
-                          {mockStats.responseRate}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-green-600 dark:bg-green-700 h-2 rounded-full"
-                          style={{ width: `${mockStats.responseRate}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Excellent response time
-                      </p>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">
-                          Completion Rate
-                        </span>
-                        <span className="text-sm font-bold">
-                          {mockStats.completionRate}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-blue-600 dark:bg-blue-700 h-2 rounded-full"
-                          style={{ width: `${mockStats.completionRate}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Great job completion rate
-                      </p>
-                    </div>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {(stats?.totalBookings ?? 0).toLocaleString()}
                   </div>
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3" />+
+                    {stats?.thisMonthBookings ?? 0} this month
+                  </p>
+                </CardContent>
+              </Card>
 
-                  <div className="pt-6 border-t">
-                    <h4 className="font-semibold mb-4 text-foreground">
-                      Recent Reviews
-                    </h4>
-                    <div className="space-y-4">
-                      {[
-                        {
-                          author: "Sarah M.",
-                          rating: 5,
-                          comment: "Excellent service! Very professional.",
-                        },
-                        {
-                          author: "Mike R.",
-                          rating: 4,
-                          comment: "Good work, would hire again.",
-                        },
-                      ].map((review) => (
-                        <div key={review.author} className="flex gap-3">
-                          <Avatar>
-                            <AvatarFallback>{review.author[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm text-foreground">
-                                {review.author}
-                              </span>
-                              <div className="flex">
-                                {Array.from({ length: review.rating }).map(
-                                  (_, i) => (
-                                    <Star
-                                      key={`${review.author}-star-${i}`}
-                                      className="w-3 h-3 fill-yellow-400 text-yellow-400"
-                                    />
-                                  ),
-                                )}
-                              </div>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {review.comment}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Pending Requests
+                  </CardTitle>
+                  <AlertCircle className="w-4 h-4 text-orange-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {stats?.pendingBookings ?? 0}
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Awaiting your response
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Completed Jobs
+                  </CardTitle>
+                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {stats?.completedJobs ?? 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats?.completionRate ?? 0}% completion rate
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Average Rating
+                  </CardTitle>
+                  <Star className="w-4 h-4 text-yellow-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {stats?.averageRating
+                      ? stats.averageRating.toFixed(1)
+                      : "—"}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats?.totalReviews ?? 0} reviews
+                  </p>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-        </Tabs>
+
+            {/* Tabs */}
+            <Tabs defaultValue="pending" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="pending">
+                  Pending Requests
+                  {pendingBookings.length > 0 && (
+                    <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full">
+                      {pendingBookings.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming Jobs</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+              </TabsList>
+
+              {/* Pending Requests Tab */}
+              <TabsContent value="pending">
+                <div className="space-y-4">
+                  {pendingBookings.map((request) => (
+                    <Card key={request.id}>
+                      <CardContent>
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="flex items-start gap-4 flex-1">
+                            <Avatar className="w-16 h-16">
+                              <AvatarImage
+                                src={
+                                  request.customer.avatar || "/placeholder.svg"
+                                }
+                                alt={request.customer.name}
+                              />
+                              <AvatarFallback>
+                                {request.customer.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold text-lg text-foreground">
+                                {request.customer.name}
+                              </h3>
+                              {request.category && (
+                                <p className="text-sm text-muted-foreground">
+                                  {request.category}
+                                </p>
+                              )}
+                              {request.description && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {request.description}
+                                </p>
+                              )}
+                              <Badge variant="secondary" className="mt-2">
+                                New Request
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                {formatBookingDate(request.requestedAt)}
+                                {request.requestedAt && (
+                                  <>
+                                    {" "}
+                                    at {formatBookingTime(request.requestedAt)}
+                                  </>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end justify-center gap-2">
+                            <Button
+                              className="bg-green-600 hover:bg-green-700 w-full md:w-auto"
+                              onClick={() => handleAccept(request.id)}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="bg-transparent w-full md:w-auto"
+                              onClick={() => handleDecline(request.id)}
+                            >
+                              <XCircle />
+                              Decline
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {pendingBookings.length === 0 && (
+                    <Card>
+                      <CardContent className="text-center">
+                        <AlertCircle className="text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2 text-foreground">
+                          No Pending Requests
+                        </h3>
+                        <p className="text-muted-foreground">
+                          You&apos;re all caught up! New booking requests will
+                          appear here.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Upcoming Jobs Tab */}
+              <TabsContent value="upcoming">
+                <div className="space-y-4">
+                  {upcomingBookings.map((job) => (
+                    <Card key={job.id}>
+                      <CardContent>
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="flex items-start gap-4 flex-1">
+                            <Avatar className="w-16 h-16">
+                              <AvatarImage
+                                src={job.customer.avatar || "/placeholder.svg"}
+                                alt={job.customer.name}
+                              />
+                              <AvatarFallback>
+                                {job.customer.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold text-lg text-foreground">
+                                {job.customer.name}
+                              </h3>
+                              {job.category && (
+                                <p className="text-sm text-muted-foreground">
+                                  {job.category}
+                                </p>
+                              )}
+                              {job.description && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {job.description}
+                                </p>
+                              )}
+                              <Badge className="mt-2 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                Confirmed
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                {formatBookingDate(job.requestedAt)}
+                                {job.requestedAt && (
+                                  <> at {formatBookingTime(job.requestedAt)}</>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end justify-center gap-2">
+                            <Button variant="outline" asChild>
+                              <Link href={`/bookings/${job.id}`}>
+                                View Details
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700 bg-transparent"
+                              onClick={() => handleCancel(job.id)}
+                            >
+                              Cancel Job
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {upcomingBookings.length === 0 && (
+                    <Card>
+                      <CardContent className="text-center">
+                        <CheckCircle2 className="text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2 text-foreground">
+                          No Upcoming Jobs
+                        </h3>
+                        <p className="text-muted-foreground">
+                          Accepted bookings will appear here.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Performance Tab */}
+              <TabsContent value="performance">
+                <div className="grid gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Performance Metrics</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">
+                              Completion Rate
+                            </span>
+                            <span className="text-sm font-bold">
+                              {stats?.completionRate ?? 0}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div
+                              className="bg-blue-600 dark:bg-blue-700 h-2 rounded-full"
+                              style={{
+                                width: `${stats?.completionRate ?? 0}%`,
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Based on completed vs canceled jobs
+                          </p>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">
+                              Average Rating
+                            </span>
+                            <span className="text-sm font-bold">
+                              {stats?.averageRating
+                                ? `${stats.averageRating.toFixed(1)} / 5`
+                                : "No ratings yet"}
+                            </span>
+                          </div>
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div
+                              className="bg-yellow-500 dark:bg-yellow-600 h-2 rounded-full"
+                              style={{
+                                width: `${((stats?.averageRating ?? 0) / 5) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {stats?.totalReviews ?? 0} total reviews
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="pt-6 border-t">
+                        <h4 className="font-semibold mb-4 text-foreground">
+                          Recent Reviews
+                        </h4>
+                        {recentReviews.length > 0 ? (
+                          <div className="space-y-4">
+                            {recentReviews.map((review) => (
+                              <div key={review.id} className="flex gap-3">
+                                <Avatar>
+                                  <AvatarFallback>
+                                    {review.customerName[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-sm text-foreground">
+                                      {review.customerName}
+                                    </span>
+                                    <div className="flex">
+                                      {Array.from({
+                                        length: review.rating,
+                                      }).map((_, i) => (
+                                        <Star
+                                          key={`${review.id}-star-${i}`}
+                                          className="w-3 h-3 fill-yellow-400 text-yellow-400"
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                  {review.comment && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {review.comment}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            No reviews yet. Complete jobs to start receiving
+                            feedback.
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </div>
     </div>
   );
