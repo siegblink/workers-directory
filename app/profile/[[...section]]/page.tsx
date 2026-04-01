@@ -413,21 +413,24 @@ export default function ProfilePage() {
     const state =
       lastComma >= 0 ? data.location.slice(lastComma + 1).trim() : null;
 
-    await Promise.all([
-      supabase
-        .from("users")
-        .update({ firstname, lastname, city, state, status_emoji: data.statusEmoji ?? "", status_text: data.statusText ?? "" })
-        .eq("id", userId),
-      workerId
-        ? supabase
-            .from("workers")
-            .update({
-              profession: data.profession,
-              hourly_rate_min: data.hourlyRate,
-            })
-            .eq("id", workerId)
-        : Promise.resolve(),
-    ]);
+    await supabase
+      .from("users")
+      .update({ firstname, lastname, city, state, status_emoji: data.statusEmoji ?? "", status_text: data.statusText ?? "" })
+      .eq("id", userId);
+
+    if (workerId) {
+      await supabase
+        .from("workers")
+        .update({ profession: data.profession, hourly_rate_min: data.hourlyRate })
+        .eq("id", workerId);
+    } else if (data.profession) {
+      const { data: newWorker } = await supabase
+        .from("workers")
+        .insert({ user_id: userId, profession: data.profession, hourly_rate_min: data.hourlyRate })
+        .select("id")
+        .single();
+      if (newWorker) setWorkerId((newWorker as { id: string }).id);
+    }
 
     if (!activeSubProfile) {
       setProfile((prev) => ({

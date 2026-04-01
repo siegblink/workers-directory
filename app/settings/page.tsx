@@ -165,6 +165,23 @@ export default function SettingsPage() {
         setProfileSaving(false);
         return;
       }
+    } else if (profession) {
+      const workerInsert = await supabase
+        .from("workers")
+        .insert({
+          user_id: user.id,
+          profession,
+          hourly_rate_min: hourlyRate ? parseInt(hourlyRate, 10) : null,
+        })
+        .select("id")
+        .single();
+
+      if (workerInsert.error) {
+        setProfileError(`Workers save failed: ${workerInsert.error.message}`);
+        setProfileSaving(false);
+        return;
+      }
+      setWorkerId(workerInsert.data.id);
     }
 
     setProfileSuccess(true);
