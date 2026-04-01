@@ -231,15 +231,19 @@ export default function MessagesPage() {
             created_at: string;
             sender_id: unknown;
           };
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: m.id,
-              text: m.message_text ?? "",
-              timestamp: formatMessageTime(m.created_at),
-              isOwn: String(m.sender_id) === currentUserId,
-            },
-          ]);
+          // Skip if already added optimistically by handleSendMessage
+          setMessages((prev) => {
+            if (prev.some((msg) => msg.id === m.id)) return prev;
+            return [
+              ...prev,
+              {
+                id: m.id,
+                text: m.message_text ?? "",
+                timestamp: formatMessageTime(m.created_at),
+                isOwn: String(m.sender_id) === currentUserId,
+              },
+            ];
+          });
         },
       )
       .subscribe();
@@ -270,16 +274,34 @@ export default function MessagesPage() {
     }
 
     const supabase = createClient();
-    await supabase.from("messages").insert({
-      chat_id: selectedChatId,
-      sender_id: currentUserId,
-      receiver_id: conversation.otherUserId,
-      message_text: text,
-      sent_at: new Date().toISOString(),
-      status: "sent",
-    });
+    const { data: inserted } = await supabase
+      .from("messages")
+      .insert({
+        chat_id: selectedChatId,
+        sender_id: currentUserId,
+        receiver_id: conversation.otherUserId,
+        message_text: text,
+        sent_at: new Date().toISOString(),
+        status: "sent",
+      })
+      .select("id, created_at")
+      .single();
 
-    // Optimistically update the conversation's last message
+    // Add the sent message to state immediately using the DB-assigned ID.
+    // The Realtime handler will deduplicate by ID so it won't appear twice.
+    if (inserted) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: inserted.id,
+          text,
+          timestamp: formatMessageTime(inserted.created_at),
+          isOwn: true,
+        },
+      ]);
+    }
+
+    // Update the conversation's last message preview
     setConversations((prev) =>
       prev.map((c) =>
         c.chatId === selectedChatId
