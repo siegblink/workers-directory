@@ -136,28 +136,34 @@ export default function SettingsPage() {
     const state =
       lastComma >= 0 ? location.slice(lastComma + 1).trim() : null;
 
-    const [userUpdate, workerUpdate] = await Promise.all([
-      supabase
-        .from("users")
-        .update({ firstname: firstName, lastname: lastName, bio, city, state })
-        .eq("id", user.id),
-      workerId
-        ? supabase
-            .from("workers")
-            .update({
-              profession,
-              hourly_rate_min: hourlyRate ? parseInt(hourlyRate, 10) : null,
-            })
-            .eq("id", workerId)
-        : Promise.resolve({ error: null }),
-    ]);
+    const userUpdate = await supabase
+      .from("users")
+      .update({ firstname: firstName, lastname: lastName, bio, city, state })
+      .eq("id", user.id);
 
-    const err = userUpdate.error ?? (workerUpdate as { error: unknown } | null)?.error;
-    if (err) {
-      setProfileError("Failed to save. Please try again.");
-    } else {
-      setProfileSuccess(true);
+    if (userUpdate.error) {
+      setProfileError(`Users update failed: ${userUpdate.error.message}`);
+      setProfileSaving(false);
+      return;
     }
+
+    if (workerId) {
+      const workerUpdate = await supabase
+        .from("workers")
+        .update({
+          profession,
+          hourly_rate_min: hourlyRate ? parseInt(hourlyRate, 10) : null,
+        })
+        .eq("id", workerId);
+
+      if (workerUpdate.error) {
+        setProfileError(`Workers update failed: ${workerUpdate.error.message}`);
+        setProfileSaving(false);
+        return;
+      }
+    }
+
+    setProfileSuccess(true);
     setProfileSaving(false);
   }
 
