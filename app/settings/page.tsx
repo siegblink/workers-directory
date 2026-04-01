@@ -79,6 +79,10 @@ export default function SettingsPage() {
           .maybeSingle(),
       ]);
 
+      if (workerResult.error) {
+        setProfileError(`Failed to load worker data: ${workerResult.error.message}`);
+      }
+
       const ud = userResult.data as {
         firstname: string;
         lastname: string;

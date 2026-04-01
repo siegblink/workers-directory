@@ -409,7 +409,7 @@ export function ProfileHeader({
                     variant="outline"
                     size="sm"
                     onClick={handleEdit}
-                    className={hasMainProfile ? "w-full md:w-auto" : "hidden"}
+                    className="w-full md:w-auto"
                   >
                     <Pencil />
                     Edit
