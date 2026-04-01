@@ -66,6 +66,10 @@ export function ProfileHeader({
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Show worker-specific fields when the SubProfile context is set OR when
+  // real worker data already exists in the DB (profession non-empty).
+  const showWorkerInfo = hasMainProfile || !!profile.profession;
+
   const form = useForm<ProfileHeaderFormValues>({
     resolver: zodResolver(profileHeaderSchema),
     defaultValues: {
@@ -374,7 +378,7 @@ export function ProfileHeader({
                           Verified
                         </Pill>
                       )}
-                      <span className={hasMainProfile ? "contents" : "hidden"}>
+                      <span className={showWorkerInfo ? "contents" : "hidden"}>
                         •
                         <span className="text-sm text-muted-foreground">
                           {profile.profession}
@@ -385,7 +389,7 @@ export function ProfileHeader({
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <div
                         className={
-                          hasMainProfile ? "flex items-center gap-1" : "hidden"
+                          showWorkerInfo ? "flex items-center gap-1" : "hidden"
                         }
                       >
                         <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
@@ -421,7 +425,7 @@ export function ProfileHeader({
             {/* Stats - visible only when not editing and profile exists */}
             <div
               className={
-                !isEditing && hasMainProfile
+                !isEditing && showWorkerInfo
                   ? "grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border"
                   : "hidden"
               }
