@@ -432,7 +432,7 @@ export default function MessagesPage() {
 
           {/* Chat Area — desktop */}
           {selectedConversation ? (
-            <div className="hidden md:flex flex-1 flex-col bg-card">
+            <div className="hidden md:flex flex-1 flex-col bg-card min-w-0 overflow-hidden">
               {/* Chat Header */}
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
