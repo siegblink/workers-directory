@@ -79,7 +79,7 @@ export default function MessagesPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Load conversations on mount
   useEffect(() => {
@@ -273,7 +273,10 @@ export default function MessagesPage() {
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   async function handleSendMessage() {
@@ -490,7 +493,10 @@ export default function MessagesPage() {
               </div>
 
               {/* Messages */}
-              <ScrollArea className="flex-1">
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto min-h-0"
+              >
                 {loadingMessages ? (
                   <div className="flex items-center justify-center py-12">
                     <Spinner className="size-6" />
@@ -530,10 +536,9 @@ export default function MessagesPage() {
                         </div>
                       ))
                     )}
-                    <div ref={messagesEndRef} />
                   </div>
                 )}
-              </ScrollArea>
+              </div>
 
               {/* Message Input */}
               <div className="p-4 border-t border-border">
