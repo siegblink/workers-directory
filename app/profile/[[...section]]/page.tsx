@@ -278,7 +278,7 @@ export default function ProfilePage() {
       profession: wd?.profession ?? "",
       isOnline: vd?.is_online ?? false,
       verified: wd?.is_verified ?? false,
-      rating: vd ? parseFloat(String(vd.average_rating)) || 0 : 0,
+      rating: vd ? Math.round(parseFloat(String(vd.average_rating)) * 10) / 10 || 0 : 0,
       reviews: vd ? parseInt(String(vd.review_count), 10) || 0 : 0,
       location: locationParts,
       joinedDate: ud?.created_at ? formatJoinedDate(ud.created_at) : "",
