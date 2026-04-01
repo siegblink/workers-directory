@@ -432,7 +432,7 @@ export default function MessagesPage() {
 
           {/* Chat Area — desktop */}
           {selectedConversation ? (
-            <div className="hidden md:flex flex-1 flex-col bg-card min-w-0 overflow-hidden">
+            <div className="hidden md:flex flex-1 flex-col bg-card min-w-0">
               {/* Chat Header */}
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -505,10 +505,10 @@ export default function MessagesPage() {
                       messages.map((message) => (
                         <div
                           key={message.id}
-                          className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                          className={`flex w-full ${message.isOwn ? "justify-end" : "justify-start"}`}
                         >
                           <div
-                            className={`max-w-[70%] ${message.isOwn ? "order-2" : "order-1"}`}
+                            className={`max-w-[70%] min-w-0 ${message.isOwn ? "order-2" : "order-1"}`}
                           >
                             <Card
                               className={`p-3 ${
