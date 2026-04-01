@@ -197,15 +197,6 @@ export async function updateBookingStatus(
 }
 
 /**
- * Accept booking (worker)
- */
-export async function acceptBooking(
-  bookingId: number,
-): Promise<ApiResponse<Booking>> {
-  return updateBookingStatus(bookingId, "accepted");
-}
-
-/**
  * Complete booking
  */
 export async function completeBooking(
@@ -230,7 +221,6 @@ export async function getWorkerBookingStats(workerId: number): Promise<
   ApiResponse<{
     total: number;
     pending: number;
-    accepted: number;
     completed: number;
     canceled: number;
     completion_rate: number;
@@ -251,13 +241,12 @@ export async function getWorkerBookingStats(workerId: number): Promise<
     const stats = {
       total: bookings.length,
       pending: bookings.filter((b) => b.status === "pending").length,
-      accepted: bookings.filter((b) => b.status === "accepted").length,
       completed: bookings.filter((b) => b.status === "completed").length,
       canceled: bookings.filter((b) => b.status === "canceled").length,
       completion_rate: 0,
     };
 
-    const totalNonPending = stats.accepted + stats.completed + stats.canceled;
+    const totalNonPending = stats.completed + stats.canceled;
     if (totalNonPending > 0) {
       stats.completion_rate = (stats.completed / totalNonPending) * 100;
     }

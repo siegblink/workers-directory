@@ -34,7 +34,8 @@ type ConversationItem = {
   lastMessageAt: string | null;
   unread: number;
   isOnline: boolean;
-  otherUserId: string;
+  otherUserId: string;   // users.id of the other participant
+  chatWorkerId: string;  // workers.id from chats.worker_id (for URL param matching)
 };
 
 type MessageItem = {
@@ -96,10 +97,22 @@ export default function MessagesPage() {
       // public.users.id is the auth UUID directly
       setCurrentUserId(user.id);
 
+      // chats.worker_id is a FK to workers.id (not users.id), so we need
+      // the current user's workers.id to filter chats where they are the worker
+      const { data: myWorkerRecord } = await supabase
+        .from("workers")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const chatFilter = myWorkerRecord
+        ? `customer_id.eq.${user.id},worker_id.eq.${myWorkerRecord.id}`
+        : `customer_id.eq.${user.id}`;
+
       const { data: chats, error: chatsError } = await supabase
         .from("chats")
         .select("id, customer_id, worker_id, created_at")
-        .or(`customer_id.eq.${user.id},worker_id.eq.${user.id}`)
+        .or(chatFilter)
         .order("created_at", { ascending: false });
 
       if (chatsError || !chats || chats.length === 0) {
@@ -110,22 +123,25 @@ export default function MessagesPage() {
       const items: ConversationItem[] = [];
 
       for (const chat of chats) {
-        // Coerce to string to handle both UUID and integer ID schemas
-        const otherUserId =
-          String(chat.customer_id) === user.id
-            ? String(chat.worker_id)
-            : String(chat.customer_id);
+        // Resolve the worker's users.id via the workers table
+        const { data: workerRecord } = await supabase
+          .from("workers")
+          .select("user_id, profession")
+          .eq("id", String(chat.worker_id))
+          .maybeSingle();
+
+        const workerUserId = workerRecord?.user_id ?? null;
+        const isCurrentUserTheWorker = workerUserId === user.id;
+
+        // otherUserId is always a users.id UUID
+        const otherUserId = isCurrentUserTheWorker
+          ? String(chat.customer_id)
+          : (workerUserId ?? "");
 
         const { data: otherUser } = await supabase
           .from("users")
           .select("id, firstname, lastname, profile_pic_url")
           .eq("id", otherUserId)
-          .maybeSingle();
-
-        const { data: workerRecord } = await supabase
-          .from("workers")
-          .select("profession")
-          .eq("user_id", otherUserId)
           .maybeSingle();
 
         const { data: presence } = await supabase
@@ -163,14 +179,15 @@ export default function MessagesPage() {
           unread: unreadCount ?? 0,
           isOnline: presence?.is_online ?? false,
           otherUserId,
+          chatWorkerId: String(chat.worker_id),
         });
       }
 
       setConversations(items);
 
-      // If a workerId was passed via URL, select that conversation
+      // workerId URL param is a workers.id — match against chatWorkerId
       if (workerIdParam) {
-        const match = items.find((c) => c.otherUserId === workerIdParam);
+        const match = items.find((c) => c.chatWorkerId === workerIdParam);
         setSelectedChatId(match ? match.chatId : items[0]?.chatId ?? null);
       } else if (items.length > 0) {
         setSelectedChatId(items[0].chatId);

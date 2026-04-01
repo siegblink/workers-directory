@@ -6,7 +6,6 @@
 export * from "./base-query";
 export * as BookingQueries from "./queries/bookings";
 export {
-  acceptBooking,
   cancelBooking,
   canRateBooking,
   completeBooking,
