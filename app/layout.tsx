@@ -26,7 +26,9 @@ const geistMono = Geist_Mono({
 });
 
 const siteDescription =
-  "Find trusted service workers in your area. Connect with verified plumbers, electricians, cleaners, and more.";
+  "Find and book trusted service workers near you. Connect with verified plumbers, electricians, cleaners, and more on Direktory.";
+
+const ogTitle = "Direktory – Find & Book Trusted Local Service Workers";
 
 export const metadata: Metadata = {
   title: {
@@ -37,12 +39,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Direktory",
-    title: "Direktory – Find Trusted Service Workers",
+    title: ogTitle,
     description: siteDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Direktory – Find Trusted Service Workers",
+    title: ogTitle,
     description: siteDescription,
   },
 };
