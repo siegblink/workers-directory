@@ -183,7 +183,7 @@ export default function WorkerDashboardPage() {
       thisMonthBookings: thisMonth,
       pendingBookings: pending,
       completedJobs: completed,
-      averageRating: viewData ? parseFloat(String(viewData.average_rating)) || 0 : 0,
+      averageRating: viewData ? Math.round((parseFloat(String(viewData.average_rating)) || 0) * 10) / 10 : 0,
       totalReviews: viewData ? parseInt(String(viewData.review_count), 10) || 0 : 0,
       completionRate,
     });

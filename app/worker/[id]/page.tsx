@@ -198,7 +198,7 @@ export default function WorkerProfilePage({
     id: worker.id,
     name: u ? `${u.firstname} ${u.lastname}` : "Unknown Worker",
     profession: worker.profession ?? "Service Provider",
-    rating: worker.average_rating ?? 0,
+    rating: Math.round((worker.average_rating ?? 0) * 10) / 10,
     reviews: worker.review_count ?? 0,
     hourlyRate: worker.hourly_rate_min ?? 0,
     location:
@@ -238,7 +238,7 @@ export default function WorkerProfilePage({
         />
 
         <WorkerTestimonials
-          rating={worker.average_rating ?? 0}
+          rating={Math.round((worker.average_rating ?? 0) * 10) / 10}
           reviewCount={worker.review_count ?? 0}
           reviews={reviews}
           workerId={worker.id}

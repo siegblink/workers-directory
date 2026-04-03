@@ -52,7 +52,7 @@ function toWorkerCardShape(w: WorkerWithDetails): WorkerCardWorker {
     id: w.id,
     name: w.user ? `${w.user.firstname} ${w.user.lastname}` : "Worker",
     profession: w.profession ?? w.categories?.[0]?.name ?? "Worker",
-    rating: w.average_rating ?? 0,
+    rating: Math.round((w.average_rating ?? 0) * 10) / 10,
     reviews: w.review_count ?? 0,
     hourlyRateMin: w.hourly_rate_min ?? 0,
     hourlyRateMax: w.hourly_rate_max ?? 0,
