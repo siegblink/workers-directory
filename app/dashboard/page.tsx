@@ -33,7 +33,7 @@ type DashboardStats = {
 
 type DashboardBooking = {
   id: number;
-  customer: { name: string; avatar: string };
+  customer: { name: string; avatar: string | null | undefined };
   category: string | null;
   description: string | null;
   requestedAt: string | null;
@@ -244,7 +244,7 @@ export default function WorkerDashboardPage() {
         id: b.id,
         customer: {
           name: cu ? `${cu.firstname} ${cu.lastname}` : "Unknown Customer",
-          avatar: cu?.profile_pic_url ?? "/placeholder.svg",
+          avatar: cu?.profile_pic_url,
         },
         category: cat?.name ?? null,
         description: b.description,
@@ -478,7 +478,7 @@ export default function WorkerDashboardPage() {
                             <Avatar className="w-16 h-16">
                               <AvatarImage
                                 src={
-                                  request.customer.avatar || "/placeholder.svg"
+                                  request.customer.avatar || undefined
                                 }
                                 alt={request.customer.name}
                               />
@@ -572,7 +572,7 @@ export default function WorkerDashboardPage() {
                           <div className="flex items-start gap-4 flex-1">
                             <Avatar className="w-16 h-16">
                               <AvatarImage
-                                src={job.customer.avatar || "/placeholder.svg"}
+                                src={job.customer.avatar || undefined}
                                 alt={job.customer.name}
                               />
                               <AvatarFallback>

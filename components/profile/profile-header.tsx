@@ -146,7 +146,7 @@ export function ProfileHeader({
           >
             <Avatar className="w-32 h-32">
               <AvatarImage
-                src={displayAvatar || "/placeholder.svg"}
+                src={displayAvatar || undefined}
                 alt={profile.name}
               />
               <AvatarFallback className="bg-blue-800 text-white text-5xl">

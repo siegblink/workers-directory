@@ -11,7 +11,7 @@ export type Review = {
   rating: number;
   date: string;
   comment: string;
-  avatar: string;
+  avatar: string | null | undefined;
   isNew?: boolean;
 };
 
@@ -65,7 +65,7 @@ export function ProfileTestimonials({
                 <div className="flex gap-4">
                   <Avatar>
                     <AvatarImage
-                      src={review.avatar || "/placeholder.svg"}
+                      src={review.avatar || undefined}
                       alt={review.author}
                     />
                     <AvatarFallback>{review.author[0]}</AvatarFallback>

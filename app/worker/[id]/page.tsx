@@ -16,7 +16,7 @@ import type { WorkerWithDetails } from "@/lib/database/types";
 
 type PortfolioItem = {
   id: number;
-  image: string;
+  image: string | null;
   title: string;
   description: string;
   price?: number;
@@ -28,7 +28,7 @@ type ReviewItem = {
   rating: number;
   date: string;
   comment: string;
-  avatar: string;
+  avatar: string | null | undefined;
 };
 
 function formatResponseTime(minutes: number | null): string {
@@ -119,7 +119,7 @@ export default function WorkerProfilePage({
         setPortfolio(
           postsResult.data.map((post) => ({
             id: post.id,
-            image: post.media_url ?? "/placeholder.svg",
+            image: post.media_url ?? null,
             title: post.title ?? "Portfolio Item",
             description: post.content ?? "",
           })),
@@ -143,7 +143,7 @@ export default function WorkerProfilePage({
                 rating: r.rating_value as number,
                 date: formatRelativeDate(r.created_at),
                 comment: r.review_comment as string,
-                avatar: customer?.profile_pic_url ?? "/placeholder.svg",
+                avatar: customer?.profile_pic_url,
               };
             }),
         );
@@ -206,7 +206,7 @@ export default function WorkerProfilePage({
       (u
         ? [u.city, u.state].filter(Boolean).join(", ") || "Location not set"
         : "Location not set"),
-    avatar: u?.profile_pic_url ?? "/placeholder.svg",
+    avatar: u?.profile_pic_url ?? undefined,
     isOnline: worker.is_online ?? false,
     verified: worker.is_verified ?? false,
     joinedDate: formatJoinedDate(worker.created_at),

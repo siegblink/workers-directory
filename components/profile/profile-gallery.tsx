@@ -30,7 +30,7 @@ import {
 
 export type PortfolioItem = {
   id: number;
-  image: string;
+  image: string | null;
   title: string;
   description: string;
   price?: number;
@@ -129,12 +129,14 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                     }}
                   >
                     <div className="aspect-video relative bg-muted">
-                      <Image
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.title}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
+                      {item.image && (
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                         <p className="text-white font-semibold text-sm">
                           {item.title}
@@ -167,13 +169,15 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
 
           <div className="relative px-4">
             <div className="aspect-video relative bg-muted rounded-lg overflow-hidden">
-              <Image
-                src={portfolio[selectedImageIndex]?.image || "/placeholder.svg"}
-                alt={portfolio[selectedImageIndex]?.title || "Gallery image"}
-                fill
-                className="object-cover"
-                priority
-              />
+              {portfolio[selectedImageIndex]?.image && (
+                <Image
+                  src={portfolio[selectedImageIndex].image}
+                  alt={portfolio[selectedImageIndex]?.title || "Gallery image"}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              )}
             </div>
 
             <Button
@@ -224,12 +228,14 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <Image
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
+                  {item.image && (
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
                 </button>
               ))}
             </div>

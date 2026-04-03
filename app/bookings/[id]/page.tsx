@@ -41,7 +41,7 @@ type BookingDetail = {
     id: string;
     name: string;
     profession: string;
-    avatar: string;
+    avatar: string | null | undefined;
   };
   category: string | null;
 };
@@ -201,7 +201,7 @@ export default function BookingDetailPage({
             ? `${workerUser.firstname} ${workerUser.lastname}`
             : "Unknown Worker",
           profession: workerData?.profession ?? "Service Provider",
-          avatar: workerUser?.profile_pic_url ?? "/placeholder.svg",
+          avatar: workerUser?.profile_pic_url,
         },
         category: categoryName,
       });
@@ -273,7 +273,7 @@ export default function BookingDetailPage({
                 <div className="flex items-center gap-4">
                   <Avatar className="w-20 h-20">
                     <AvatarImage
-                      src={booking.worker.avatar}
+                      src={booking.worker.avatar ?? undefined}
                       alt={booking.worker.name}
                     />
                     <AvatarFallback>

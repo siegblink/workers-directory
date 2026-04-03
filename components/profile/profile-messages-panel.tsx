@@ -46,7 +46,7 @@ export function ProfileMessagesPanel({
                 <div className="flex items-center gap-4 w-full">
                   <Avatar className="w-14 h-14">
                     <AvatarImage
-                      src={conversation.avatar || "/placeholder.svg"}
+                      src={conversation.avatar || undefined}
                       alt={conversation.name}
                     />
                     <AvatarFallback>

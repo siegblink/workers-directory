@@ -59,16 +59,16 @@ const mockBookings = [
 ];
 
 const mockBookmarked = [
-  { id: 1, name: "Mike Davis", profession: "Cleaner", rating: 4.7, hourlyRate: 350, avatar: "/placeholder.svg?height=60&width=60" },
-  { id: 2, name: "Lisa Brown", profession: "Painter", rating: 4.9, hourlyRate: 500, avatar: "/placeholder.svg?height=60&width=60" },
+  { id: 1, name: "Mike Davis", profession: "Cleaner", rating: 4.7, hourlyRate: 350, avatar: "" },
+  { id: 2, name: "Lisa Brown", profession: "Painter", rating: 4.9, hourlyRate: 500, avatar: "" },
 ];
 
 const mockConversations = [
-  { id: 1, name: "John Smith", profession: "Plumber", avatar: "/placeholder.svg?height=60&width=60", lastMessage: "I can come by tomorrow at 2 PM", timestamp: "2m ago", unread: 2 },
-  { id: 2, name: "Sarah Johnson", profession: "Electrician", avatar: "/placeholder.svg?height=60&width=60", lastMessage: "The job is complete. Let me know if you have any questions!", timestamp: "1h ago", unread: 0 },
-  { id: 3, name: "Mike Davis", profession: "Cleaner", avatar: "/placeholder.svg?height=60&width=60", lastMessage: "Thanks for the booking!", timestamp: "3h ago", unread: 1 },
-  { id: 4, name: "Emily Chen", profession: "Painter", avatar: "/placeholder.svg?height=60&width=60", lastMessage: "I'll bring all the supplies needed", timestamp: "1d ago", unread: 0 },
-  { id: 5, name: "David Wilson", profession: "Handyman", avatar: "/placeholder.svg?height=60&width=60", lastMessage: "See you next week!", timestamp: "2d ago", unread: 0 },
+  { id: 1, name: "John Smith", profession: "Plumber", avatar: "", lastMessage: "I can come by tomorrow at 2 PM", timestamp: "2m ago", unread: 2 },
+  { id: 2, name: "Sarah Johnson", profession: "Electrician", avatar: "", lastMessage: "The job is complete. Let me know if you have any questions!", timestamp: "1h ago", unread: 0 },
+  { id: 3, name: "Mike Davis", profession: "Cleaner", avatar: "", lastMessage: "Thanks for the booking!", timestamp: "3h ago", unread: 1 },
+  { id: 4, name: "Emily Chen", profession: "Painter", avatar: "", lastMessage: "I'll bring all the supplies needed", timestamp: "1d ago", unread: 0 },
+  { id: 5, name: "David Wilson", profession: "Handyman", avatar: "", lastMessage: "See you next week!", timestamp: "2d ago", unread: 0 },
 ];
 
 const mockInvoices: Invoice[] = [
@@ -94,7 +94,7 @@ const defaultAvailability: ProfileAvailabilityFormValues = {
 const emptyProfile: ProfileData = {
   name: "",
   username: "",
-  avatar: "/placeholder.svg",
+  avatar: "",
   statusEmoji: "",
   statusText: "",
   profession: "",
@@ -272,7 +272,7 @@ export default function ProfilePage() {
     setProfile({
       name: ud ? `${ud.firstname} ${ud.lastname}` : "",
       username: "",
-      avatar: ud?.profile_pic_url ?? "/placeholder.svg",
+      avatar: ud?.profile_pic_url ?? "",
       statusEmoji: ud?.status_emoji ?? "",
       statusText: ud?.status_text ?? "",
       profession: wd?.profession ?? "",
@@ -296,7 +296,7 @@ export default function ProfilePage() {
     setPortfolio(
       posts.map((p) => ({
         id: p.id,
-        image: p.media_url ?? "/placeholder.svg",
+        image: p.media_url ?? null,
         title: p.title ?? "",
         description: p.content ?? "",
         price: 0,
@@ -330,7 +330,7 @@ export default function ProfilePage() {
             rating: r.rating_value ?? 0,
             date: timeAgo(r.created_at),
             comment: r.review_comment ?? "",
-            avatar: cu?.profile_pic_url ?? "/placeholder.svg",
+            avatar: cu?.profile_pic_url ?? "",
           };
         }),
       );

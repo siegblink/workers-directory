@@ -387,7 +387,7 @@ export default function MessagesPage() {
                       <div className="relative">
                         <Avatar>
                           <AvatarImage
-                            src={conversation.avatar ?? "/placeholder.svg"}
+                            src={conversation.avatar ?? undefined}
                             alt={conversation.name}
                           />
                           <AvatarFallback>
@@ -442,7 +442,7 @@ export default function MessagesPage() {
                   <div className="relative">
                     <Avatar>
                       <AvatarImage
-                        src={selectedConversation.avatar ?? "/placeholder.svg"}
+                        src={selectedConversation.avatar ?? undefined}
                         alt={selectedConversation.name}
                       />
                       <AvatarFallback>

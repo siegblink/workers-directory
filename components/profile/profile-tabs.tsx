@@ -183,7 +183,7 @@ export function ProfileTabs({
                     <div className="flex items-center gap-4">
                       <Avatar className="w-14 h-14">
                         <AvatarImage
-                          src={worker.avatar || "/placeholder.svg"}
+                          src={worker.avatar || undefined}
                           alt={worker.name}
                         />
                         <AvatarFallback>
@@ -240,7 +240,7 @@ export function ProfileTabs({
                     <div className="flex items-center gap-4">
                       <Avatar className="w-14 h-14">
                         <AvatarImage
-                          src={conversation.avatar || "/placeholder.svg"}
+                          src={conversation.avatar || undefined}
                           alt={conversation.name}
                         />
                         <AvatarFallback>

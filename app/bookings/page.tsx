@@ -33,7 +33,7 @@ type BookingItem = {
     id: string;
     name: string;
     profession: string;
-    avatar: string;
+    avatar: string | null | undefined;
   };
   requestedAt: string | null;
   status: string;
@@ -181,7 +181,7 @@ export default function BookingsPage() {
                 ? `${workerUser.firstname} ${workerUser.lastname}`
                 : "Unknown Worker",
               profession: worker?.profession ?? "Service Provider",
-              avatar: workerUser?.profile_pic_url ?? "/placeholder.svg",
+              avatar: workerUser?.profile_pic_url,
             },
             requestedAt: b.requested_at,
             status: b.status,
@@ -287,7 +287,7 @@ export default function BookingsPage() {
                     <div className="flex items-start gap-4 flex-1">
                       <Avatar className="w-16 h-16">
                         <AvatarImage
-                          src={booking.worker.avatar}
+                          src={booking.worker.avatar ?? undefined}
                           alt={booking.worker.name}
                         />
                         <AvatarFallback>

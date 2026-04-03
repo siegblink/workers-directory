@@ -26,7 +26,7 @@ type WorkerProfileHeaderProps = {
     reviews: number;
     hourlyRate: number;
     location: string;
-    avatar: string;
+    avatar: string | null | undefined;
     isOnline: boolean;
     verified: boolean;
     joinedDate: string;
@@ -54,7 +54,7 @@ export function WorkerProfileHeader({
         <div className="flex flex-col md:flex-row gap-6">
           <Avatar className="w-32 h-32">
             <AvatarImage
-              src={worker.avatar || "/placeholder.svg"}
+              src={worker.avatar || undefined}
               alt={worker.name}
             />
             <AvatarFallback className="bg-blue-800 text-white text-5xl">

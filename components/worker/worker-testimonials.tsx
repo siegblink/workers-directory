@@ -24,7 +24,7 @@ type Review = {
   rating: number;
   date: string;
   comment: string;
-  avatar: string;
+  avatar: string | null | undefined;
 };
 
 type WorkerTestimonialsProps = {
@@ -56,7 +56,7 @@ function ReviewItem({ review }: { review: Review }) {
       <div className="flex gap-4">
         <Avatar>
           <AvatarImage
-            src={review.avatar || "/placeholder.svg"}
+            src={review.avatar || undefined}
             alt={review.author}
           />
           <AvatarFallback>{review.author[0]}</AvatarFallback>
@@ -128,7 +128,7 @@ export function WorkerTestimonials({
             comment: r.review_comment as string,
             avatar:
               (customer as { profile_pic_url: string | null } | null)
-                ?.profile_pic_url ?? "/placeholder.svg",
+                ?.profile_pic_url,
           };
         });
 
