@@ -31,6 +31,9 @@ const siteDescription =
 const ogTitle = "Direktory – Find & Book Trusted Local Service Workers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://direktory.com",
+  ),
   title: {
     template: "%s – Direktory",
     default: "Direktory – Find Trusted Service Workers",
