@@ -8,7 +8,7 @@
     "start": "bun --bun next start",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "lint": "oxlint app components lib hooks contexts proxy.ts",
+    "lint": "oxlint -c .oxlintrc.json app components lib hooks contexts proxy.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

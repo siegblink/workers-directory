@@ -1,0 +1,18 @@
+{
+  "plugins": ["react", "nextjs", "jsx-a11y"],
+  "rules": {
+    // autoFocus is an intentional UX choice in this codebase (e.g. inline rename inputs)
+    "jsx-a11y/no-autofocus": "off"
+  },
+  "overrides": [
+    {
+      // shadcn/ui generated components use intentional ARIA patterns that diverge
+      // from the prefer-semantic-element rules — suppress rather than modify generated code
+      "files": ["components/ui/**"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/role-has-required-aria-props": "off"
+      }
+    }
+  ]
+}

@@ -65,6 +65,7 @@ function InputGroupAddon({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: Addon click is for convenience, not required for accessibility
     // biome-ignore lint/a11y/useSemanticElements: Using div with role for input addon
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- addon click is a convenience focus helper, not a primary interaction
     <div
       role="group"
       data-slot="input-group-addon"

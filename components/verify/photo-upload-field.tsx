@@ -90,8 +90,8 @@ export function PhotoUploadField({
   return (
     <div className="w-full">
       {!preview && (
-        <div
-          role="button"
+        <button
+          type="button"
           tabIndex={disabled ? -1 : 0}
           aria-label={label}
           aria-disabled={disabled}
@@ -103,12 +103,6 @@ export function PhotoUploadField({
             error && "border-destructive/50",
           )}
           onClick={handleClick}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleClick();
-            }
-          }}
         >
           <div className="flex flex-col items-center gap-2">
             <div className="text-muted-foreground">{icon}</div>
@@ -138,7 +132,7 @@ export function PhotoUploadField({
             disabled={disabled}
             id={id}
           />
-        </div>
+        </button>
       )}
 
       {preview && (
