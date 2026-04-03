@@ -1,13 +1,22 @@
 "use client";
 
 import { Eye, MessageSquarePlus, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnonymousReviewModal } from "@/components/anonymous-review-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+
+const PAGE_SIZE = 20;
 
 type Review = {
   id: number;
@@ -41,6 +50,39 @@ function formatRelativeDate(dateString: string): string {
   return `${years} year${years > 1 ? "s" : ""} ago`;
 }
 
+function ReviewItem({ review }: { review: Review }) {
+  return (
+    <div className="border-b last:border-0 pb-6 last:pb-0">
+      <div className="flex gap-4">
+        <Avatar>
+          <AvatarImage
+            src={review.avatar || "/placeholder.svg"}
+            alt={review.author}
+          />
+          <AvatarFallback>{review.author[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="font-semibold text-foreground">{review.author}</p>
+              <p className="text-sm text-muted-foreground">{review.date}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: review.rating }).map((_, i) => (
+                <Star
+                  key={`${review.id}-star-${i}`}
+                  className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                />
+              ))}
+            </div>
+          </div>
+          <p className="text-foreground leading-relaxed">{review.comment}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function WorkerTestimonials({
   rating,
   reviewCount,
@@ -49,52 +91,67 @@ export function WorkerTestimonials({
   workerName,
 }: WorkerTestimonialsProps) {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [displayedReviews, setDisplayedReviews] = useState(reviews);
-  const [loadingAll, setLoadingAll] = useState(false);
-  const [showingAll, setShowingAll] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetReviews, setSheetReviews] = useState<Review[]>([]);
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const [sheetPage, setSheetPage] = useState(0);
+  const [sheetHasMore, setSheetHasMore] = useState(true);
 
-  useEffect(() => {
-    setDisplayedReviews(reviews);
-    setShowingAll(false);
-  }, [reviews]);
-
-  async function handleViewAll() {
-    setLoadingAll(true);
+  async function loadSheetReviews(page: number) {
+    setSheetLoading(true);
     const supabase = createClient();
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     const { data } = await supabase
       .from("ratings")
       .select(
         "id, rating_value, review_comment, created_at, customer:users(firstname, lastname, profile_pic_url)",
       )
       .eq("worker_id", workerId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (data) {
-      setDisplayedReviews(
-        data
-          .filter((r) => r.rating_value != null && r.review_comment)
-          .map((r) => {
-            const customer = Array.isArray(r.customer)
-              ? r.customer[0]
-              : r.customer;
-            const name = customer
-              ? `${(customer as { firstname: string; lastname: string }).firstname} ${(customer as { firstname: string; lastname: string }).lastname[0]}.`
-              : "Anonymous";
-            return {
-              id: r.id,
-              author: name,
-              rating: r.rating_value as number,
-              date: formatRelativeDate(r.created_at),
-              comment: r.review_comment as string,
-              avatar:
-                (customer as { profile_pic_url: string | null } | null)
-                  ?.profile_pic_url ?? "/placeholder.svg",
-            };
-          }),
-      );
-      setShowingAll(true);
+      const mapped = data
+        .filter((r) => r.rating_value != null && r.review_comment)
+        .map((r) => {
+          const customer = Array.isArray(r.customer) ? r.customer[0] : r.customer;
+          const name = customer
+            ? `${(customer as { firstname: string; lastname: string }).firstname} ${(customer as { firstname: string; lastname: string }).lastname[0]}.`
+            : "Anonymous";
+          return {
+            id: r.id,
+            author: name,
+            rating: r.rating_value as number,
+            date: formatRelativeDate(r.created_at),
+            comment: r.review_comment as string,
+            avatar:
+              (customer as { profile_pic_url: string | null } | null)
+                ?.profile_pic_url ?? "/placeholder.svg",
+          };
+        });
+
+      setSheetReviews((prev) => (page === 0 ? mapped : [...prev, ...mapped]));
+      setSheetHasMore(data.length === PAGE_SIZE);
+      setSheetPage(page);
     }
-    setLoadingAll(false);
+
+    setSheetLoading(false);
+  }
+
+  function handleOpenSheet() {
+    setSheetOpen(true);
+    loadSheetReviews(0);
+  }
+
+  function handleSheetOpenChange(open: boolean) {
+    setSheetOpen(open);
+    if (!open) {
+      setSheetReviews([]);
+      setSheetPage(0);
+      setSheetHasMore(true);
+    }
   }
 
   return (
@@ -114,44 +171,8 @@ export function WorkerTestimonials({
         </div>
 
         <div className="space-y-6">
-          {displayedReviews.map((review) => (
-            <div
-              key={review.id}
-              className="border-b last:border-0 pb-6 last:pb-0"
-            >
-              <div className="flex gap-4">
-                <Avatar>
-                  <AvatarImage
-                    src={review.avatar || "/placeholder.svg"}
-                    alt={review.author}
-                  />
-                  <AvatarFallback>{review.author[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {review.author}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {review.date}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <Star
-                          key={`${review.id}-star-${i}`}
-                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-foreground leading-relaxed">
-                    {review.comment}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {reviews.map((review) => (
+            <ReviewItem key={review.id} review={review} />
           ))}
         </div>
 
@@ -164,14 +185,9 @@ export function WorkerTestimonials({
             <MessageSquarePlus />
             Leave a Review
           </Button>
-          {!showingAll && reviewCount > displayedReviews.length && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewAll}
-              disabled={loadingAll}
-            >
-              {loadingAll ? <Spinner /> : <Eye />}
+          {reviewCount > reviews.length && (
+            <Button variant="outline" size="sm" onClick={handleOpenSheet}>
+              <Eye />
               View All Reviews
             </Button>
           )}
@@ -184,6 +200,53 @@ export function WorkerTestimonials({
         workerId={workerId}
         workerName={workerName}
       />
+
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader className="pr-6">
+            <SheetTitle>Reviews for {workerName}</SheetTitle>
+            <SheetDescription>
+              {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="px-4 pb-6">
+            {sheetLoading && sheetReviews.length === 0 ? (
+              <div className="flex justify-center py-12">
+                <Spinner className="size-6" />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-6">
+                  {sheetReviews.map((review) => (
+                    <ReviewItem key={review.id} review={review} />
+                  ))}
+                </div>
+
+                {sheetHasMore && (
+                  <div className="mt-6 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadSheetReviews(sheetPage + 1)}
+                      disabled={sheetLoading}
+                    >
+                      {sheetLoading ? <Spinner /> : null}
+                      Load more
+                    </Button>
+                  </div>
+                )}
+
+                {!sheetHasMore && sheetReviews.length > 0 && (
+                  <p className="mt-6 text-center text-sm text-muted-foreground">
+                    All {sheetReviews.length} reviews loaded
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </Card>
   );
 }
