@@ -175,7 +175,7 @@ export function BookingModal({
             <div className="border-t pt-2 flex items-center justify-between">
               <span className="font-semibold">Estimated Total</span>
               <span className="text-2xl font-bold text-blue-600">
-                ${estimatedCost}
+                ₱{estimatedCost}
               </span>
             </div>
             <p className="text-xs text-gray-500">
