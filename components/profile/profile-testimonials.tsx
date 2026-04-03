@@ -44,14 +44,7 @@ export function ProfileTestimonials({
               </span>
             </div>
             {reviewCount > reviews.length && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // TODO: Implement view all reviews functionality
-                  console.log("View all reviews");
-                }}
-              >
+              <Button variant="outline" size="sm">
                 View all reviews
               </Button>
             )}

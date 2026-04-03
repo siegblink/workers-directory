@@ -5,6 +5,7 @@ import { AlertCircle, Star } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
+import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -68,19 +69,26 @@ export function AnonymousReviewModal({
     setError(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      // TODO: Replace with actual API call
-      console.log("Review submitted:", {
-        workerId,
-        ...values,
+      if (!user) {
+        setError("Please sign in to leave a review.");
+        return;
+      }
+
+      const { error: dbError } = await supabase.from("ratings").insert({
+        worker_id: workerId,
+        customer_id: user.id,
+        rating_value: values.rating,
+        review_comment: values.comment,
       });
 
-      // Show success message
-      setShowSuccess(true);
+      if (dbError) throw new Error(dbError.message);
 
-      // Auto-close modal after 2 seconds
+      setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         onOpenChange(false);

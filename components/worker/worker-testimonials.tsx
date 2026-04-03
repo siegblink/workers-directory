@@ -1,11 +1,13 @@
 "use client";
 
 import { Eye, MessageSquarePlus, Star } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnonymousReviewModal } from "@/components/anonymous-review-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { createClient } from "@/lib/supabase/client";
 
 type Review = {
   id: number;
@@ -24,6 +26,21 @@ type WorkerTestimonialsProps = {
   workerName: string;
 };
 
+function formatRelativeDate(dateString: string): string {
+  const diffDays = Math.floor(
+    (Date.now() - new Date(dateString).getTime()) / 86_400_000,
+  );
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  const weeks = Math.floor(diffDays / 7);
+  if (diffDays < 30) return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+  const months = Math.floor(diffDays / 30);
+  if (diffDays < 365) return `${months} month${months > 1 ? "s" : ""} ago`;
+  const years = Math.floor(diffDays / 365);
+  return `${years} year${years > 1 ? "s" : ""} ago`;
+}
+
 export function WorkerTestimonials({
   rating,
   reviewCount,
@@ -32,6 +49,53 @@ export function WorkerTestimonials({
   workerName,
 }: WorkerTestimonialsProps) {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [displayedReviews, setDisplayedReviews] = useState(reviews);
+  const [loadingAll, setLoadingAll] = useState(false);
+  const [showingAll, setShowingAll] = useState(false);
+
+  useEffect(() => {
+    setDisplayedReviews(reviews);
+    setShowingAll(false);
+  }, [reviews]);
+
+  async function handleViewAll() {
+    setLoadingAll(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("ratings")
+      .select(
+        "id, rating_value, review_comment, created_at, customer:users(firstname, lastname, profile_pic_url)",
+      )
+      .eq("worker_id", workerId)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setDisplayedReviews(
+        data
+          .filter((r) => r.rating_value != null && r.review_comment)
+          .map((r) => {
+            const customer = Array.isArray(r.customer)
+              ? r.customer[0]
+              : r.customer;
+            const name = customer
+              ? `${(customer as { firstname: string; lastname: string }).firstname} ${(customer as { firstname: string; lastname: string }).lastname[0]}.`
+              : "Anonymous";
+            return {
+              id: r.id,
+              author: name,
+              rating: r.rating_value as number,
+              date: formatRelativeDate(r.created_at),
+              comment: r.review_comment as string,
+              avatar:
+                (customer as { profile_pic_url: string | null } | null)
+                  ?.profile_pic_url ?? "/placeholder.svg",
+            };
+          }),
+      );
+      setShowingAll(true);
+    }
+    setLoadingAll(false);
+  }
 
   return (
     <Card className="mb-6">
@@ -50,7 +114,7 @@ export function WorkerTestimonials({
         </div>
 
         <div className="space-y-6">
-          {reviews.map((review) => (
+          {displayedReviews.map((review) => (
             <div
               key={review.id}
               className="border-b last:border-0 pb-6 last:pb-0"
@@ -100,17 +164,17 @@ export function WorkerTestimonials({
             <MessageSquarePlus />
             Leave a Review
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // TODO: Implement view all reviews functionality
-              console.log("View all reviews:", workerId);
-            }}
-          >
-            <Eye />
-            View All Reviews
-          </Button>
+          {!showingAll && reviewCount > displayedReviews.length && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewAll}
+              disabled={loadingAll}
+            >
+              {loadingAll ? <Spinner /> : <Eye />}
+              View All Reviews
+            </Button>
+          )}
         </div>
       </CardContent>
 
