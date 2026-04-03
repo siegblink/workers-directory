@@ -25,10 +25,26 @@ const geistMono = Geist_Mono({
   weight: ["400", "500", "600", "700"],
 });
 
+const siteDescription =
+  "Find trusted service workers in your area. Connect with verified plumbers, electricians, cleaners, and more.";
+
 export const metadata: Metadata = {
-  title: "Direktory - Home",
-  description:
-    "Find trusted service workers in your area. Connect with verified plumbers, electricians, cleaners, and more",
+  title: {
+    template: "%s – Direktory",
+    default: "Direktory – Find Trusted Service Workers",
+  },
+  description: siteDescription,
+  openGraph: {
+    type: "website",
+    siteName: "Direktory",
+    title: "Direktory – Find Trusted Service Workers",
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Direktory – Find Trusted Service Workers",
+    description: siteDescription,
+  },
 };
 
 export default async function RootLayout({

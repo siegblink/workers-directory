@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Account Created",
+  description: "Your Direktory account has been created successfully.",
+};
 import { Button } from "@/components/ui/button";
 import {
   Card,
