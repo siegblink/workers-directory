@@ -106,7 +106,7 @@ export default function WorkerProfilePage({
             )
             .eq("worker_id", id)
             .order("created_at", { ascending: false })
-            .limit(10),
+            .limit(5),
           supabase
             .from("worker_availability")
             .select("schedule")
