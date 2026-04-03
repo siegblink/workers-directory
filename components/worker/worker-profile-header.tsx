@@ -4,7 +4,7 @@ import {
   Bookmark,
   Calendar,
   Clock,
-  DollarSign,
+  PhilippinePeso,
   MapPin,
   MessageSquare,
   Share2,
@@ -166,11 +166,11 @@ export function WorkerProfileHeader({
             <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
               <div>
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <DollarSign className="w-4 h-4" />
+                  <PhilippinePeso className="w-4 h-4" />
                   <span className="text-sm">Hourly Rate</span>
                 </div>
                 <p className="text-2xl font-bold text-foreground">
-                  ${worker.hourlyRate}
+                  ₱{worker.hourlyRate}
                 </p>
               </div>
               <div>

@@ -64,7 +64,7 @@ export function BookingModal({
         <DialogHeader>
           <DialogTitle>Book {workerName}</DialogTitle>
           <DialogDescription>
-            {workerProfession} • ${hourlyRate}/hour
+            {workerProfession} • ₱{hourlyRate}/hour
           </DialogDescription>
         </DialogHeader>
 
@@ -166,7 +166,7 @@ export function BookingModal({
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Hourly Rate</span>
-              <span className="font-medium">${hourlyRate}/hour</span>
+              <span className="font-medium">₱{hourlyRate}/hour</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Duration</span>
