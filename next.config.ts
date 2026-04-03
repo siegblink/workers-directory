@@ -31,9 +31,14 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // TODO: remove once gallery/edit mock data is replaced with real uploads
       {
         protocol: "https",
         hostname: "picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: supabaseHost,
       },
     ],
   },
