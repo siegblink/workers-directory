@@ -138,7 +138,7 @@ export default function HelpPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Get help from our support team
               </p>
-              <Button variant="outline" size="sm" onClick={() => router.push("/messages")}>
+              <Button variant="outline" size="sm" onClick={() => router.push("/contact-support")}>
                 Send Message
               </Button>
             </CardContent>
@@ -218,7 +218,7 @@ export default function HelpPage() {
             <p className="text-muted-foreground mb-6">
               Our support team is here to assist you
             </p>
-            <Button size="lg" onClick={() => router.push("/messages")}>Contact Support</Button>
+            <Button size="lg" onClick={() => router.push("/contact-support")}>Contact Support</Button>
           </CardContent>
         </Card>
       </div>
