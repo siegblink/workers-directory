@@ -1,6 +1,7 @@
 "use client";
 
 import { Book, CreditCard, MessageCircle, Search, Shield } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Accordion,
@@ -81,7 +82,26 @@ const faqCategories = [
 ];
 
 export default function HelpPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const query = searchQuery.toLowerCase().trim();
+  const filteredCategories = faqCategories
+    .map((category) => {
+      if (!query) return category;
+      if (category.title.toLowerCase().includes(query)) return category;
+      const matched = category.questions.filter(
+        (item) =>
+          item.q.toLowerCase().includes(query) ||
+          item.a.toLowerCase().includes(query)
+      );
+      return matched.length > 0 ? { ...category, questions: matched } : null;
+    })
+    .filter(Boolean) as typeof faqCategories;
+
+  function scrollToFAQ() {
+    document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" });
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,7 +138,7 @@ export default function HelpPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Get help from our support team
               </p>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => router.push("/messages")}>
                 Send Message
               </Button>
             </CardContent>
@@ -133,7 +153,7 @@ export default function HelpPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Learn how to use Direktory
               </p>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={scrollToFAQ}>
                 View Guide
               </Button>
             </CardContent>
@@ -148,7 +168,7 @@ export default function HelpPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Learn about our safety measures
               </p>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => router.push("/privacy")}>
                 Learn More
               </Button>
             </CardContent>
@@ -156,33 +176,39 @@ export default function HelpPage() {
         </div>
 
         {/* FAQ Categories */}
-        <div className="space-y-8">
-          {faqCategories.map((category) => (
-            <Card key={category.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <category.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  {category.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  {category.questions.map((item) => (
-                    <AccordionItem key={item.q} value={item.q}>
-                      <AccordionTrigger className="text-left">
-                        {item.q}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground leading-relaxed">
-                        {item.a}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))}
+        <div id="faq" className="space-y-8">
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map((category) => (
+              <Card key={category.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <category.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    {category.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {category.questions.map((item) => (
+                      <AccordionItem key={item.q} value={item.q}>
+                        <AccordionTrigger className="text-left">
+                          {item.q}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground leading-relaxed">
+                          {item.a}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <p className="text-center text-muted-foreground py-12">
+              No results for &ldquo;{searchQuery}&rdquo;
+            </p>
+          )}
         </div>
 
         {/* Still Need Help */}
@@ -192,7 +218,7 @@ export default function HelpPage() {
             <p className="text-muted-foreground mb-6">
               Our support team is here to assist you
             </p>
-            <Button size="lg">Contact Support</Button>
+            <Button size="lg" onClick={() => router.push("/messages")}>Contact Support</Button>
           </CardContent>
         </Card>
       </div>
