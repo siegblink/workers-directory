@@ -1,11 +1,12 @@
 "use client";
 
-import { Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
+import { AlertCircle, Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,24 +39,6 @@ const benefits = [
   },
 ];
 
-// Fallback list used while DB categories are loading or on fetch error
-const fallbackJobTitles = [
-  "Plumber",
-  "Electrician",
-  "Cleaner",
-  "Painter",
-  "Carpenter",
-  "Handyman",
-  "HVAC Technician",
-  "Landscaper",
-  "Roofer",
-  "Mason",
-  "Welder",
-  "Locksmith",
-  "Pest Control Technician",
-  "Appliance Repair Technician",
-  "General Contractor",
-];
 
 export default function BecomeWorkerPage() {
   const [step, setStep] = useState(1);
@@ -65,7 +48,9 @@ export default function BecomeWorkerPage() {
     bio: "",
     agreeToTerms: false,
   });
-  const [jobTitleOptions, setJobTitleOptions] = useState<string[]>(fallbackJobTitles);
+  const [jobTitleOptions, setJobTitleOptions] = useState<string[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState(false);
   const [termsError, setTermsError] = useState(false);
 
   const router = useRouter();
@@ -73,13 +58,16 @@ export default function BecomeWorkerPage() {
   useEffect(() => {
     async function fetchCategories() {
       const supabase = createClient();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("categories")
         .select("name")
         .order("name", { ascending: true });
-      if (data && data.length > 0) {
+      if (error || !data || data.length === 0) {
+        setCategoriesError(true);
+      } else {
         setJobTitleOptions(data.map((c: { name: string }) => c.name));
       }
+      setCategoriesLoading(false);
     }
     fetchCategories();
   }, []);
@@ -239,17 +227,32 @@ export default function BecomeWorkerPage() {
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="jobTitle">Job Title</Label>
-                      <Combobox
-                        id="jobTitle"
-                        value={formData.jobTitle}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, jobTitle: value })
-                        }
-                        options={jobTitleOptions}
-                        placeholder="Select or type your job title"
-                        searchPlaceholder="Search job titles…"
-                        emptyMessage="No matching title — press Escape to use your search text."
-                      />
+                      {categoriesError ? (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Job categories couldn&apos;t be loaded from the
+                            server. Please try refreshing the page.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Combobox
+                          id="jobTitle"
+                          value={formData.jobTitle}
+                          onValueChange={(value) =>
+                            setFormData({ ...formData, jobTitle: value })
+                          }
+                          options={jobTitleOptions}
+                          placeholder={
+                            categoriesLoading
+                              ? "Loading categories…"
+                              : "Select or type your job title"
+                          }
+                          disabled={categoriesLoading}
+                          searchPlaceholder="Search job titles…"
+                          emptyMessage="No matching title — press Escape to use your search text."
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">
