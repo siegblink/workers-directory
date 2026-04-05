@@ -8,7 +8,6 @@ import type {
   ApiResponse,
   Category,
   PaginatedResponse,
-  User,
   UserStatus,
   Worker,
   WorkerFilters,
