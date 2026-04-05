@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  Briefcase,
   Calendar,
   CheckCircle2,
   Clock,
@@ -71,7 +72,7 @@ export default function WorkerDashboardPage() {
     "loading" | "verified" | "pending" | "not_verified"
   >("loading");
   const [loading, setLoading] = useState(true);
-  const [workerId, setWorkerId] = useState<string | null>(null);
+  const [isWorker, setIsWorker] = useState<boolean | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pendingBookings, setPendingBookings] = useState<DashboardBooking[]>([]);
   const [upcomingBookings, setUpcomingBookings] = useState<DashboardBooking[]>([]);
@@ -117,14 +118,15 @@ export default function WorkerDashboardPage() {
       setVerificationStatus("pending");
     }
 
-    // No worker profile — stop here
+    // No worker profile — show non-worker empty state
     if (!workerResult.data) {
+      setIsWorker(false);
       setLoading(false);
       return;
     }
 
+    setIsWorker(true);
     const wid = workerResult.data.id as string;
-    setWorkerId(wid);
 
     // Parallel: all bookings for stats, view data, pending, upcoming, reviews
     const [
@@ -314,8 +316,8 @@ export default function WorkerDashboardPage() {
           </p>
         </div>
 
-        {/* Verification Reminder Banner */}
-        {verificationStatus === "not_verified" && (
+        {/* Verification Reminder Banner — workers only */}
+        {isWorker && verificationStatus === "not_verified" && (
           <Alert className="mb-6 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
             <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <AlertTitle className="text-blue-900 dark:text-blue-100">
@@ -331,7 +333,7 @@ export default function WorkerDashboardPage() {
           </Alert>
         )}
 
-        {verificationStatus === "pending" && (
+        {isWorker && verificationStatus === "pending" && (
           <Alert className="mb-6 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
             <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
             <AlertTitle className="text-yellow-900 dark:text-yellow-100">
@@ -344,38 +346,59 @@ export default function WorkerDashboardPage() {
           </Alert>
         )}
 
-        {/* Promotion Banner */}
-        <Card className="mb-6 bg-linear-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-yellow-400 dark:bg-yellow-600 rounded-full flex items-center justify-center">
-                  <Crown className="w-6 h-6 text-yellow-900 dark:text-yellow-100" />
+        {/* Promotion Banner — workers only */}
+        {isWorker && (
+          <Card className="mb-6 bg-linear-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-yellow-400 dark:bg-yellow-600 rounded-full flex items-center justify-center">
+                    <Crown className="w-6 h-6 text-yellow-900 dark:text-yellow-100" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1 text-foreground">
+                      Boost Your Profile
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Get featured at the top of search results and get 3x more
+                      bookings
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1 text-foreground">
-                    Boost Your Profile
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Get featured at the top of search results and get 3x more
-                    bookings
-                  </p>
-                </div>
+                <Button
+                  className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800"
+                  asChild
+                >
+                  <Link href="/dashboard/promote">Get Prioritized Now</Link>
+                </Button>
               </div>
-              <Button
-                className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800"
-                asChild
-              >
-                <Link href="/dashboard/promote">Get Prioritized Now</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Spinner className="size-8" />
           </div>
+        ) : isWorker === false ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-6">
+                <Briefcase className="size-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2 text-foreground">
+                This area is for service workers
+              </h2>
+              <p className="text-muted-foreground mb-6 max-w-sm">
+                You don&apos;t have a worker profile yet. Register as a service
+                worker to manage bookings, track your performance, and grow your
+                business.
+              </p>
+              <Button asChild size="lg">
+                <Link href="/become-worker">Become a Worker</Link>
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <>
             {/* Stats Grid */}
