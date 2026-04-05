@@ -1,9 +1,9 @@
 "use client";
 
 import { Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +12,6 @@ import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useSubProfile } from "@/contexts/sub-profile-context";
-import type { DirectoryId } from "@/lib/types/sub-profile";
 
 const benefits = [
   {
@@ -60,42 +58,21 @@ const jobTitles = [
 export default function BecomeWorkerPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    profileLabel: "",
     jobTitle: "",
     experience: "",
     bio: "",
     agreeToTerms: false,
   });
 
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const { addSubProfile, setHasMainProfile } = useSubProfile();
-
-  const fromParam = searchParams.get("from");
-  const isSubProfileFlow = fromParam === "sub-profile";
-  const isMainProfileFlow = fromParam === "main-profile";
-  const directoryParam = searchParams.get("directory");
-
-  useEffect(() => {
-    if (isMainProfileFlow) {
-      setFormData((prev) => ({ ...prev, profileLabel: "Main" }));
-    }
-  }, [isMainProfileFlow]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (step === 2 && (!formData.profileLabel || !formData.jobTitle)) return;
+    if (step === 2 && !formData.jobTitle) return;
     if (step < 3) {
       setStep(step + 1);
-    } else if (isMainProfileFlow && directoryParam) {
-      // Main profile creation flow
-      setHasMainProfile(true);
-      toast("Profile created successfully");
-      router.push("/profile");
-    } else if (isSubProfileFlow && directoryParam) {
-      // Sub-profile creation flow: add profile and redirect
-      addSubProfile(directoryParam as DirectoryId, formData.profileLabel);
-      toast(`${formData.profileLabel} sub-profile created`);
+    } else {
+      toast("Application submitted successfully");
       router.push("/profile");
     }
   }
@@ -239,29 +216,6 @@ export default function BecomeWorkerPage() {
                 {step === 2 && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="profileLabel">Profile Label</Label>
-                      <Input
-                        id="profileLabel"
-                        type="text"
-                        placeholder="e.g., John's Plumbing Services"
-                        value={formData.profileLabel}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            profileLabel: e.target.value,
-                          })
-                        }
-                        disabled={isMainProfileFlow}
-                        required
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        {isMainProfileFlow
-                          ? "Your first profile is always labeled 'Main'."
-                          : "A short name for your worker profile that customers will see."}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
                       <Label htmlFor="jobTitle">Job Title</Label>
                       <Combobox
                         id="jobTitle"
@@ -313,13 +267,14 @@ export default function BecomeWorkerPage() {
                   <>
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-3">
                       <h4 className="font-semibold text-foreground">
-                        What's Next?
+                        What&apos;s Next?
                       </h4>
                       <ul className="space-y-2 text-sm text-muted-foreground">
                         <li className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
                           <span>
-                            We'll review your application within 24-48 hours
+                            We&apos;ll review your application within 24-48
+                            hours
                           </span>
                         </li>
                         <li className="flex items-start gap-2">

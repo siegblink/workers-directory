@@ -1,9 +1,9 @@
 "use client";
 
 import { User } from "lucide-react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { DirectorySelectionDialog } from "@/components/profile/directory-selection-dialog";
+import { useCallback, useEffect, useState } from "react";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
 import { ProfileBookingsPanel } from "@/components/profile/profile-bookings-panel";
@@ -20,7 +20,6 @@ import {
   ProfileInvoices,
 } from "@/components/profile/profile-invoices";
 import { ProfileMessagesPanel } from "@/components/profile/profile-messages-panel";
-import { ProfileSettings } from "@/components/profile/profile-settings";
 import {
   type ProfileSection,
   ProfileSidebar,
@@ -30,7 +29,6 @@ import {
   ProfileTestimonials,
   type Review,
 } from "@/components/profile/profile-testimonials";
-import { SubProfileBar } from "@/components/profile/sub-profile-bar";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -40,7 +38,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
-import { useSubProfile } from "@/contexts/sub-profile-context";
 import type {
   ProfileAboutFormValues,
   ProfileAvailabilityFormValues,
@@ -141,33 +138,13 @@ function timeAgo(dateString: string): string {
 
 export default function ProfilePage() {
   const params = useParams<{ section?: string[] }>();
-  const context = useSubProfile();
-
-  // Gate context values behind useLayoutEffect to prevent hydration mismatch.
-  // The SubProfileProvider persists in the root layout, so on back-navigation
-  // its state (isHydrated=true) is already populated from localStorage. But
-  // the cached RSC payload was rendered with server defaults (all false/empty).
-  // Starting with server-safe defaults and syncing before paint ensures the
-  // first render matches the server exactly, with no visible flash.
-  const [synced, setSynced] = useState(false);
-  useLayoutEffect(() => setSynced(true), []);
-
-  const hasMainProfile = synced ? context.hasMainProfile : false;
-  const subProfiles = synced ? context.subProfiles : [];
-  const activeSubProfileId = synced ? context.activeSubProfileId : null;
 
   const sectionSlug = params.section?.[0];
-  const resolvedSection: ProfileSection =
+  const activeSection: ProfileSection =
     sectionSlug && validSections.includes(sectionSlug as ProfileSection)
       ? (sectionSlug as ProfileSection)
       : "profile";
-  // Settings is only valid when a sub-profile is active
-  const activeSection: ProfileSection =
-    resolvedSection === "settings" && !activeSubProfileId
-      ? "profile"
-      : resolvedSection;
 
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // IDs needed by save handlers
@@ -182,6 +159,9 @@ export default function ProfilePage() {
     useState<ProfileAvailabilityFormValues>(defaultAvailability);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+
+  // Whether the user has a worker profile (determines empty vs full UI)
+  const hasMainProfile = workerId !== null;
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -343,57 +323,12 @@ export default function ProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
-  // Determine data source (main profile vs active sub-profile)
-  const activeSubProfile = activeSubProfileId
-    ? subProfiles.find((sp) => sp.id === activeSubProfileId)
-    : null;
-
-  const currentProfile = activeSubProfile ? activeSubProfile.profileData : profile;
-  const currentBio = activeSubProfile ? activeSubProfile.bio : bio;
-  const currentSkills = activeSubProfile ? activeSubProfile.skills : skills;
-  const currentAvailability = activeSubProfile
-    ? activeSubProfile.availability
-    : availability;
-  const currentPortfolio = activeSubProfile ? activeSubProfile.portfolio : portfolio;
-  const currentReviews = activeSubProfile ? activeSubProfile.reviews : reviews;
-  const currentBookings = activeSubProfile
-    ? activeSubProfile.bookings
-    : mockBookings;
-  const currentBookmarked = activeSubProfile
-    ? activeSubProfile.bookmarkedWorkers
-    : mockBookmarked;
-  const currentConversations = activeSubProfile
-    ? activeSubProfile.conversations
-    : mockConversations;
-  const currentInvoices = activeSubProfile
-    ? activeSubProfile.invoices
-    : mockInvoices;
-
-  // Notification counts for the active profile
-  const unreadMessagesCount = currentConversations.reduce(
+  // Notification counts for sidebar badges
+  const unreadMessagesCount = mockConversations.reduce(
     (sum, c) => sum + c.unread,
     0,
   );
-  const newReviewsCount = currentReviews.filter((r) => r.isNew).length;
-
-  // Per-profile notification indicators for the SubProfileBar dots
-  function hasNewItems(
-    conversations: typeof mockConversations,
-    reviewList: Review[],
-  ) {
-    return (
-      conversations.some((c) => c.unread > 0) ||
-      reviewList.some((r) => r.isNew)
-    );
-  }
-
-  const notifications: Record<string, boolean> = {};
-  if (hasMainProfile) {
-    notifications.main = hasNewItems(mockConversations, reviews);
-  }
-  for (const sp of subProfiles) {
-    notifications[sp.id] = hasNewItems(sp.conversations, sp.reviews);
-  }
+  const newReviewsCount = 0; // real reviews don't carry an isNew flag
 
   async function handleHeaderSave(data: ProfileHeaderFormValues) {
     if (!userId) return;
@@ -432,17 +367,15 @@ export default function ProfilePage() {
       if (newWorker) setWorkerId((newWorker as { id: string }).id);
     }
 
-    if (!activeSubProfile) {
-      setProfile((prev) => ({
-        ...prev,
-        name: data.name,
-        statusEmoji: data.statusEmoji ?? prev.statusEmoji,
-        statusText: data.statusText ?? prev.statusText,
-        profession: data.profession,
-        location: data.location,
-        hourlyRate: data.hourlyRate,
-      }));
-    }
+    setProfile((prev) => ({
+      ...prev,
+      name: data.name,
+      statusEmoji: data.statusEmoji ?? prev.statusEmoji,
+      statusText: data.statusText ?? prev.statusText,
+      profession: data.profession,
+      location: data.location,
+      hourlyRate: data.hourlyRate,
+    }));
   }
 
   async function handleAvatarChange(_file: File) {
@@ -463,17 +396,13 @@ export default function ProfilePage() {
         : Promise.resolve(),
     ]);
 
-    if (!activeSubProfile) {
-      setBio(data.bio);
-      setSkills(data.skills);
-    }
+    setBio(data.bio);
+    setSkills(data.skills);
   }
 
   async function handleAvailabilitySave(data: ProfileAvailabilityFormValues) {
     // No DB table for availability — local state only
-    if (!activeSubProfile) {
-      setAvailability(data);
-    }
+    setAvailability(data);
   }
 
   function renderDetailPanel() {
@@ -482,53 +411,40 @@ export default function ProfilePage() {
         return (
           <>
             <ProfileAbout
-              bio={currentBio}
-              skills={currentSkills}
-              profileLabel={
-                activeSubProfile
-                  ? activeSubProfile.directoryLabel
-                  : "Main Profile"
-              }
+              bio={bio}
+              skills={skills}
+              profileLabel="Main Profile"
               onSave={handleAboutSave}
             />
             <ProfileAvailability
-              availability={currentAvailability}
+              availability={availability}
               onSave={handleAvailabilitySave}
             />
           </>
         );
       case "messages":
-        return <ProfileMessagesPanel conversations={currentConversations} />;
+        return <ProfileMessagesPanel conversations={mockConversations} />;
       case "bookings":
         return (
           <ProfileBookingsPanel
-            bookings={currentBookings}
-            bookmarkedWorkers={currentBookmarked}
+            bookings={mockBookings}
+            bookmarkedWorkers={mockBookmarked}
           />
         );
       case "gallery":
-        return <ProfileGallery portfolio={currentPortfolio} />;
+        return <ProfileGallery portfolio={portfolio} />;
       case "reviews":
         return (
           <ProfileTestimonials
-            rating={currentProfile.rating}
-            reviewCount={currentProfile.reviews}
-            reviews={currentReviews}
+            rating={profile.rating}
+            reviewCount={profile.reviews}
+            reviews={reviews}
           />
         );
       case "invoices":
-        return <ProfileInvoices invoices={currentInvoices} />;
-      case "settings":
-        return activeSubProfile ? (
-          <ProfileSettings
-            key={activeSubProfile.id}
-            subProfile={activeSubProfile}
-          />
-        ) : null;
+        return <ProfileInvoices invoices={mockInvoices} />;
     }
   }
-
-  const dialogProfileType = hasMainProfile ? "sub" : "main";
 
   return (
     <div className="min-h-screen bg-background">
@@ -541,24 +457,10 @@ export default function ProfilePage() {
           <>
             {/* Profile Header */}
             <ProfileHeader
-              profile={currentProfile}
+              profile={profile}
               onSave={handleHeaderSave}
               onAvatarChange={handleAvatarChange}
               hasMainProfile={hasMainProfile}
-            />
-
-            {/* Sub-profile bar */}
-            <SubProfileBar
-              onCreateClick={() => setDialogOpen(true)}
-              hasMainProfile={hasMainProfile}
-              notifications={notifications}
-            />
-
-            {/* Directory selection dialog */}
-            <DirectorySelectionDialog
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-              profileType={dialogProfileType}
             />
 
             {hasMainProfile ? (
@@ -588,19 +490,20 @@ export default function ProfilePage() {
                 </div>
               </>
             ) : (
-              /* Empty state for new accounts */
+              /* Empty state for non-worker accounts */
               <Empty className="mt-6">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <User />
                   </EmptyMedia>
-                  <EmptyTitle>No Profile Yet</EmptyTitle>
+                  <EmptyTitle>No Worker Profile Yet</EmptyTitle>
                   <EmptyDescription>
-                    Create your profile to get started.
+                    Register as a service worker to manage your profile, track
+                    bookings, and grow your business.
                   </EmptyDescription>
                 </EmptyHeader>
-                <Button onClick={() => setDialogOpen(true)}>
-                  Create Profile
+                <Button asChild>
+                  <Link href="/become-worker">Become a Worker</Link>
                 </Button>
               </Empty>
             )}

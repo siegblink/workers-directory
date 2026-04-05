@@ -6,16 +6,13 @@ import {
   FileText,
   Images,
   MessageSquare,
-  Settings,
   Star,
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSubProfile } from "@/contexts/sub-profile-context";
 
 type SidebarItem = {
   key: string;
@@ -48,21 +45,13 @@ const sidebarItems: SidebarItem[] = [
   },
 ];
 
-const settingsItem: SidebarItem = {
-  key: "settings",
-  label: "Settings",
-  icon: Settings,
-  href: "/profile/settings",
-};
-
 export type ProfileSection =
   | "profile"
   | "messages"
   | "bookings"
   | "gallery"
   | "reviews"
-  | "invoices"
-  | "settings";
+  | "invoices";
 
 export const validSections: ProfileSection[] = [
   "profile",
@@ -71,7 +60,6 @@ export const validSections: ProfileSection[] = [
   "gallery",
   "reviews",
   "invoices",
-  "settings",
 ];
 
 type ProfileSidebarProps = {
@@ -85,17 +73,10 @@ export function ProfileSidebar({
   unreadMessagesCount = 0,
   newReviewsCount = 0,
 }: ProfileSidebarProps) {
-  const { activeSubProfileId } = useSubProfile();
-
   const badgeCounts: Record<string, number> = {
     messages: unreadMessagesCount,
     reviews: newReviewsCount,
   };
-
-  const visibleItems = useMemo(
-    () => (activeSubProfileId ? [...sidebarItems, settingsItem] : sidebarItems),
-    [activeSubProfileId],
-  );
 
   return (
     <>
@@ -103,7 +84,7 @@ export function ProfileSidebar({
       <Card className="hidden md:block w-56 shrink-0 sticky top-20 self-start">
         <CardContent className="p-2">
           <nav className="flex flex-col gap-1">
-            {visibleItems.map((item) => {
+            {sidebarItems.map((item) => {
               const count = badgeCounts[item.key] ?? 0;
               return (
                 <Button
@@ -131,7 +112,7 @@ export function ProfileSidebar({
       {/* Mobile horizontal nav */}
       <div className="md:hidden overflow-x-auto -mx-4 px-4">
         <nav className="flex gap-2 pb-2 min-w-max">
-          {visibleItems.map((item) => {
+          {sidebarItems.map((item) => {
             const count = badgeCounts[item.key] ?? 0;
             return (
               <Button
