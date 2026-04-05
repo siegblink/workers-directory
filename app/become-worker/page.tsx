@@ -3,8 +3,9 @@
 import { Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +38,8 @@ const benefits = [
   },
 ];
 
-const jobTitles = [
+// Fallback list used while DB categories are loading or on fetch error
+const fallbackJobTitles = [
   "Plumber",
   "Electrician",
   "Cleaner",
@@ -63,8 +65,24 @@ export default function BecomeWorkerPage() {
     bio: "",
     agreeToTerms: false,
   });
+  const [jobTitleOptions, setJobTitleOptions] = useState<string[]>(fallbackJobTitles);
+  const [termsError, setTermsError] = useState(false);
 
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchCategories() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("categories")
+        .select("name")
+        .order("name", { ascending: true });
+      if (data && data.length > 0) {
+        setJobTitleOptions(data.map((c: { name: string }) => c.name));
+      }
+    }
+    fetchCategories();
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -72,6 +90,10 @@ export default function BecomeWorkerPage() {
     if (step < 3) {
       setStep(step + 1);
     } else {
+      if (!formData.agreeToTerms) {
+        setTermsError(true);
+        return;
+      }
       toast("Application submitted successfully");
       router.push("/profile");
     }
@@ -223,7 +245,7 @@ export default function BecomeWorkerPage() {
                         onValueChange={(value) =>
                           setFormData({ ...formData, jobTitle: value })
                         }
-                        options={jobTitles}
+                        options={jobTitleOptions}
                         placeholder="Select or type your job title"
                         searchPlaceholder="Search job titles…"
                         emptyMessage="No matching title — press Escape to use your search text."
@@ -288,26 +310,33 @@ export default function BecomeWorkerPage() {
                       </ul>
                     </div>
 
-                    <div className="flex items-start gap-2">
-                      <Checkbox
-                        id="terms"
-                        checked={formData.agreeToTerms}
-                        onCheckedChange={(checked) =>
-                          setFormData({
-                            ...formData,
-                            agreeToTerms: checked as boolean,
-                          })
-                        }
-                        required
-                      />
-                      <Label
-                        htmlFor="terms"
-                        className="font-normal cursor-pointer leading-relaxed text-sm"
-                      >
-                        I agree to the Terms of Service and Privacy Policy. I
-                        understand that Direktory will verify my identity and
-                        professional credentials.
-                      </Label>
+                    <div className="space-y-1">
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          id="terms"
+                          checked={formData.agreeToTerms}
+                          onCheckedChange={(checked) => {
+                            setFormData({
+                              ...formData,
+                              agreeToTerms: checked as boolean,
+                            });
+                            if (checked) setTermsError(false);
+                          }}
+                        />
+                        <Label
+                          htmlFor="terms"
+                          className="font-normal cursor-pointer leading-relaxed text-sm"
+                        >
+                          I agree to the Terms of Service and Privacy Policy. I
+                          understand that Direktory will verify my identity and
+                          professional credentials.
+                        </Label>
+                      </div>
+                      {termsError && (
+                        <p className="text-sm text-destructive pl-6">
+                          You must agree to the terms before submitting.
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
