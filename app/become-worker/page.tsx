@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertCircle, Briefcase, Check, DollarSign, TrendingUp, Users } from "lucide-react";
+import { AlertCircle, Briefcase, Check, DollarSign, ExternalLink, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -51,6 +52,7 @@ export default function BecomeWorkerPage() {
   const [jobTitleOptions, setJobTitleOptions] = useState<string[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState(false);
+  const [categoriesErrorTimestamp, setCategoriesErrorTimestamp] = useState<string | null>(null);
   const [termsError, setTermsError] = useState(false);
 
   const router = useRouter();
@@ -64,6 +66,7 @@ export default function BecomeWorkerPage() {
         .order("name", { ascending: true });
       if (error || !data || data.length === 0) {
         setCategoriesError(true);
+        setCategoriesErrorTimestamp(new Date().toISOString());
       } else {
         setJobTitleOptions(data.map((c: { name: string }) => c.name));
       }
@@ -232,7 +235,14 @@ export default function BecomeWorkerPage() {
                           <AlertCircle className="h-4 w-4" />
                           <AlertDescription>
                             Job categories couldn&apos;t be loaded from the
-                            server. Please try refreshing the page.
+                            server. Please try refreshing the page.{" "}
+                            <Link
+                              href={`/contact-support?page=%2Fbecome-worker&issue=Job+categories+failed+to+load&timestamp=${encodeURIComponent(categoriesErrorTimestamp ?? new Date().toISOString())}`}
+                              className="inline-flex items-center gap-1 underline underline-offset-2 font-medium"
+                            >
+                              Report this issue
+                              <ExternalLink className="size-3" />
+                            </Link>
                           </AlertDescription>
                         </Alert>
                       ) : (
