@@ -320,66 +320,66 @@ export default function ProfilePage() {
     // Refresh sub-profiles from DB (handles return from /become-worker)
     await refreshSubProfiles();
 
-    // Load chat previews for the messages panel (two-step: chats then messages)
-    type ChatUserRow = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
-    type ChatRow = {
-      id: number;
-      customer_id: string;
-      worker_id: string;
-      customer: ChatUserRow | null;
-      worker: ChatUserRow | null;
-    };
-    type MsgRow = {
-      chat_id: number;
-      message_text: string | null;
-      created_at: string;
-      receiver_id: string;
-      status: string;
-    };
+    // Load chat previews for the messages panel
+    // Avoid FK hint joins — query chats, users, and messages separately
+    type RawChat = { id: number; customer_id: string; worker_id: string };
+    type RawUser = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
+    type RawMsg = { chat_id: number; message_text: string | null; created_at: string; receiver_id: string; status: string };
 
-    const { data: chatsData } = await supabase
+    const { data: chatsRaw } = await supabase
       .from("chats")
-      .select(`
-        id,
-        customer_id,
-        worker_id,
-        customer:users!chats_customer_id_fkey(id, firstname, lastname, profile_pic_url),
-        worker:users!chats_worker_id_fkey(id, firstname, lastname, profile_pic_url)
-      `)
+      .select("id, customer_id, worker_id")
       .or(`customer_id.eq.${user.id},worker_id.eq.${user.id}`)
       .order("created_at", { ascending: false })
       .limit(5);
 
-    if (chatsData && chatsData.length > 0) {
-      const chats = chatsData as unknown as ChatRow[];
+    if (chatsRaw && chatsRaw.length > 0) {
+      const chats = chatsRaw as RawChat[];
       const chatIds = chats.map((c) => c.id);
 
-      const { data: msgsData } = await supabase
-        .from("messages")
-        .select("chat_id, message_text, created_at, receiver_id, status")
-        .in("chat_id", chatIds)
-        .order("created_at", { ascending: false });
+      // Batch-fetch other users and messages in parallel
+      const otherUserIds = [
+        ...new Set(
+          chats.map((c) =>
+            c.customer_id === user.id ? c.worker_id : c.customer_id,
+          ),
+        ),
+      ];
 
-      const msgs = (msgsData ?? []) as MsgRow[];
+      const [usersResult, msgsResult] = await Promise.all([
+        supabase
+          .from("users")
+          .select("id, firstname, lastname, profile_pic_url")
+          .in("id", otherUserIds),
+        supabase
+          .from("messages")
+          .select("chat_id, message_text, created_at, receiver_id, status")
+          .in("chat_id", chatIds)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const userMap = new Map(
+        ((usersResult.data ?? []) as RawUser[]).map((u) => [u.id, u]),
+      );
+      const msgs = (msgsResult.data ?? []) as RawMsg[];
 
       setChatPreviews(
         chats.map((chat) => {
-          const otherUser =
-            chat.customer_id === user.id ? chat.worker : chat.customer;
-          const name = otherUser
-            ? `${otherUser.firstname} ${otherUser.lastname}`
-            : "Unknown";
-          const avatar = otherUser?.profile_pic_url ?? "";
+          const otherId =
+            chat.customer_id === user.id ? chat.worker_id : chat.customer_id;
+          const otherUser = userMap.get(otherId) ?? null;
           const chatMsgs = msgs.filter((m) => m.chat_id === chat.id);
-          const lastMsg = chatMsgs[0] ?? null; // already sorted desc
+          const lastMsg = chatMsgs[0] ?? null;
           const unread = chatMsgs.filter(
             (m) => m.receiver_id === user.id && m.status !== "read",
           ).length;
           return {
             id: chat.id,
-            name,
+            name: otherUser
+              ? `${otherUser.firstname} ${otherUser.lastname}`
+              : "Unknown",
             profession: "",
-            avatar,
+            avatar: otherUser?.profile_pic_url ?? "",
             lastMessage: lastMsg?.message_text ?? "",
             timestamp: lastMsg ? timeAgo(lastMsg.created_at) : "",
             unread,
