@@ -2,18 +2,24 @@
 // Sub-Profile Queries
 // =====================================================
 
-import {
-  executeQuery,
-  getCurrentUserId,
-  getSupabaseClient,
-} from "../base-query";
+import { executeQuery, getSupabaseClient } from "../base-query";
 import type { ApiResponse, SubProfile } from "../types";
+
+// In this schema, public.users.id IS the auth UUID directly.
+// getCurrentUserId() uses an auth_id lookup that doesn't apply here.
+async function getAuthUserId(): Promise<string | null> {
+  const supabase = getSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
 
 /**
  * Get all non-deleted sub-profiles for the current user
  */
 export async function getMySubProfiles(): Promise<ApiResponse<SubProfile[]>> {
-  const userId = await getCurrentUserId();
+  const userId = await getAuthUserId();
 
   if (!userId) {
     return { data: null, error: new Error("User not authenticated") };
@@ -48,7 +54,7 @@ export async function createSubProfile(
     | "status"
   >,
 ): Promise<ApiResponse<SubProfile>> {
-  const userId = await getCurrentUserId();
+  const userId = await getAuthUserId();
 
   if (!userId) {
     return { data: null, error: new Error("User not authenticated") };
