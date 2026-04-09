@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import { ConditionalLayout } from "@/components/conditional-layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AnnouncementProvider } from "@/contexts/announcement-context";
+import { SubProfileProvider } from "@/contexts/sub-profile-context";
 import "./globals.css";
 
 import { Geist, Geist_Mono } from "next/font/google";
@@ -74,9 +75,11 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <AnnouncementProvider initialDismissed={initialDismissed}>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ConditionalLayout>{children}</ConditionalLayout>
-            </Suspense>
+            <SubProfileProvider>
+              <Suspense fallback={<div>Loading...</div>}>
+                <ConditionalLayout>{children}</ConditionalLayout>
+              </Suspense>
+            </SubProfileProvider>
           </AnnouncementProvider>
           <Analytics />
           <Toaster position="top-right" closeButton />
