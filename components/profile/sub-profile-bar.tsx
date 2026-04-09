@@ -47,9 +47,9 @@ export function SubProfileBar({
     setRenameValue(currentLabel);
   }
 
-  function handleRename() {
+  async function handleRename() {
     if (!renamingProfile || !renameValue.trim()) return;
-    renameSubProfile(renamingProfile.id, renameValue.trim());
+    await renameSubProfile(renamingProfile.id, renameValue.trim());
     setRenamingProfile(null);
   }
 
@@ -88,12 +88,12 @@ export function SubProfileBar({
                       className="rounded-r-none focus-visible:ring-0"
                       onClick={() => setActiveSubProfileId(sp.id)}
                     >
-                      {sp.directoryLabel.length > 20 ? (
+                      {sp.label.length > 20 ? (
                         <span className="max-w-[20ch] overflow-hidden whitespace-nowrap block mask-[linear-gradient(to_right,black_80%,transparent)]">
-                          {sp.directoryLabel}
+                          {sp.label}
                         </span>
                       ) : (
-                        sp.directoryLabel
+                        sp.label
                       )}
                     </Button>
                     <Button
@@ -102,8 +102,8 @@ export function SubProfileBar({
                       }
                       size="icon"
                       className="rounded-l-none border-l-0 focus-visible:ring-0"
-                      aria-label={`Rename ${sp.directoryLabel} sub-profile`}
-                      onClick={() => openRenameDialog(sp.id, sp.directoryLabel)}
+                      aria-label={`Rename ${sp.label} sub-profile`}
+                      onClick={() => openRenameDialog(sp.id, sp.label)}
                     >
                       <Pencil />
                     </Button>

@@ -1,4 +1,4 @@
-import type { DirectoryId, SubProfile } from "@/lib/types/sub-profile";
+import type { DirectoryId } from "@/lib/types/sub-profile";
 
 type DirectoryMockConfig = {
   name: string;
@@ -359,10 +359,11 @@ function generatePortfolio(services: string[]) {
   }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function generateSubProfileMockData(
   directoryId: DirectoryId,
   directoryLabel: string,
-): SubProfile {
+): any {
   const config = directoryMockConfigs[directoryId];
 
   return {

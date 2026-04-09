@@ -65,6 +65,20 @@ export type Worker = {
   deleted_at: string | null;
 };
 
+export type SubProfile = {
+  id: string;
+  user_id: string;
+  label: string;          // display name, user-editable (e.g. "Electrician")
+  profession: string;
+  skills: string[];
+  hourly_rate_min: number | null;
+  hourly_rate_max: number | null;
+  years_experience: number | null;
+  status: "available" | "busy" | "offline";
+  created_at: string;
+  deleted_at: string | null;
+};
+
 export interface Category {
   id: number;
   name: string | null;

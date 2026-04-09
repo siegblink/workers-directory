@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
+import { DirectorySelectionDialog } from "@/components/profile/directory-selection-dialog";
 import { ProfileBookingsPanel } from "@/components/profile/profile-bookings-panel";
 import {
   type PortfolioItem,
@@ -20,6 +21,7 @@ import {
   ProfileInvoices,
 } from "@/components/profile/profile-invoices";
 import { ProfileMessagesPanel } from "@/components/profile/profile-messages-panel";
+import { ProfileSubProfileSettings } from "@/components/profile/profile-sub-profile-settings";
 import {
   type ProfileSection,
   ProfileSidebar,
@@ -29,6 +31,7 @@ import {
   ProfileTestimonials,
   type Review,
 } from "@/components/profile/profile-testimonials";
+import { SubProfileBar } from "@/components/profile/sub-profile-bar";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -38,6 +41,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
+import { useSubProfile } from "@/contexts/sub-profile-context";
+import { deleteSubProfile, updateSubProfile } from "@/lib/database/queries/sub-profiles";
+import type { SubProfile } from "@/lib/database/types";
 import type {
   ProfileAboutFormValues,
   ProfileAvailabilityFormValues,
@@ -45,36 +51,12 @@ import type {
 } from "@/lib/schemas/profile";
 import { createClient } from "@/lib/supabase/client";
 
-// ─── Deferred mock data (no DB backing — Phase 5) ────────────────────────────
-
-const mockBookings = [
-  { id: 1, worker: "John Smith", service: "Plumbing", date: "Dec 15, 2024", status: "Completed", amount: 180 },
-  { id: 2, worker: "Sarah Johnson", service: "Electrical", date: "Dec 20, 2024", status: "Upcoming", amount: 220 },
-  { id: 3, worker: "Mike Davis", service: "Deep Cleaning", date: "Jan 5, 2025", status: "Completed", amount: 150 },
-  { id: 4, worker: "Emily Chen", service: "Interior Painting", date: "Jan 12, 2025", status: "Cancelled", amount: 400 },
-  { id: 5, worker: "David Wilson", service: "Home Organization", date: "Jan 25, 2025", status: "Upcoming", amount: 200 },
-];
-
-const mockBookmarked = [
-  { id: 1, name: "Mike Davis", profession: "Cleaner", rating: 4.7, hourlyRate: 350, avatar: "" },
-  { id: 2, name: "Lisa Brown", profession: "Painter", rating: 4.9, hourlyRate: 500, avatar: "" },
-];
-
-const mockConversations = [
-  { id: 1, name: "John Smith", profession: "Plumber", avatar: "", lastMessage: "I can come by tomorrow at 2 PM", timestamp: "2m ago", unread: 2 },
-  { id: 2, name: "Sarah Johnson", profession: "Electrician", avatar: "", lastMessage: "The job is complete. Let me know if you have any questions!", timestamp: "1h ago", unread: 0 },
-  { id: 3, name: "Mike Davis", profession: "Cleaner", avatar: "", lastMessage: "Thanks for the booking!", timestamp: "3h ago", unread: 1 },
-  { id: 4, name: "Emily Chen", profession: "Painter", avatar: "", lastMessage: "I'll bring all the supplies needed", timestamp: "1d ago", unread: 0 },
-  { id: 5, name: "David Wilson", profession: "Handyman", avatar: "", lastMessage: "See you next week!", timestamp: "2d ago", unread: 0 },
-];
-
-const mockInvoices: Invoice[] = [
-  { id: 1, invoiceNumber: "INV-001", client: "John Smith", service: "Plumbing Repair", date: "Dec 15, 2024", amount: 180, status: "Paid" },
-  { id: 2, invoiceNumber: "INV-002", client: "Sarah Johnson", service: "Electrical Wiring", date: "Dec 20, 2024", amount: 220, status: "Pending" },
-  { id: 3, invoiceNumber: "INV-003", client: "Mike Davis", service: "Deep Cleaning", date: "Nov 28, 2024", amount: 150, status: "Paid" },
-  { id: 4, invoiceNumber: "INV-004", client: "Emily Chen", service: "Interior Painting", date: "Nov 10, 2024", amount: 400, status: "Overdue" },
-  { id: 5, invoiceNumber: "INV-005", client: "David Wilson", service: "Home Organization", date: "Oct 25, 2024", amount: 200, status: "Paid" },
-];
+const BOOKING_STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  accepted: "Upcoming",
+  completed: "Completed",
+  canceled: "Cancelled",
+};
 
 // ─── Defaults & helpers ───────────────────────────────────────────────────────
 
@@ -159,6 +141,25 @@ export default function ProfilePage() {
     useState<ProfileAvailabilityFormValues>(defaultAvailability);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+
+  // Real data for panels
+  const [chatPreviews, setChatPreviews] = useState<
+    { id: number | string; name: string; profession: string; avatar: string; lastMessage: string; timestamp: string; unread: number }[]
+  >([]);
+  const [bookingPreviews, setBookingPreviews] = useState<
+    { id: number | string; worker: string; service: string; date: string; status: string }[]
+  >([]);
+
+  // Sub-profile dialog
+  const [directoryDialogOpen, setDirectoryDialogOpen] = useState(false);
+
+  // Sub-profile context
+  const {
+    subProfiles,
+    activeSubProfileId,
+    setActiveSubProfileId,
+    refreshSubProfiles,
+  } = useSubProfile();
 
   // Whether the user has a worker profile (determines empty vs full UI)
   const hasMainProfile = workerId !== null;
@@ -316,18 +317,119 @@ export default function ProfilePage() {
       );
     }
 
+    // Refresh sub-profiles from DB (handles return from /become-worker)
+    await refreshSubProfiles();
+
+    // Load chat previews for the messages panel
+    type ChatUserRow = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
+    type MsgRow = { id: number; message_text: string | null; created_at: string; sender_id: string; receiver_id: string; status: string };
+    type ChatRow = {
+      id: number;
+      customer_id: string;
+      worker_id: string;
+      customer: ChatUserRow | null;
+      worker: ChatUserRow | null;
+      messages: MsgRow[];
+    };
+
+    const { data: chatsData } = await supabase
+      .from("chats")
+      .select(`
+        id,
+        customer_id,
+        worker_id,
+        customer:users!chats_customer_id_fkey(id, firstname, lastname, profile_pic_url),
+        worker:users!chats_worker_id_fkey(id, firstname, lastname, profile_pic_url),
+        messages(id, message_text, created_at, sender_id, receiver_id, status)
+      `)
+      .or(`customer_id.eq.${user.id},worker_id.eq.${user.id}`)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (chatsData) {
+      const chats = chatsData as unknown as ChatRow[];
+      setChatPreviews(
+        chats.map((chat) => {
+          const otherUser =
+            chat.customer_id === user.id ? chat.worker : chat.customer;
+          const name = otherUser
+            ? `${otherUser.firstname} ${otherUser.lastname}`
+            : "Unknown";
+          const avatar = otherUser?.profile_pic_url ?? "";
+          const msgs = chat.messages ?? [];
+          const lastMsg = msgs.sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          )[0];
+          const unread = msgs.filter(
+            (m) => m.receiver_id === user.id && m.status !== "read",
+          ).length;
+          return {
+            id: chat.id,
+            name,
+            profession: "",
+            avatar,
+            lastMessage: lastMsg?.message_text ?? "",
+            timestamp: lastMsg ? timeAgo(lastMsg.created_at) : "",
+            unread,
+          };
+        }),
+      );
+    }
+
+    // Load booking previews for the bookings panel
+    type BookingRow = {
+      id: number;
+      status: string;
+      requested_at: string | null;
+      worker: { user: { firstname: string; lastname: string } | null } | null;
+      category: { name: string | null } | null;
+    };
+
+    const { data: bookingsData } = await supabase
+      .from("bookings")
+      .select(`
+        id,
+        status,
+        requested_at,
+        worker:workers!bookings_worker_id_fkey(
+          user:users!workers_user_id_fkey(firstname, lastname)
+        ),
+        category:categories!bookings_category_id_fkey(name)
+      `)
+      .eq("customer_id", user.id)
+      .order("requested_at", { ascending: false })
+      .limit(5);
+
+    if (bookingsData) {
+      const bookings = bookingsData as unknown as BookingRow[];
+      setBookingPreviews(
+        bookings.map((b) => ({
+          id: b.id,
+          worker: b.worker?.user
+            ? `${b.worker.user.firstname} ${b.worker.user.lastname}`
+            : "Unknown Worker",
+          service: b.category?.name ?? "Service",
+          date: b.requested_at
+            ? new Date(b.requested_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "",
+          status: BOOKING_STATUS_LABEL[b.status] ?? b.status,
+        })),
+      );
+    }
+
     setLoading(false);
-  }, []);
+  }, [refreshSubProfiles]);
 
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
 
   // Notification counts for sidebar badges
-  const unreadMessagesCount = mockConversations.reduce(
-    (sum, c) => sum + c.unread,
-    0,
-  );
+  const unreadMessagesCount = chatPreviews.reduce((sum, c) => sum + c.unread, 0);
   const newReviewsCount = 0; // real reviews don't carry an isNew flag
 
   async function handleHeaderSave(data: ProfileHeaderFormValues) {
@@ -405,6 +507,17 @@ export default function ProfilePage() {
     setAvailability(data);
   }
 
+  async function handleSubProfileSave(id: string, updates: Partial<SubProfile>) {
+    await updateSubProfile(id, updates);
+    await refreshSubProfiles();
+  }
+
+  async function handleSubProfileDelete(id: string) {
+    await deleteSubProfile(id);
+    setActiveSubProfileId(null);
+    await refreshSubProfiles();
+  }
+
   function renderDetailPanel() {
     switch (activeSection) {
       case "profile":
@@ -423,12 +536,12 @@ export default function ProfilePage() {
           </>
         );
       case "messages":
-        return <ProfileMessagesPanel conversations={mockConversations} />;
+        return <ProfileMessagesPanel conversations={chatPreviews} />;
       case "bookings":
         return (
           <ProfileBookingsPanel
-            bookings={mockBookings}
-            bookmarkedWorkers={mockBookmarked}
+            bookings={bookingPreviews}
+            bookmarkedWorkers={[]}
           />
         );
       case "gallery":
@@ -442,7 +555,16 @@ export default function ProfilePage() {
           />
         );
       case "invoices":
-        return <ProfileInvoices invoices={mockInvoices} />;
+        return <ProfileInvoices invoices={[] as Invoice[]} />;
+      case "settings":
+        return (
+          <ProfileSubProfileSettings
+            activeSubProfileId={activeSubProfileId}
+            subProfiles={subProfiles}
+            onSave={handleSubProfileSave}
+            onDelete={handleSubProfileDelete}
+          />
+        );
     }
   }
 
@@ -465,6 +587,12 @@ export default function ProfilePage() {
 
             {hasMainProfile ? (
               <>
+                {/* Sub-profile switcher bar */}
+                <SubProfileBar
+                  hasMainProfile={hasMainProfile}
+                  onCreateClick={() => setDirectoryDialogOpen(true)}
+                />
+
                 {/* Mobile sidebar nav */}
                 <div className="md:hidden mt-6">
                   <ProfileSidebar
@@ -510,6 +638,13 @@ export default function ProfilePage() {
           </>
         )}
       </div>
+
+      {/* Directory selection dialog — opened by SubProfileBar "Create" button */}
+      <DirectorySelectionDialog
+        open={directoryDialogOpen}
+        onOpenChange={setDirectoryDialogOpen}
+        profileType="sub"
+      />
     </div>
   );
 }

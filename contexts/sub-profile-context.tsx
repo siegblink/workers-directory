@@ -1,10 +1,15 @@
 "use client";
 
 import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { generateSubProfileMockData } from "@/lib/mock-data/sub-profile-mock";
-import type { DirectoryId, SubProfile } from "@/lib/types/sub-profile";
+import {
+  deleteSubProfile,
+  getMySubProfiles,
+  updateSubProfile,
+} from "@/lib/database/queries/sub-profiles";
+import type { SubProfile } from "@/lib/database/types";
+import type { DirectoryId } from "@/lib/types/sub-profile";
 
 type PendingDirectory = {
   id: DirectoryId;
@@ -17,18 +22,13 @@ type SubProfileContextType = {
   subProfiles: SubProfile[];
   activeSubProfileId: string | null;
   setActiveSubProfileId: (id: string | null) => void;
-  addSubProfile: (
-    directoryId: DirectoryId,
-    directoryLabel: string,
-  ) => SubProfile;
-  removeSubProfile: (id: string) => void;
-  renameSubProfile: (id: string, newLabel: string) => void;
+  renameSubProfile: (id: string, newLabel: string) => Promise<void>;
+  removeSubProfile: (id: string) => Promise<void>;
+  refreshSubProfiles: () => Promise<void>;
   pendingDirectory: PendingDirectory;
   setPendingDirectory: (dir: PendingDirectory) => void;
   pendingProfileType: PendingProfileType;
   setPendingProfileType: (type: PendingProfileType) => void;
-  hasMainProfile: boolean;
-  setHasMainProfile: (value: boolean) => void;
 };
 
 const SubProfileContext = createContext<SubProfileContextType | undefined>(
@@ -36,10 +36,6 @@ const SubProfileContext = createContext<SubProfileContextType | undefined>(
 );
 
 export const MAX_PROFILES = 20;
-
-const STORAGE_KEY = "sub-profiles";
-const ACTIVE_KEY = "sub-profiles-active";
-const MAIN_PROFILE_KEY = "has-main-profile";
 
 export function SubProfileProvider({
   children,
@@ -54,58 +50,25 @@ export function SubProfileProvider({
     useState<PendingDirectory>(null);
   const [pendingProfileType, setPendingProfileType] =
     useState<PendingProfileType>("sub");
-  const [hasMainProfile, setHasMainProfileState] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Hydrate from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as SubProfile[];
-        setSubProfiles(parsed);
-      }
-      const storedActive = localStorage.getItem(ACTIVE_KEY);
-      if (storedActive) {
-        setActiveSubProfileIdState(storedActive);
-      }
-      const storedMainProfile = localStorage.getItem(MAIN_PROFILE_KEY);
-      if (storedMainProfile === "true") {
-        setHasMainProfileState(true);
-      }
-    } catch {
-      // Silently fail if localStorage is unavailable
-    }
-    setIsHydrated(true);
+  const refreshSubProfiles = useCallback(async () => {
+    const result = await getMySubProfiles();
+    setSubProfiles(result.data ?? []);
   }, []);
 
-  function persistProfiles(profiles: SubProfile[]) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
-    } catch {
-      // Silently fail
-    }
-  }
+  useEffect(() => {
+    refreshSubProfiles();
+  }, [refreshSubProfiles]);
 
   function setActiveSubProfileId(id: string | null) {
     setActiveSubProfileIdState(id);
-    try {
-      if (id) {
-        localStorage.setItem(ACTIVE_KEY, id);
-      } else {
-        localStorage.removeItem(ACTIVE_KEY);
-      }
-    } catch {
-      // Silently fail
-    }
-
     if (id) {
       const profile = subProfiles.find((p) => p.id === id);
       if (profile) {
         const label =
-          profile.directoryLabel.length > 20
-            ? `${profile.directoryLabel.slice(0, 20)}…`
-            : profile.directoryLabel;
+          profile.label.length > 20
+            ? `${profile.label.slice(0, 20)}…`
+            : profile.label;
         toast(`Switched to ${label} sub-profile`);
       }
     } else {
@@ -113,69 +76,36 @@ export function SubProfileProvider({
     }
   }
 
-  function addSubProfile(
-    directoryId: DirectoryId,
-    directoryLabel: string,
-  ): SubProfile {
-    const totalProfiles = (hasMainProfile ? 1 : 0) + subProfiles.length;
-    if (totalProfiles >= MAX_PROFILES) {
-      toast.error(`You can have at most ${MAX_PROFILES} profiles.`);
-      setPendingDirectory(null);
-      return null as unknown as SubProfile;
-    }
-
-    const newProfile = generateSubProfileMockData(directoryId, directoryLabel);
-    const updated = [...subProfiles, newProfile];
-    setSubProfiles(updated);
-    persistProfiles(updated);
-    setActiveSubProfileId(newProfile.id);
-    setPendingDirectory(null);
-    return newProfile;
-  }
-
-  function removeSubProfile(id: string) {
-    const updated = subProfiles.filter((p) => p.id !== id);
-    setSubProfiles(updated);
-    persistProfiles(updated);
-    if (activeSubProfileId === id) {
-      setActiveSubProfileId(null);
+  async function renameSubProfile(id: string, newLabel: string) {
+    const result = await updateSubProfile(id, { label: newLabel });
+    if (!result.error) {
+      setSubProfiles((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, label: newLabel } : p)),
+      );
     }
   }
 
-  function setHasMainProfile(value: boolean) {
-    setHasMainProfileState(value);
-    try {
-      if (value) {
-        localStorage.setItem(MAIN_PROFILE_KEY, "true");
-      } else {
-        localStorage.removeItem(MAIN_PROFILE_KEY);
+  async function removeSubProfile(id: string) {
+    const result = await deleteSubProfile(id);
+    if (!result.error) {
+      setSubProfiles((prev) => prev.filter((p) => p.id !== id));
+      if (activeSubProfileId === id) {
+        setActiveSubProfileIdState(null);
       }
-    } catch {
-      // Silently fail
     }
-  }
-
-  function renameSubProfile(id: string, newLabel: string) {
-    const updated = subProfiles.map((p) =>
-      p.id === id ? { ...p, directoryLabel: newLabel } : p,
-    );
-    setSubProfiles(updated);
-    persistProfiles(updated);
   }
 
   const value: SubProfileContextType = {
-    subProfiles: isHydrated ? subProfiles : [],
-    activeSubProfileId: isHydrated ? activeSubProfileId : null,
+    subProfiles,
+    activeSubProfileId,
     setActiveSubProfileId,
-    addSubProfile,
-    removeSubProfile,
     renameSubProfile,
+    removeSubProfile,
+    refreshSubProfiles,
     pendingDirectory,
     setPendingDirectory,
     pendingProfileType,
     setPendingProfileType,
-    hasMainProfile: isHydrated ? hasMainProfile : false,
-    setHasMainProfile,
   };
 
   return (

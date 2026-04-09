@@ -54,40 +54,86 @@ export default function BecomeWorkerPage() {
   const [categoriesError, setCategoriesError] = useState(false);
   const [categoriesErrorTimestamp, setCategoriesErrorTimestamp] = useState<string | null>(null);
   const [termsError, setTermsError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [hasExistingWorker, setHasExistingWorker] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchInitialData() {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("categories")
-        .select("name")
-        .order("name", { ascending: true });
-      if (error || !data || data.length === 0) {
+
+      // Fetch categories and check for existing worker record in parallel
+      const [catResult, authResult] = await Promise.all([
+        supabase.from("categories").select("name").order("name", { ascending: true }),
+        supabase.auth.getUser(),
+      ]);
+
+      if (catResult.error || !catResult.data || catResult.data.length === 0) {
         setCategoriesError(true);
         setCategoriesErrorTimestamp(new Date().toISOString());
       } else {
-        setJobTitleOptions(data.map((c: { name: string }) => c.name));
+        setJobTitleOptions(catResult.data.map((c: { name: string }) => c.name));
       }
       setCategoriesLoading(false);
+
+      const user = authResult.data.user;
+      if (user) {
+        setUserId(user.id);
+        const { data: worker } = await supabase
+          .from("workers")
+          .select("id")
+          .eq("user_id", user.id)
+          .is("deleted_at", null)
+          .maybeSingle();
+        setHasExistingWorker(!!worker);
+      }
     }
-    fetchCategories();
+    fetchInitialData();
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (step === 2 && !formData.jobTitle) return;
     if (step < 3) {
       setStep(step + 1);
-    } else {
-      if (!formData.agreeToTerms) {
-        setTermsError(true);
-        return;
-      }
-      toast("Application submitted successfully");
-      router.push("/profile");
+      return;
     }
+    if (!formData.agreeToTerms) {
+      setTermsError(true);
+      return;
+    }
+    if (!userId) return;
+
+    setSubmitting(true);
+    const supabase = createClient();
+
+    if (!hasExistingWorker) {
+      // Create main worker profile
+      await supabase.from("workers").insert({
+        user_id: userId,
+        profession: formData.jobTitle,
+        years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
+        status: "available",
+      });
+      if (formData.bio.trim()) {
+        await supabase.from("users").update({ bio: formData.bio.trim() }).eq("id", userId);
+      }
+    } else {
+      // Create sub-profile (user already has a main worker profile)
+      await supabase.from("sub_profiles").insert({
+        user_id: userId,
+        label: formData.jobTitle,
+        profession: formData.jobTitle,
+        years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
+        status: "available",
+      });
+    }
+
+    setSubmitting(false);
+    toast("Profile created successfully");
+    router.push("/profile");
   }
 
   return (
@@ -361,12 +407,13 @@ export default function BecomeWorkerPage() {
                       variant="outline"
                       onClick={() => setStep(step - 1)}
                       className="flex-1"
+                      disabled={submitting}
                     >
                       Back
                     </Button>
                   )}
-                  <Button type="submit" className="flex-1">
-                    {step === 3 ? "Submit Application" : "Continue"}
+                  <Button type="submit" className="flex-1" disabled={submitting}>
+                    {submitting ? "Submitting…" : step === 3 ? "Submit Application" : "Continue"}
                   </Button>
                 </div>
               </form>

@@ -6,6 +6,7 @@ import {
   FileText,
   Images,
   MessageSquare,
+  Settings2,
   Star,
   User,
 } from "lucide-react";
@@ -43,6 +44,12 @@ const sidebarItems: SidebarItem[] = [
     icon: FileText,
     href: "/profile/invoices",
   },
+  {
+    key: "settings",
+    label: "Settings",
+    icon: Settings2,
+    href: "/profile/settings",
+  },
 ];
 
 export type ProfileSection =
@@ -51,7 +58,8 @@ export type ProfileSection =
   | "bookings"
   | "gallery"
   | "reviews"
-  | "invoices";
+  | "invoices"
+  | "settings";
 
 export const validSections: ProfileSection[] = [
   "profile",
@@ -60,6 +68,7 @@ export const validSections: ProfileSection[] = [
   "gallery",
   "reviews",
   "invoices",
+  "settings",
 ];
 
 type ProfileSidebarProps = {

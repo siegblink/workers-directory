@@ -2,10 +2,7 @@
 
 import { Bookmark, Star } from "lucide-react";
 import Link from "next/link";
-import type {
-  Booking,
-  BookmarkedWorker,
-} from "@/components/profile/profile-tabs";
+import type { Booking, BookmarkedWorker } from "@/components/profile/profile-tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +13,7 @@ type ProfileBookingsPanelProps = {
   bookings: Booking[];
   bookmarkedWorkers: BookmarkedWorker[];
 };
+
 
 export function ProfileBookingsPanel({
   bookings,
@@ -73,9 +71,11 @@ export function ProfileBookingsPanel({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-foreground">
-                        ${booking.amount}
-                      </p>
+                      {booking.amount != null && (
+                        <p className="text-xl font-bold text-foreground">
+                          ${booking.amount}
+                        </p>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

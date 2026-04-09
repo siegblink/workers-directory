@@ -23,7 +23,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { useSubProfile } from "@/contexts/sub-profile-context";
-import type { SubProfile } from "@/lib/types/sub-profile";
+import type { SubProfile } from "@/lib/database/types";
 
 type ProfileSettingsProps = {
   subProfile: SubProfile;
@@ -33,7 +33,7 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
   const { renameSubProfile, removeSubProfile } = useSubProfile();
   const router = useRouter();
 
-  const [label, setLabel] = useState(subProfile.directoryLabel);
+  const [label, setLabel] = useState(subProfile.label);
   const [isSaving, setIsSaving] = useState(false);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -41,12 +41,11 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
   const [confirmText, setConfirmText] = useState("");
 
   const isLabelChanged =
-    label.trim() !== "" && label.trim() !== subProfile.directoryLabel;
+    label.trim() !== "" && label.trim() !== subProfile.label;
 
   async function handleSaveLabel() {
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    renameSubProfile(subProfile.id, label.trim());
+    await renameSubProfile(subProfile.id, label.trim());
     setIsSaving(false);
     toast.success("Sub-profile label updated");
   }
@@ -57,12 +56,12 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
     setDeleteDialogOpen(true);
   }
 
-  function handleConfirmDelete() {
-    removeSubProfile(subProfile.id);
+  async function handleConfirmDelete() {
+    await removeSubProfile(subProfile.id);
     setDeleteDialogOpen(false);
     router.push("/profile");
     toast.success(
-      `Sub-profile "${subProfile.directoryLabel}" has been deleted`,
+      `Sub-profile "${subProfile.label}" has been deleted`,
     );
   }
 
@@ -136,7 +135,7 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
                   <div className="space-y-3 pt-2">
                     <p>
                       This will permanently delete the{" "}
-                      <strong>{subProfile.directoryLabel}</strong> sub-profile.
+                      <strong>{subProfile.label}</strong> sub-profile.
                     </p>
                     <p>
                       All associated data (bio, skills, availability, portfolio,
@@ -171,7 +170,7 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
                   <div className="space-y-3 pt-2">
                     <p>
                       To confirm, type{" "}
-                      <strong>{subProfile.directoryLabel}</strong> in the box
+                      <strong>{subProfile.label}</strong> in the box
                       below.
                     </p>
                   </div>
@@ -181,7 +180,7 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
                 <InputGroupInput
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder={subProfile.directoryLabel}
+                  placeholder={subProfile.label}
                   autoFocus
                 />
               </InputGroup>
@@ -194,7 +193,7 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
                 </Button>
                 <Button
                   variant="destructive"
-                  disabled={confirmText !== subProfile.directoryLabel}
+                  disabled={confirmText !== subProfile.label}
                   onClick={handleConfirmDelete}
                 >
                   Confirm delete

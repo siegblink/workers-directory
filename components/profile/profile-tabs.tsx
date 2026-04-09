@@ -9,35 +9,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export interface Booking {
-  id: number;
+export type Booking = {
+  id: number | string;
   worker: string;
   service: string;
   date: string;
   status: string;
-  amount: number;
-}
+  amount?: number;
+};
 
-export interface BookmarkedWorker {
-  id: number;
+export type BookmarkedWorker = {
+  id: number | string;
   name: string;
   profession: string;
   rating: number;
   hourlyRate: number;
   avatar: string;
-}
+};
 
-export interface Conversation {
-  id: number;
+export type Conversation = {
+  id: number | string;
   name: string;
   profession: string;
   avatar: string;
   lastMessage: string;
   timestamp: string;
   unread: number;
-}
+};
 
-interface ProfileTabsProps {
+type ProfileTabsProps = {
   bookings: Booking[];
   bookmarkedWorkers: BookmarkedWorker[];
   conversations: Conversation[];
@@ -148,9 +148,11 @@ export function ProfileTabs({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-foreground">
-                        ${booking.amount}
-                      </p>
+                      {booking.amount != null && (
+                        <p className="text-xl font-bold text-foreground">
+                          ${booking.amount}
+                        </p>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
