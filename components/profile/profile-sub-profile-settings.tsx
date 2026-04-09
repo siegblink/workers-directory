@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
@@ -79,12 +80,7 @@ export function ProfileSubProfileSettings({
         <CardContent>
           <Alert>
             <AlertDescription>
-              You&apos;re viewing your main profile. Select a sub-profile above
-              to manage its settings, or visit{" "}
-              <Link href="/settings" className="underline underline-offset-2">
-                Settings
-              </Link>{" "}
-              to update your main profile.
+              You&apos;re viewing your main profile. Select a sub-profile above to manage its settings, or visit <Link href="/settings" className="underline underline-offset-2">Settings</Link> to update your main profile.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -101,6 +97,7 @@ export function ProfileSubProfileSettings({
       hourly_rate_max: data.hourly_rate_max ? parseFloat(data.hourly_rate_max) : null,
       years_experience: data.years_experience ? parseInt(data.years_experience, 10) : null,
     });
+    toast.success("Changes saved");
   }
 
   async function handleDelete() {

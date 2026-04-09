@@ -388,48 +388,62 @@ export default function ProfilePage() {
       );
     }
 
-    // Load booking previews for the bookings panel
-    type BookingRow = {
-      id: number;
-      status: string;
-      requested_at: string | null;
-      worker: { user: { firstname: string; lastname: string } | null } | null;
-      category: { name: string | null } | null;
-    };
+    // Load booking previews — avoid FK hints; use plain queries merged in memory
+    type RawBooking = { id: number; status: string; requested_at: string | null; worker_id: string | null; category_id: number | null };
+    type RawWorkerRow = { id: string; user_id: string };
+    type RawWorkerUser = { id: string; firstname: string; lastname: string };
+    type RawCategory = { id: number; name: string };
 
-    const { data: bookingsData } = await supabase
+    const { data: rawBookings } = await supabase
       .from("bookings")
-      .select(`
-        id,
-        status,
-        requested_at,
-        worker:workers!bookings_worker_id_fkey(
-          user:users!workers_user_id_fkey(firstname, lastname)
-        ),
-        category:categories!bookings_category_id_fkey(name)
-      `)
+      .select("id, status, requested_at, worker_id, category_id")
       .eq("customer_id", user.id)
       .order("requested_at", { ascending: false })
       .limit(5);
 
-    if (bookingsData) {
-      const bookings = bookingsData as unknown as BookingRow[];
+    if (rawBookings && rawBookings.length > 0) {
+      const bookings = rawBookings as RawBooking[];
+      const bookingWorkerIds = [...new Set(bookings.map((b) => b.worker_id).filter((id): id is string => !!id))];
+      const bookingCategoryIds = [...new Set(bookings.map((b) => b.category_id).filter((id): id is number => id !== null))];
+
+      const [workersResult, categoriesResult] = await Promise.all([
+        bookingWorkerIds.length > 0
+          ? supabase.from("workers").select("id, user_id").in("id", bookingWorkerIds)
+          : Promise.resolve({ data: [] }),
+        bookingCategoryIds.length > 0
+          ? supabase.from("categories").select("id, name").in("id", bookingCategoryIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const workerRows = (workersResult.data ?? []) as RawWorkerRow[];
+      const workerUserIds = [...new Set(workerRows.map((w) => w.user_id).filter(Boolean))];
+
+      const { data: workerUsersData } = workerUserIds.length > 0
+        ? await supabase.from("users").select("id, firstname, lastname").in("id", workerUserIds)
+        : { data: [] };
+
+      const workerToUserIdMap = new Map(workerRows.map((w) => [w.id, w.user_id]));
+      const workerUserMap = new Map(((workerUsersData ?? []) as RawWorkerUser[]).map((u) => [u.id, u]));
+      const categoryMap = new Map(((categoriesResult.data ?? []) as RawCategory[]).map((c) => [c.id, c.name]));
+
       setBookingPreviews(
-        bookings.map((b) => ({
-          id: b.id,
-          worker: b.worker?.user
-            ? `${b.worker.user.firstname} ${b.worker.user.lastname}`
-            : "Unknown Worker",
-          service: b.category?.name ?? "Service",
-          date: b.requested_at
-            ? new Date(b.requested_at).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
-            : "",
-          status: BOOKING_STATUS_LABEL[b.status] ?? b.status,
-        })),
+        bookings.map((b) => {
+          const workerUserId = b.worker_id ? workerToUserIdMap.get(b.worker_id) : null;
+          const workerUser = workerUserId ? workerUserMap.get(workerUserId) : null;
+          return {
+            id: b.id,
+            worker: workerUser ? `${workerUser.firstname} ${workerUser.lastname}` : "Unknown Worker",
+            service: b.category_id !== null ? (categoryMap.get(b.category_id) ?? "Service") : "Service",
+            date: b.requested_at
+              ? new Date(b.requested_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "",
+            status: BOOKING_STATUS_LABEL[b.status] ?? b.status,
+          };
+        }),
       );
     }
 
@@ -524,6 +538,20 @@ export default function ProfilePage() {
     await refreshSubProfiles();
   }
 
+  async function handleAboutSaveForActiveProfile(data: ProfileAboutFormValues) {
+    if (activeSubProfileId) {
+      // Bio is user-level; skills are per sub-profile
+      if (userId) {
+        const supabase = createClient();
+        await supabase.from("users").update({ bio: data.bio }).eq("id", userId);
+        setBio(data.bio);
+      }
+      await handleSubProfileSave(activeSubProfileId, { skills: data.skills });
+    } else {
+      await handleAboutSave(data);
+    }
+  }
+
   async function handleSubProfileDelete(id: string) {
     await deleteSubProfile(id);
     setActiveSubProfileId(null);
@@ -532,14 +560,17 @@ export default function ProfilePage() {
 
   function renderDetailPanel() {
     switch (activeSection) {
-      case "profile":
+      case "profile": {
+        const activeSubProfile = activeSubProfileId
+          ? (subProfiles.find((sp) => sp.id === activeSubProfileId) ?? null)
+          : null;
         return (
           <>
             <ProfileAbout
               bio={bio}
-              skills={skills}
-              profileLabel="Main Profile"
-              onSave={handleAboutSave}
+              skills={activeSubProfile ? activeSubProfile.skills : skills}
+              profileLabel={activeSubProfile ? activeSubProfile.label : "Main Profile"}
+              onSave={handleAboutSaveForActiveProfile}
             />
             <ProfileAvailability
               availability={availability}
@@ -547,6 +578,7 @@ export default function ProfilePage() {
             />
           </>
         );
+      }
       case "messages":
         return <ProfileMessagesPanel conversations={chatPreviews} />;
       case "bookings":
