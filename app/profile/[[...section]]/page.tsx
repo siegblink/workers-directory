@@ -320,16 +320,21 @@ export default function ProfilePage() {
     // Refresh sub-profiles from DB (handles return from /become-worker)
     await refreshSubProfiles();
 
-    // Load chat previews for the messages panel
+    // Load chat previews for the messages panel (two-step: chats then messages)
     type ChatUserRow = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
-    type MsgRow = { id: number; message_text: string | null; created_at: string; sender_id: string; receiver_id: string; status: string };
     type ChatRow = {
       id: number;
       customer_id: string;
       worker_id: string;
       customer: ChatUserRow | null;
       worker: ChatUserRow | null;
-      messages: MsgRow[];
+    };
+    type MsgRow = {
+      chat_id: number;
+      message_text: string | null;
+      created_at: string;
+      receiver_id: string;
+      status: string;
     };
 
     const { data: chatsData } = await supabase
@@ -339,15 +344,24 @@ export default function ProfilePage() {
         customer_id,
         worker_id,
         customer:users!chats_customer_id_fkey(id, firstname, lastname, profile_pic_url),
-        worker:users!chats_worker_id_fkey(id, firstname, lastname, profile_pic_url),
-        messages(id, message_text, created_at, sender_id, receiver_id, status)
+        worker:users!chats_worker_id_fkey(id, firstname, lastname, profile_pic_url)
       `)
       .or(`customer_id.eq.${user.id},worker_id.eq.${user.id}`)
       .order("created_at", { ascending: false })
       .limit(5);
 
-    if (chatsData) {
+    if (chatsData && chatsData.length > 0) {
       const chats = chatsData as unknown as ChatRow[];
+      const chatIds = chats.map((c) => c.id);
+
+      const { data: msgsData } = await supabase
+        .from("messages")
+        .select("chat_id, message_text, created_at, receiver_id, status")
+        .in("chat_id", chatIds)
+        .order("created_at", { ascending: false });
+
+      const msgs = (msgsData ?? []) as MsgRow[];
+
       setChatPreviews(
         chats.map((chat) => {
           const otherUser =
@@ -356,11 +370,9 @@ export default function ProfilePage() {
             ? `${otherUser.firstname} ${otherUser.lastname}`
             : "Unknown";
           const avatar = otherUser?.profile_pic_url ?? "";
-          const msgs = chat.messages ?? [];
-          const lastMsg = msgs.sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-          )[0];
-          const unread = msgs.filter(
+          const chatMsgs = msgs.filter((m) => m.chat_id === chat.id);
+          const lastMsg = chatMsgs[0] ?? null; // already sorted desc
+          const unread = chatMsgs.filter(
             (m) => m.receiver_id === user.id && m.status !== "read",
           ).length;
           return {
