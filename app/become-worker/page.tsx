@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useSubProfile } from "@/contexts/sub-profile-context";
 import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ export default function BecomeWorkerPage() {
   const [hasExistingWorker, setHasExistingWorker] = useState(false);
 
   const router = useRouter();
+  const { selectSubProfileSilently } = useSubProfile();
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -122,23 +124,30 @@ export default function BecomeWorkerPage() {
       }
     } else {
       // Create sub-profile (user already has a main worker profile)
-      await supabase.from("sub_profiles").insert({
-        user_id: userId,
-        label: formData.jobTitle,
-        profession: formData.jobTitle,
-        bio: formData.bio.trim() || null,
-        years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
-        status: "available",
-        availability: {
-          monday: "9:00 AM - 5:00 PM",
-          tuesday: "9:00 AM - 5:00 PM",
-          wednesday: "9:00 AM - 5:00 PM",
-          thursday: "9:00 AM - 5:00 PM",
-          friday: "9:00 AM - 5:00 PM",
-          saturday: "Closed",
-          sunday: "Closed",
-        },
-      });
+      const { data: newSubProfile } = await supabase
+        .from("sub_profiles")
+        .insert({
+          user_id: userId,
+          label: formData.jobTitle,
+          profession: formData.jobTitle,
+          bio: formData.bio.trim() || null,
+          years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
+          status: "available",
+          availability: {
+            monday: "9:00 AM - 5:00 PM",
+            tuesday: "9:00 AM - 5:00 PM",
+            wednesday: "9:00 AM - 5:00 PM",
+            thursday: "9:00 AM - 5:00 PM",
+            friday: "9:00 AM - 5:00 PM",
+            saturday: "Closed",
+            sunday: "Closed",
+          },
+        })
+        .select("id")
+        .single();
+      if (newSubProfile) {
+        selectSubProfileSilently((newSubProfile as { id: string }).id);
+      }
     }
 
     setSubmitting(false);

@@ -22,6 +22,8 @@ type SubProfileContextType = {
   subProfiles: SubProfile[];
   activeSubProfileId: string | null;
   setActiveSubProfileId: (id: string | null) => void;
+  /** Pre-select a sub-profile by ID without showing a toast (used after creation). */
+  selectSubProfileSilently: (id: string) => void;
   renameSubProfile: (id: string, newLabel: string) => Promise<void>;
   removeSubProfile: (id: string) => Promise<void>;
   refreshSubProfiles: () => Promise<void>;
@@ -59,6 +61,10 @@ export function SubProfileProvider({
   useEffect(() => {
     refreshSubProfiles();
   }, [refreshSubProfiles]);
+
+  function selectSubProfileSilently(id: string) {
+    setActiveSubProfileIdState(id);
+  }
 
   function setActiveSubProfileId(id: string | null) {
     setActiveSubProfileIdState(id);
@@ -99,6 +105,7 @@ export function SubProfileProvider({
     subProfiles,
     activeSubProfileId,
     setActiveSubProfileId,
+    selectSubProfileSilently,
     renameSubProfile,
     removeSubProfile,
     refreshSubProfiles,
