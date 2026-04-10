@@ -199,16 +199,28 @@ export function ProfileAbout({
         </FieldGroup>
       ) : (
         <>
-          <p className="text-foreground leading-relaxed mb-6">{bio}</p>
+          {bio ? (
+            <p className="text-foreground leading-relaxed mb-6">{bio}</p>
+          ) : (
+            <p className="text-muted-foreground leading-relaxed mb-6 italic">
+              No bio yet. Click Edit to describe your services and experience.
+            </p>
+          )}
 
           <h4 className="font-semibold mb-3">Skills & Expertise</h4>
-          <div className="flex flex-wrap gap-2">
-            {skills.map((skill) => (
-              <Badge key={skill} variant="secondary" className="text-sm p-2">
-                {skill}
-              </Badge>
-            ))}
-          </div>
+          {skills.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {skills.map((skill) => (
+                <Badge key={skill} variant="secondary" className="text-sm p-2">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm italic">
+              No skills listed yet. Click Edit to add your areas of expertise.
+            </p>
+          )}
         </>
       )}
     </EditSectionWrapper>
