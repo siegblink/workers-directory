@@ -29,6 +29,9 @@ type ProfileAboutProps = {
   bio: string;
   skills: string[];
   profileLabel?: string;
+  hourlyRateMin?: number | null;
+  hourlyRateMax?: number | null;
+  yearsExperience?: number | null;
   onSave: (data: ProfileAboutFormValues) => Promise<void>;
 };
 
@@ -36,6 +39,9 @@ export function ProfileAbout({
   bio,
   skills,
   profileLabel,
+  hourlyRateMin,
+  hourlyRateMax,
+  yearsExperience,
   onSave,
 }: ProfileAboutProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -231,6 +237,36 @@ export function ProfileAbout({
             <p className="text-muted-foreground italic">
               No skills listed yet. Click Edit to add your areas of expertise.
             </p>
+          )}
+
+          {(hourlyRateMin != null || yearsExperience != null) && (
+            <div className="mt-6 pt-6 border-t border-border grid grid-cols-2 gap-4">
+              {hourlyRateMin != null && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Hourly Rate</p>
+                  <p className="font-semibold text-foreground">
+                    ₱{hourlyRateMin}
+                    {hourlyRateMax != null && hourlyRateMax > hourlyRateMin
+                      ? `–₱${hourlyRateMax}`
+                      : ""}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      /hr
+                    </span>
+                  </p>
+                </div>
+              )}
+              {yearsExperience != null && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Experience</p>
+                  <p className="font-semibold text-foreground">
+                    {yearsExperience}{" "}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      yr{yearsExperience !== 1 ? "s" : ""}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
           )}
         </>
       )}

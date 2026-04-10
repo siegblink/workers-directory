@@ -677,6 +677,9 @@ export default function ProfilePage() {
               bio={activeSubProfile ? (activeSubProfile.bio ?? "") : bio}
               skills={activeSubProfile ? activeSubProfile.skills : skills}
               profileLabel={activeSubProfile ? activeSubProfile.label : "Main Profile"}
+              hourlyRateMin={activeSubProfile ? activeSubProfile.hourly_rate_min : null}
+              hourlyRateMax={activeSubProfile ? activeSubProfile.hourly_rate_max : null}
+              yearsExperience={activeSubProfile ? activeSubProfile.years_experience : null}
               onSave={handleAboutSaveForActiveProfile}
             />
             <ProfileAvailability
