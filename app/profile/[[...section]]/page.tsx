@@ -121,11 +121,34 @@ function timeAgo(dateString: string): string {
 export default function ProfilePage() {
   const params = useParams<{ section?: string[] }>();
 
-  const sectionSlug = params.section?.[0];
-  const activeSection: ProfileSection =
-    sectionSlug && validSections.includes(sectionSlug as ProfileSection)
-      ? (sectionSlug as ProfileSection)
+  // Derive initial section from URL, then track in state.
+  // Tab clicks update state + sync the URL via pushState (no Next.js navigation,
+  // so the component never remounts and loadProfile never re-runs).
+  const [activeSection, setActiveSection] = useState<ProfileSection>(() => {
+    const slug = params.section?.[0];
+    return slug && validSections.includes(slug as ProfileSection)
+      ? (slug as ProfileSection)
       : "profile";
+  });
+
+  function handleSectionChange(section: ProfileSection) {
+    setActiveSection(section);
+    const url = section === "profile" ? "/profile" : `/profile/${section}`;
+    window.history.pushState(null, "", url);
+  }
+
+  // Keep activeSection in sync with browser back/forward buttons.
+  useEffect(() => {
+    function onPopState() {
+      const slug = window.location.pathname.split("/profile/")[1] ?? "";
+      const section = validSections.includes(slug as ProfileSection)
+        ? (slug as ProfileSection)
+        : "profile";
+      setActiveSection(section);
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const [loading, setLoading] = useState(true);
 
@@ -806,6 +829,7 @@ export default function ProfilePage() {
                 <div className="md:hidden mt-6">
                   <ProfileSidebar
                     activeSection={activeSection}
+                    onSectionChange={handleSectionChange}
                     unreadMessagesCount={unreadMessagesCount}
                     newReviewsCount={newReviewsCount}
                   />
@@ -816,6 +840,7 @@ export default function ProfilePage() {
                   {/* Desktop sidebar */}
                   <ProfileSidebar
                     activeSection={activeSection}
+                    onSectionChange={handleSectionChange}
                     unreadMessagesCount={unreadMessagesCount}
                     newReviewsCount={newReviewsCount}
                   />

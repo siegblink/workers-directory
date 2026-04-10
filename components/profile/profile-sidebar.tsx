@@ -10,7 +10,6 @@ import {
   Star,
   User,
 } from "lucide-react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,12 +72,14 @@ export const validSections: ProfileSection[] = [
 
 type ProfileSidebarProps = {
   activeSection: ProfileSection;
+  onSectionChange: (section: ProfileSection) => void;
   unreadMessagesCount?: number;
   newReviewsCount?: number;
 };
 
 export function ProfileSidebar({
   activeSection,
+  onSectionChange,
   unreadMessagesCount = 0,
   newReviewsCount = 0,
 }: ProfileSidebarProps) {
@@ -100,17 +101,15 @@ export function ProfileSidebar({
                   key={item.key}
                   variant={activeSection === item.key ? "secondary" : "ghost"}
                   className="justify-start"
-                  asChild
+                  onClick={() => onSectionChange(item.key as ProfileSection)}
                 >
-                  <Link href={item.href}>
-                    <item.icon />
-                    {item.label}
-                    {count > 0 && (
-                      <Badge className="size-5 rounded-full p-0 text-[10px]">
-                        {count}
-                      </Badge>
-                    )}
-                  </Link>
+                  <item.icon />
+                  {item.label}
+                  {count > 0 && (
+                    <Badge className="size-5 rounded-full p-0 text-[10px]">
+                      {count}
+                    </Badge>
+                  )}
                 </Button>
               );
             })}
@@ -128,17 +127,15 @@ export function ProfileSidebar({
                 key={item.key}
                 variant={activeSection === item.key ? "secondary" : "outline"}
                 size="sm"
-                asChild
+                onClick={() => onSectionChange(item.key as ProfileSection)}
               >
-                <Link href={item.href}>
-                  <item.icon />
-                  {item.label}
-                  {count > 0 && (
-                    <Badge className="size-5 rounded-full p-0 text-[10px]">
-                      {count}
-                    </Badge>
-                  )}
-                </Link>
+                <item.icon />
+                {item.label}
+                {count > 0 && (
+                  <Badge className="size-5 rounded-full p-0 text-[10px]">
+                    {count}
+                  </Badge>
+                )}
               </Button>
             );
           })}
