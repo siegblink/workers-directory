@@ -632,12 +632,12 @@ export default function ProfilePage() {
     if (workerId) {
       await supabase
         .from("workers")
-        .update({ profession: data.profession, hourly_rate_min: data.hourlyRate })
+        .update({ profession: data.profession })
         .eq("id", workerId);
     } else if (data.profession) {
       const { data: newWorker } = await supabase
         .from("workers")
-        .insert({ user_id: userId, profession: data.profession, hourly_rate_min: data.hourlyRate, status: "available" })
+        .insert({ user_id: userId, profession: data.profession, status: "available" })
         .select("id")
         .single();
       if (newWorker) setWorkerId((newWorker as { id: string }).id);
@@ -650,7 +650,6 @@ export default function ProfilePage() {
       statusText: data.statusText ?? prev.statusText,
       profession: data.profession,
       location: data.location,
-      hourlyRate: data.hourlyRate,
     }));
   }
 
@@ -684,10 +683,7 @@ export default function ProfilePage() {
     await Promise.all([
       supabase.from("users").update({ bio: data.bio }).eq("id", userId),
       workerId
-        ? supabase
-            .from("workers")
-            .update({ skills: data.skills })
-            .eq("id", workerId)
+        ? supabase.from("workers").update({ skills: data.skills }).eq("id", workerId)
         : Promise.resolve(),
     ]);
 
@@ -747,7 +743,7 @@ export default function ProfilePage() {
               bio={activeSubProfile ? (activeSubProfile.bio ?? "") : bio}
               skills={activeSubProfile ? activeSubProfile.skills : skills}
               profileLabel={activeSubProfile ? activeSubProfile.label : "Main Profile"}
-              hourlyRateMin={activeSubProfile ? activeSubProfile.hourly_rate_min : null}
+              hourlyRateMin={activeSubProfile ? activeSubProfile.hourly_rate_min : (profile.hourlyRate || null)}
               hourlyRateMax={activeSubProfile ? activeSubProfile.hourly_rate_max : null}
               yearsExperience={activeSubProfile ? activeSubProfile.years_experience : null}
               onSave={handleAboutSaveForActiveProfile}

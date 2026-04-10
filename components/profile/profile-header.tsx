@@ -7,7 +7,6 @@ import {
   Clock,
   MapPin,
   Pencil,
-  PhilippinePeso,
   Shield,
   Star,
 } from "lucide-react";
@@ -81,7 +80,6 @@ export function ProfileHeader({
       statusText: profile.statusText || "",
       profession: profile.profession,
       location: profile.location,
-      hourlyRate: profile.hourlyRate,
     },
   });
 
@@ -92,7 +90,6 @@ export function ProfileHeader({
       statusText: profile.statusText || "",
       profession: profile.profession,
       location: profile.location,
-      hourlyRate: profile.hourlyRate,
     });
     setIsEditing(true);
   };
@@ -296,36 +293,6 @@ export function ProfileHeader({
                         )}
                       />
 
-                      <Controller
-                        control={form.control}
-                        name="hourlyRate"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel htmlFor="hourlyRate">
-                              Hourly Rate (₱)
-                            </FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                id="hourlyRate"
-                                type="number"
-                                min={0}
-                                placeholder="45"
-                                value={field.value ?? ""}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  field.onChange(val === "" ? 0 : Number(val));
-                                }}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                                disabled={form.formState.isSubmitting}
-                                aria-invalid={!!fieldState.error}
-                              />
-                            </InputGroup>
-                            <FieldError>{fieldState.error?.message}</FieldError>
-                          </Field>
-                        )}
-                      />
                     </div>
 
                     <div className="flex gap-2 mt-4">
@@ -437,19 +404,10 @@ export function ProfileHeader({
             <div
               className={
                 !isEditing && showWorkerInfo
-                  ? "grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border"
+                  ? "grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border"
                   : "hidden"
               }
             >
-              <div>
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <PhilippinePeso className="w-4 h-4" />
-                  <span className="text-sm">Hourly Rate</span>
-                </div>
-                <p className="text-2xl font-bold text-foreground">
-                  ₱{profile.hourlyRate}
-                </p>
-              </div>
               <div>
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Calendar className="w-4 h-4" />

@@ -9,10 +9,6 @@ export const profileHeaderSchema = z.object({
     .optional(),
   profession: z.string().min(2, "Profession is required").max(100),
   location: z.string().min(2, "Location is required").max(200),
-  hourlyRate: z
-    .number()
-    .min(0, "Hourly rate must be positive")
-    .max(10000, "Hourly rate seems too high"),
 });
 
 export type ProfileHeaderFormValues = z.infer<typeof profileHeaderSchema>;
