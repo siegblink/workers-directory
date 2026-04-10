@@ -149,6 +149,10 @@ export default function ProfilePage() {
   const [bookingPreviews, setBookingPreviews] = useState<
     { id: number | string; worker: string; service: string; date: string; status: string }[]
   >([]);
+  // Bookings where the user is the service provider (for sub-profile tabs)
+  const [workerBookingPreviews, setWorkerBookingPreviews] = useState<
+    { id: number | string; worker: string; service: string; date: string; status: string; categoryName: string }[]
+  >([]);
 
   // Sub-profile dialog
   const [directoryDialogOpen, setDirectoryDialogOpen] = useState(false);
@@ -447,6 +451,60 @@ export default function ProfilePage() {
       );
     }
 
+    // Load worker-side bookings (for sub-profile tabs)
+    // These are bookings where the user is the service provider
+    if (wid) {
+      type RawWorkerBooking = { id: number; status: string; requested_at: string | null; customer_id: string; category_id: number | null };
+      type RawWBCustomer = { id: string; firstname: string; lastname: string };
+      type RawWBCategory = { id: number; name: string };
+
+      const { data: rawWB } = await supabase
+        .from("bookings")
+        .select("id, status, requested_at, customer_id, category_id")
+        .eq("worker_id", wid)
+        .order("requested_at", { ascending: false })
+        .limit(50);
+
+      if (rawWB && rawWB.length > 0) {
+        const wb = rawWB as RawWorkerBooking[];
+        const wbCustomerIds = [...new Set(wb.map((b) => b.customer_id).filter(Boolean))];
+        const wbCategoryIds = [...new Set(wb.map((b) => b.category_id).filter((id): id is number => id !== null))];
+
+        const [wbCustomersResult, wbCategoriesResult] = await Promise.all([
+          wbCustomerIds.length > 0
+            ? supabase.from("users").select("id, firstname, lastname").in("id", wbCustomerIds)
+            : Promise.resolve({ data: [] }),
+          wbCategoryIds.length > 0
+            ? supabase.from("categories").select("id, name").in("id", wbCategoryIds)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        const wbCustomerMap = new Map(((wbCustomersResult.data ?? []) as RawWBCustomer[]).map((u) => [u.id, u]));
+        const wbCategoryMap = new Map(((wbCategoriesResult.data ?? []) as RawWBCategory[]).map((c) => [c.id, c.name]));
+
+        setWorkerBookingPreviews(
+          wb.map((b) => {
+            const customer = wbCustomerMap.get(b.customer_id);
+            const categoryName = b.category_id !== null ? (wbCategoryMap.get(b.category_id) ?? "") : "";
+            return {
+              id: b.id,
+              worker: customer ? `${customer.firstname} ${customer.lastname}` : "Unknown Customer",
+              service: categoryName || "Service",
+              date: b.requested_at
+                ? new Date(b.requested_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "",
+              status: BOOKING_STATUS_LABEL[b.status] ?? b.status,
+              categoryName,
+            };
+          }),
+        );
+      }
+    }
+
     setLoading(false);
   }, [refreshSubProfiles]);
 
@@ -581,13 +639,29 @@ export default function ProfilePage() {
       }
       case "messages":
         return <ProfileMessagesPanel conversations={chatPreviews} />;
-      case "bookings":
+      case "bookings": {
+        let displayedBookings;
+        if (activeSubProfileId) {
+          const activeSubProfile = subProfiles.find((sp) => sp.id === activeSubProfileId);
+          if (activeSubProfile) {
+            const profession = activeSubProfile.profession.toLowerCase();
+            displayedBookings = workerBookingPreviews.filter((b) => {
+              const cat = b.categoryName.toLowerCase();
+              return cat.includes(profession) || profession.includes(cat);
+            });
+          } else {
+            displayedBookings = workerBookingPreviews;
+          }
+        } else {
+          displayedBookings = bookingPreviews;
+        }
         return (
           <ProfileBookingsPanel
-            bookings={bookingPreviews}
+            bookings={displayedBookings}
             bookmarkedWorkers={[]}
           />
         );
+      }
       case "gallery":
         return <ProfileGallery portfolio={portfolio} />;
       case "reviews":
