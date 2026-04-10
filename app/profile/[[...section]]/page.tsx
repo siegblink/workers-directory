@@ -654,8 +654,27 @@ export default function ProfilePage() {
     }));
   }
 
-  async function handleAvatarChange(_file: File) {
-    // Avatar upload requires Supabase Storage — deferred to Phase 5
+  async function handleAvatarChange(file: File) {
+    if (!userId) return;
+    const supabase = createClient();
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${userId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
+    if (error) {
+      toast.error("Failed to upload avatar");
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(path);
+    await supabase
+      .from("users")
+      .update({ profile_pic_url: publicUrl })
+      .eq("id", userId);
+    setProfile((prev) => ({ ...prev, avatar: publicUrl }));
+    toast.success("Avatar updated");
   }
 
   async function handleAboutSave(data: ProfileAboutFormValues) {
