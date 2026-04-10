@@ -1,63 +1,161 @@
 "use client";
 
-import * as SliderPrimitive from "@radix-ui/react-slider";
-import * as React from "react";
-
 import { cn } from "@/lib/utils";
 
-function Slider({
-  className,
-  defaultValue,
+// Native <input type="range"> slider — drop-in replacement for the Radix slider.
+// Uses browser-native pointer capture so drag is never interrupted by competing
+// event handlers (e.g. react-easy-crop inside a dialog).
+//
+// Supports both single-value  value={[n]}         and
+//             range            value={[lo, hi]}    modes.
+
+type SliderProps = {
+  value: number[];
+  onValueChange: (values: number[]) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  disabled?: boolean;
+  className?: string;
+};
+
+// Shared Tailwind classes for the native thumb across both modes.
+const THUMB =
+  // webkit
+  "[&::-webkit-slider-thumb]:appearance-none " +
+  "[&::-webkit-slider-thumb]:size-4 " +
+  "[&::-webkit-slider-thumb]:rounded-full " +
+  "[&::-webkit-slider-thumb]:bg-white " +
+  "[&::-webkit-slider-thumb]:border-2 " +
+  "[&::-webkit-slider-thumb]:border-primary " +
+  "[&::-webkit-slider-thumb]:shadow-sm " +
+  "[&::-webkit-slider-thumb]:cursor-pointer " +
+  "[&::-webkit-slider-thumb]:transition-[box-shadow] " +
+  "[&::-webkit-slider-thumb]:hover:ring-4 " +
+  "[&::-webkit-slider-thumb]:hover:ring-ring/50 " +
+  // hide the native webkit track (we draw our own)
+  "[&::-webkit-slider-runnable-track]:bg-transparent " +
+  "[&::-webkit-slider-runnable-track]:h-0 " +
+  // firefox
+  "[&::-moz-range-thumb]:size-4 " +
+  "[&::-moz-range-thumb]:rounded-full " +
+  "[&::-moz-range-thumb]:bg-white " +
+  "[&::-moz-range-thumb]:border-solid " +
+  "[&::-moz-range-thumb]:border-2 " +
+  "[&::-moz-range-thumb]:border-primary " +
+  "[&::-moz-range-thumb]:shadow-sm " +
+  "[&::-moz-range-thumb]:cursor-pointer " +
+  // hide the native firefox track
+  "[&::-moz-range-track]:bg-transparent " +
+  "[&::-moz-range-track]:h-0";
+
+export function Slider({
   value,
+  onValueChange,
   min = 0,
   max = 100,
-  ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
-  const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        : Array.isArray(defaultValue)
-          ? defaultValue
-          : [min, max],
-    [value, defaultValue, min, max],
+  step = 1,
+  disabled,
+  className,
+}: SliderProps) {
+  const isRange = value.length >= 2;
+  const lower = value[0];
+  const upper = isRange ? value[1] : value[0];
+
+  const lowerPct = ((lower - min) / (max - min)) * 100;
+  const upperPct = ((upper - min) / (max - min)) * 100;
+
+  // ─── Single value ────────────────────────────────────────────────────────
+
+  if (!isRange) {
+    return (
+      <div className={cn("relative flex w-full items-center", className)}>
+        {/* Custom track */}
+        <div className="pointer-events-none absolute w-full top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted">
+          <div
+            className="h-full bg-primary rounded-full"
+            style={{ width: `${upperPct}%` }}
+          />
+        </div>
+
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={lower}
+          onChange={(e) => onValueChange([Number(e.target.value)])}
+          disabled={disabled}
+          className={cn(
+            "relative w-full h-5 appearance-none bg-transparent cursor-pointer",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+            THUMB,
+          )}
+        />
+      </div>
+    );
+  }
+
+  // ─── Range (two thumbs) ──────────────────────────────────────────────────
+
+  function handleLower(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = Math.min(Number(e.target.value), upper - step);
+    onValueChange([v, upper]);
+  }
+
+  function handleUpper(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = Math.max(Number(e.target.value), lower + step);
+    onValueChange([lower, v]);
+  }
+
+  // When lower thumb reaches the upper limit, raise its z-index so it stays
+  // accessible when both thumbs are stacked at the same position.
+  const lowerOnTop = lower >= max - step;
+
+  // Both inputs are pointer-events:none so only their thumbs receive events.
+  const rangeInput = cn(
+    "absolute w-full h-full appearance-none bg-transparent cursor-pointer",
+    "pointer-events-none",
+    // re-enable pointer events on thumb only (webkit + firefox)
+    "[&::-webkit-slider-thumb]:pointer-events-auto",
+    "[&::-moz-range-thumb]:pointer-events-auto",
+    "disabled:opacity-50 disabled:cursor-not-allowed",
+    THUMB,
   );
 
   return (
-    <SliderPrimitive.Root
-      data-slot="slider"
-      defaultValue={defaultValue}
-      value={value}
-      min={min}
-      max={max}
-      className={cn(
-        "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-        className,
-      )}
-      {...props}
-    >
-      <SliderPrimitive.Track
-        data-slot="slider-track"
-        className={cn(
-          "bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5",
-        )}
-      >
-        <SliderPrimitive.Range
-          data-slot="slider-range"
-          className={cn(
-            "bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
-          )}
+    <div className={cn("relative flex w-full items-center h-5", className)}>
+      {/* Custom track */}
+      <div className="pointer-events-none absolute w-full top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted">
+        <div
+          className="absolute h-full bg-primary rounded-full"
+          style={{ left: `${lowerPct}%`, width: `${upperPct - lowerPct}%` }}
         />
-      </SliderPrimitive.Track>
-      {_values.map((value) => (
-        <SliderPrimitive.Thumb
-          data-slot="slider-thumb"
-          key={`slider-thumb-${value}`}
-          className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
-        />
-      ))}
-    </SliderPrimitive.Root>
+      </div>
+
+      {/* Lower thumb */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={lower}
+        onChange={handleLower}
+        disabled={disabled}
+        className={cn(rangeInput, lowerOnTop ? "z-[3]" : "z-[1]")}
+      />
+
+      {/* Upper thumb */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={upper}
+        onChange={handleUpper}
+        disabled={disabled}
+        className={cn(rangeInput, lowerOnTop ? "z-[1]" : "z-[3]")}
+      />
+    </div>
   );
 }
-
-export { Slider };
