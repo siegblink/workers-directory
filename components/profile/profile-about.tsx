@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import {
   Field,
@@ -66,6 +67,16 @@ export function ProfileAbout({
     if (!isValid) return;
 
     const values = form.getValues();
+    const unchanged =
+      values.bio === bio &&
+      JSON.stringify(values.skills) === JSON.stringify(skills);
+
+    if (unchanged) {
+      setIsEditing(false);
+      toast("No changes made");
+      return;
+    }
+
     await onSave(values);
     setIsEditing(false);
   };
@@ -217,7 +228,7 @@ export function ProfileAbout({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm italic">
+            <p className="text-muted-foreground italic">
               No skills listed yet. Click Edit to add your areas of expertise.
             </p>
           )}

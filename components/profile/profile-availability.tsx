@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -125,6 +126,17 @@ export function ProfileAvailability({
       values[day] = formatAvailability(start, end, closed);
     }
     form.reset(values);
+
+    const unchanged = DAYS.every(
+      (day) => values[day] === (availability[day] ?? "Closed"),
+    );
+
+    if (unchanged) {
+      setIsEditing(false);
+      toast("No changes made");
+      return;
+    }
+
     await onSave(values);
     setIsEditing(false);
   };
