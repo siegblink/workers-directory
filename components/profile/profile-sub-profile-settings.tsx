@@ -93,7 +93,11 @@ export function ProfileSubProfileSettings({
         <CardContent>
           <Alert>
             <AlertDescription>
-              You&apos;re viewing your main profile. Select a sub-profile above to manage its settings, or visit <Link href="/settings" className="underline underline-offset-2">Settings</Link> to update your main profile.
+              <p>
+                You&apos;re viewing your main profile. Select a sub-profile above to manage its settings, or visit{" "}
+                <Link href="/settings" className="underline underline-offset-2">Settings</Link>{" "}
+                to update your main profile.
+              </p>
             </AlertDescription>
           </Alert>
         </CardContent>
