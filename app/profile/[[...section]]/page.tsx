@@ -4,6 +4,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { ProfileAbout } from "@/components/profile/profile-about";
 import { ProfileAvailability } from "@/components/profile/profile-availability";
 import { DirectorySelectionDialog } from "@/components/profile/directory-selection-dialog";
@@ -695,6 +696,7 @@ export default function ProfilePage() {
     } else {
       setAvailability(data);
     }
+    toast.success("Availability saved");
   }
 
   async function handleSubProfileSave(id: string, updates: Partial<SubProfile>) {
@@ -709,6 +711,7 @@ export default function ProfilePage() {
     } else {
       await handleAboutSave(data);
     }
+    toast.success("About Me saved");
   }
 
   async function handleSubProfileDelete(id: string) {
