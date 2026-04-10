@@ -12,6 +12,7 @@ import {
   Star,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,6 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Show worker-specific fields when the SubProfile context is set OR when
@@ -97,7 +97,6 @@ export function ProfileHeader({
   const handleCancel = () => {
     form.reset();
     setAvatarPreview(null);
-    setAvatarError(null);
     setIsEditing(false);
   };
 
@@ -110,15 +109,13 @@ export function ProfileHeader({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setAvatarError(null);
-
     if (!file.type.startsWith("image/")) {
-      setAvatarError("Please select an image file");
+      toast.error("Please select an image file");
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setAvatarError("Image must be less than 2MB");
+      toast.error("Image must be less than 2MB");
       return;
     }
 
@@ -168,9 +165,6 @@ export function ProfileHeader({
               onChange={handleFileChange}
             />
           </button>
-          {avatarError && (
-            <p className="text-destructive text-sm mt-1">{avatarError}</p>
-          )}
 
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
