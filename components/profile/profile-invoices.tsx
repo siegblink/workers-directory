@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type Invoice = {
-  id: number;
+  id: string;
   invoiceNumber: string;
   client: string;
   service: string;

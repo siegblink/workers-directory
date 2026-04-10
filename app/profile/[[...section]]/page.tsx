@@ -165,6 +165,7 @@ export default function ProfilePage() {
     useState<ProfileAvailabilityFormValues>(defaultAvailability);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [reviews, setReviews] = useState<(Review & { categoryName: string })[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   // Real data for panels
   const [chatPreviews, setChatPreviews] = useState<
@@ -376,6 +377,56 @@ export default function ProfilePage() {
           };
         }),
       );
+    }
+
+    // Load invoices for this worker
+    if (wid) {
+      type InvoiceRow = {
+        id: string;
+        invoice_number: string;
+        customer_id: string;
+        service: string | null;
+        amount: number;
+        status: "Paid" | "Pending" | "Overdue";
+        created_at: string;
+      };
+      const { data: invoiceRows } = await supabase
+        .from("invoices")
+        .select("id, invoice_number, customer_id, service, amount, status, created_at")
+        .eq("worker_id", wid)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (invoiceRows && invoiceRows.length > 0) {
+        const rows = invoiceRows as InvoiceRow[];
+        const invoiceCustomerIds = [...new Set(rows.map((r) => r.customer_id))];
+        type InvoiceUserRow = { id: string; firstname: string; lastname: string };
+        const { data: invoiceUsersData } = await supabase
+          .from("users")
+          .select("id, firstname, lastname")
+          .in("id", invoiceCustomerIds);
+        const invoiceUserMap = new Map(
+          ((invoiceUsersData ?? []) as InvoiceUserRow[]).map((u) => [u.id, u]),
+        );
+        setInvoices(
+          rows.map((r) => {
+            const cu = invoiceUserMap.get(r.customer_id);
+            return {
+              id: r.id,
+              invoiceNumber: r.invoice_number,
+              client: cu ? `${cu.firstname} ${cu.lastname}` : "Unknown Client",
+              service: r.service ?? "",
+              date: new Date(r.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+              amount: r.amount,
+              status: r.status,
+            };
+          }),
+        );
+      }
     }
 
     // Refresh sub-profiles from DB (handles return from /become-worker)
@@ -709,7 +760,7 @@ export default function ProfilePage() {
           />
         );
       case "invoices":
-        return <ProfileInvoices invoices={[] as Invoice[]} />;
+        return <ProfileInvoices invoices={activeSubProfileId ? [] : invoices} />;
       case "settings":
         return (
           <ProfileSubProfileSettings
