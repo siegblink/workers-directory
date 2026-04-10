@@ -14,6 +14,7 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
+import { AvatarCropDialog } from "@/components/profile/avatar-crop-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,7 +53,7 @@ export interface ProfileData {
 type ProfileHeaderProps = {
   profile: ProfileData;
   onSave: (data: ProfileHeaderFormValues) => Promise<void>;
-  onAvatarChange: (file: File) => Promise<void>;
+  onAvatarChange: (blob: Blob) => Promise<void>;
   hasMainProfile?: boolean;
 };
 
@@ -64,6 +65,8 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Show worker-specific fields when the SubProfile context is set OR when
@@ -105,8 +108,10 @@ export function ProfileHeader({
     setIsEditing(false);
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset so the same file can be re-selected after cancel
+    e.target.value = "";
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -121,16 +126,28 @@ export function ProfileHeader({
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setAvatarPreview(event.target?.result as string);
+      setRawImageSrc(event.target?.result as string);
+      setCropDialogOpen(true);
     };
     reader.readAsDataURL(file);
+  };
 
-    await onAvatarChange(file);
+  const handleCropSave = async (blob: Blob) => {
+    // Show the cropped result immediately as a local preview
+    setAvatarPreview(URL.createObjectURL(blob));
+    setCropDialogOpen(false);
+    await onAvatarChange(blob);
+  };
+
+  const handleCropCancel = () => {
+    setCropDialogOpen(false);
+    setRawImageSrc("");
   };
 
   const displayAvatar = avatarPreview || profile.avatar;
 
   return (
+  <>
     <Card className="mb-6">
       <CardContent>
         <div className="flex flex-col md:flex-row gap-6">
@@ -456,5 +473,15 @@ export function ProfileHeader({
         </div>
       </CardContent>
     </Card>
+
+    {rawImageSrc && (
+      <AvatarCropDialog
+        open={cropDialogOpen}
+        imageSrc={rawImageSrc}
+        onCancel={handleCropCancel}
+        onSave={handleCropSave}
+      />
+    )}
+  </>
   );
 }

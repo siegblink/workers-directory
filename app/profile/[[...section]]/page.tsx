@@ -654,14 +654,14 @@ export default function ProfilePage() {
     }));
   }
 
-  async function handleAvatarChange(file: File) {
+  async function handleAvatarChange(blob: Blob) {
     if (!userId) return;
     const supabase = createClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${userId}/${Date.now()}.${ext}`;
+    // Always store as JPEG since the crop canvas outputs JPEG
+    const path = `${userId}/${Date.now()}.jpg`;
     const { error } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true });
+      .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
     if (error) {
       toast.error("Failed to upload avatar");
       return;
