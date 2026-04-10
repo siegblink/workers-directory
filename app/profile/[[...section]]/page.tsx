@@ -546,8 +546,18 @@ export default function ProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
-  // Notification counts for sidebar badges
-  const unreadMessagesCount = chatPreviews.reduce((sum, c) => sum + c.unread, 0);
+  // Notification counts for sidebar badges — scoped to active sub-profile if one is selected
+  const activeChatPreviews = (() => {
+    if (!activeSubProfileId) return chatPreviews;
+    const sp = subProfiles.find((s) => s.id === activeSubProfileId);
+    if (!sp) return chatPreviews;
+    const profession = sp.profession.toLowerCase();
+    return chatPreviews.filter((c) => {
+      const cat = c.categoryName.toLowerCase();
+      return cat.includes(profession) || profession.includes(cat);
+    });
+  })();
+  const unreadMessagesCount = activeChatPreviews.reduce((sum, c) => sum + c.unread, 0);
   const newReviewsCount = 0; // real reviews don't carry an isNew flag
 
   async function handleHeaderSave(data: ProfileHeaderFormValues) {
@@ -666,20 +676,8 @@ export default function ProfilePage() {
           </>
         );
       }
-      case "messages": {
-        let displayedChats = chatPreviews;
-        if (activeSubProfileId) {
-          const activeSubProfile = subProfiles.find((sp) => sp.id === activeSubProfileId);
-          if (activeSubProfile) {
-            const profession = activeSubProfile.profession.toLowerCase();
-            displayedChats = chatPreviews.filter((c) => {
-              const cat = c.categoryName.toLowerCase();
-              return cat.includes(profession) || profession.includes(cat);
-            });
-          }
-        }
-        return <ProfileMessagesPanel conversations={displayedChats} />;
-      }
+      case "messages":
+        return <ProfileMessagesPanel conversations={activeChatPreviews} />;
       case "bookings": {
         let displayedBookings;
         if (activeSubProfileId) {
