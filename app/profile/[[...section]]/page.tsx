@@ -613,6 +613,7 @@ export default function ProfilePage() {
     if (!sp) return chatPreviews;
     const profession = sp.profession.toLowerCase();
     return chatPreviews.filter((c) => {
+      if (!c.categoryName) return false;
       const cat = c.categoryName.toLowerCase();
       return cat.includes(profession) || profession.includes(cat);
     });
@@ -753,6 +754,7 @@ export default function ProfilePage() {
           if (activeSubProfile) {
             const profession = activeSubProfile.profession.toLowerCase();
             displayedBookings = workerBookingPreviews.filter((b) => {
+              if (!b.categoryName) return false;
               const cat = b.categoryName.toLowerCase();
               return cat.includes(profession) || profession.includes(cat);
             });
@@ -778,6 +780,7 @@ export default function ProfilePage() {
           if (activeSubProfile) {
             const profession = activeSubProfile.profession.toLowerCase();
             displayedReviews = reviews.filter((r) => {
+              if (!r.categoryName) return false;
               const cat = r.categoryName.toLowerCase();
               return cat.includes(profession) || profession.includes(cat);
             });
