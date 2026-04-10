@@ -144,7 +144,7 @@ export default function ProfilePage() {
 
   // Real data for panels
   const [chatPreviews, setChatPreviews] = useState<
-    { id: number | string; name: string; profession: string; avatar: string; lastMessage: string; timestamp: string; unread: number }[]
+    { id: number | string; name: string; profession: string; avatar: string; lastMessage: string; timestamp: string; unread: number; categoryName: string }[]
   >([]);
   const [bookingPreviews, setBookingPreviews] = useState<
     { id: number | string; worker: string; service: string; date: string; status: string }[]
@@ -326,13 +326,13 @@ export default function ProfilePage() {
 
     // Load chat previews for the messages panel
     // Avoid FK hint joins — query chats, users, and messages separately
-    type RawChat = { id: number; customer_id: string; worker_id: string };
+    type RawChat = { id: number; customer_id: string; worker_id: string; booking_id: number | null };
     type RawUser = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
     type RawMsg = { chat_id: number; message_text: string | null; created_at: string; receiver_id: string; status: string };
 
     const { data: chatsRaw } = await supabase
       .from("chats")
-      .select("id, customer_id, worker_id")
+      .select("id, customer_id, worker_id, booking_id")
       .or(`customer_id.eq.${user.id},worker_id.eq.${user.id}`)
       .order("created_at", { ascending: false })
       .limit(5);
@@ -341,7 +341,7 @@ export default function ProfilePage() {
       const chats = chatsRaw as RawChat[];
       const chatIds = chats.map((c) => c.id);
 
-      // Batch-fetch other users and messages in parallel
+      // Batch-fetch other users, messages, and booking categories in parallel
       const otherUserIds = [
         ...new Set(
           chats.map((c) =>
@@ -349,8 +349,11 @@ export default function ProfilePage() {
           ),
         ),
       ];
+      const chatBookingIds = [
+        ...new Set(chats.map((c) => c.booking_id).filter((id): id is number => id !== null)),
+      ];
 
-      const [usersResult, msgsResult] = await Promise.all([
+      const [usersResult, msgsResult, chatBookingsResult] = await Promise.all([
         supabase
           .from("users")
           .select("id, firstname, lastname, profile_pic_url")
@@ -360,7 +363,36 @@ export default function ProfilePage() {
           .select("chat_id, message_text, created_at, receiver_id, status")
           .in("chat_id", chatIds)
           .order("created_at", { ascending: false }),
+        chatBookingIds.length > 0
+          ? supabase.from("bookings").select("id, category_id").in("id", chatBookingIds)
+          : Promise.resolve({ data: [] }),
       ]);
+
+      // Resolve category names for chat bookings
+      type RawChatBooking = { id: number; category_id: number | null };
+      type RawChatCategory = { id: number; name: string };
+      const chatBookingRows = (chatBookingsResult.data ?? []) as RawChatBooking[];
+      const chatCatIds = [
+        ...new Set(chatBookingRows.map((b) => b.category_id).filter((id): id is number => id !== null)),
+      ];
+
+      let chatCategoryNameMap = new Map<number, string>();
+      if (chatCatIds.length > 0) {
+        const { data: chatCatsData } = await supabase
+          .from("categories")
+          .select("id, name")
+          .in("id", chatCatIds);
+        chatCategoryNameMap = new Map(
+          ((chatCatsData ?? []) as RawChatCategory[]).map((c) => [c.id, c.name]),
+        );
+      }
+
+      const bookingToCatName = new Map<number, string>(
+        chatBookingRows.map((b) => [
+          b.id,
+          b.category_id !== null ? (chatCategoryNameMap.get(b.category_id) ?? "") : "",
+        ]),
+      );
 
       const userMap = new Map(
         ((usersResult.data ?? []) as RawUser[]).map((u) => [u.id, u]),
@@ -377,6 +409,7 @@ export default function ProfilePage() {
           const unread = chatMsgs.filter(
             (m) => m.receiver_id === user.id && m.status !== "read",
           ).length;
+          const categoryName = chat.booking_id !== null ? (bookingToCatName.get(chat.booking_id) ?? "") : "";
           return {
             id: chat.id,
             name: otherUser
@@ -387,6 +420,7 @@ export default function ProfilePage() {
             lastMessage: lastMsg?.message_text ?? "",
             timestamp: lastMsg ? timeAgo(lastMsg.created_at) : "",
             unread,
+            categoryName,
           };
         }),
       );
@@ -632,8 +666,20 @@ export default function ProfilePage() {
           </>
         );
       }
-      case "messages":
-        return <ProfileMessagesPanel conversations={chatPreviews} />;
+      case "messages": {
+        let displayedChats = chatPreviews;
+        if (activeSubProfileId) {
+          const activeSubProfile = subProfiles.find((sp) => sp.id === activeSubProfileId);
+          if (activeSubProfile) {
+            const profession = activeSubProfile.profession.toLowerCase();
+            displayedChats = chatPreviews.filter((c) => {
+              const cat = c.categoryName.toLowerCase();
+              return cat.includes(profession) || profession.includes(cat);
+            });
+          }
+        }
+        return <ProfileMessagesPanel conversations={displayedChats} />;
+      }
       case "bookings": {
         let displayedBookings;
         if (activeSubProfileId) {

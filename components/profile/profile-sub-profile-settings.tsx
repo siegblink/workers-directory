@@ -1,16 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import type { SubProfile } from "@/lib/database/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
@@ -59,6 +67,11 @@ export function ProfileSubProfileSettings({
     },
   });
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     if (activeProfile) {
       form.reset({
@@ -100,90 +113,51 @@ export function ProfileSubProfileSettings({
     toast.success("Changes saved");
   }
 
-  async function handleDelete() {
+  function openDeleteDialog() {
+    setDeleteStep(1);
+    setDeleteConfirmText("");
+    setDeleteDialogOpen(true);
+  }
+
+  async function handleConfirmDelete() {
     if (!activeSubProfileId || !activeProfile) return;
-    if (
-      !window.confirm(
-        `Delete the "${activeProfile.label}" sub-profile? This cannot be undone.`,
-      )
-    ) {
-      return;
-    }
+    setIsDeleting(true);
     await onDelete(activeSubProfileId);
+    setDeleteDialogOpen(false);
+    setIsDeleting(false);
+    toast.success(`Sub-profile "${activeProfile.label}" deleted`);
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Sub-Profile Settings</CardTitle>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            disabled={form.formState.isSubmitting}
-          >
-            <Trash2 />
-            Delete Sub-Profile
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
-          <FieldGroup>
-            <Controller
-              control={form.control}
-              name="label"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel htmlFor="sp-label">Profile Label</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="sp-label"
-                      placeholder="e.g. Electrician"
-                      {...field}
-                      disabled={form.formState.isSubmitting}
-                      aria-invalid={!!fieldState.error}
-                    />
-                  </InputGroup>
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="profession"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel htmlFor="sp-profession">Profession</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="sp-profession"
-                      placeholder="e.g. Electrician"
-                      {...field}
-                      disabled={form.formState.isSubmitting}
-                      aria-invalid={!!fieldState.error}
-                    />
-                  </InputGroup>
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </Field>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Sub-Profile Settings</CardTitle>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={openDeleteDialog}
+              disabled={form.formState.isSubmitting || isDeleting}
+            >
+              <Trash2 />
+              Delete Sub-Profile
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <FieldGroup>
               <Controller
                 control={form.control}
-                name="hourly_rate_min"
+                name="label"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={!!fieldState.error}>
-                    <FieldLabel htmlFor="sp-rate-min">Min Rate (₱/hr)</FieldLabel>
+                    <FieldLabel htmlFor="sp-label">Profile Label</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
-                        id="sp-rate-min"
-                        type="number"
-                        min={0}
-                        placeholder="0"
+                        id="sp-label"
+                        placeholder="e.g. Electrician"
                         {...field}
                         disabled={form.formState.isSubmitting}
                         aria-invalid={!!fieldState.error}
@@ -196,16 +170,14 @@ export function ProfileSubProfileSettings({
 
               <Controller
                 control={form.control}
-                name="hourly_rate_max"
+                name="profession"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={!!fieldState.error}>
-                    <FieldLabel htmlFor="sp-rate-max">Max Rate (₱/hr)</FieldLabel>
+                    <FieldLabel htmlFor="sp-profession">Profession</FieldLabel>
                     <InputGroup>
                       <InputGroupInput
-                        id="sp-rate-max"
-                        type="number"
-                        min={0}
-                        placeholder="0"
+                        id="sp-profession"
+                        placeholder="e.g. Electrician"
                         {...field}
                         disabled={form.formState.isSubmitting}
                         aria-invalid={!!fieldState.error}
@@ -215,47 +187,180 @@ export function ProfileSubProfileSettings({
                   </Field>
                 )}
               />
-            </div>
 
-            <Controller
-              control={form.control}
-              name="years_experience"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel htmlFor="sp-experience">Years of Experience</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="sp-experience"
-                      type="number"
-                      min={0}
-                      placeholder="e.g. 5"
-                      {...field}
-                      disabled={form.formState.isSubmitting}
-                      aria-invalid={!!fieldState.error}
-                    />
-                  </InputGroup>
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Controller
+                  control={form.control}
+                  name="hourly_rate_min"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel htmlFor="sp-rate-min">Min Rate (₱/hr)</FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput
+                          id="sp-rate-min"
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          {...field}
+                          disabled={form.formState.isSubmitting}
+                          aria-invalid={!!fieldState.error}
+                        />
+                      </InputGroup>
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="hourly_rate_max"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel htmlFor="sp-rate-max">Max Rate (₱/hr)</FieldLabel>
+                      <InputGroup>
+                        <InputGroupInput
+                          id="sp-rate-max"
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          {...field}
+                          disabled={form.formState.isSubmitting}
+                          aria-invalid={!!fieldState.error}
+                        />
+                      </InputGroup>
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </Field>
+                  )}
+                />
+              </div>
+
+              <Controller
+                control={form.control}
+                name="years_experience"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={!!fieldState.error}>
+                    <FieldLabel htmlFor="sp-experience">Years of Experience</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        id="sp-experience"
+                        type="number"
+                        min={0}
+                        placeholder="e.g. 5"
+                        {...field}
+                        disabled={form.formState.isSubmitting}
+                        aria-invalid={!!fieldState.error}
+                      />
+                    </InputGroup>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="w-full"
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Saving…
+                </>
+              ) : (
+                "Save Changes"
               )}
-            />
-          </FieldGroup>
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-          <Button
-            type="submit"
-            disabled={form.formState.isSubmitting}
-            className="w-full"
-          >
-            {form.formState.isSubmitting ? (
-              <>
-                <Spinner className="mr-2" />
-                Saving…
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          {deleteStep === 1 ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="size-5 text-destructive" />
+                  Delete sub-profile
+                </DialogTitle>
+                <DialogDescription asChild>
+                  <div className="space-y-3 pt-2">
+                    <p>
+                      This will permanently delete the{" "}
+                      <strong>{activeProfile.label}</strong> sub-profile.
+                    </p>
+                    <p>
+                      All associated data (bio, skills, availability, portfolio,
+                      reviews, bookings, messages, invoices) will be lost.
+                    </p>
+                    <p className="font-medium text-destructive">
+                      This action cannot be undone.
+                    </p>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={() => setDeleteStep(2)}>
+                  I want to delete this sub-profile
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="size-5 text-destructive" />
+                  Confirm deletion
+                </DialogTitle>
+                <DialogDescription asChild>
+                  <div className="space-y-3 pt-2">
+                    <p>
+                      To confirm, type <strong>{activeProfile.label}</strong> in the box below.
+                    </p>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+              <InputGroup>
+                <InputGroupInput
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder={activeProfile.label}
+                  autoFocus
+                />
+              </InputGroup>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={deleteConfirmText !== activeProfile.label || isDeleting}
+                  onClick={handleConfirmDelete}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Spinner className="mr-2" />
+                      Deleting…
+                    </>
+                  ) : (
+                    "Confirm delete"
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
