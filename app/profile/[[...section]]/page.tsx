@@ -140,7 +140,7 @@ export default function ProfilePage() {
   const [availability, setAvailability] =
     useState<ProfileAvailabilityFormValues>(defaultAvailability);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<(Review & { categoryName: string })[]>([]);
 
   // Real data for panels
   const [chatPreviews, setChatPreviews] = useState<
@@ -240,7 +240,7 @@ export default function ProfilePage() {
       wid
         ? supabase
             .from("ratings")
-            .select("id, customer_id, rating_value, review_comment, created_at")
+            .select("id, customer_id, rating_value, review_comment, created_at, booking_id")
             .eq("worker_id", wid)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
@@ -288,27 +288,62 @@ export default function ProfilePage() {
       })),
     );
 
-    // Reviews from ratings — batch-resolve customer names
-    type RatingRow = { id: number; customer_id: string; rating_value: number | null; review_comment: string | null; created_at: string };
+    // Reviews from ratings — batch-resolve customer names + booking category names
+    type RatingRow = { id: number; customer_id: string; rating_value: number | null; review_comment: string | null; created_at: string; booking_id: number | null };
     const ratingsData = (ratingsResult.data ?? []) as RatingRow[];
 
     if (ratingsData.length > 0) {
       const customerIds = [
         ...new Set(ratingsData.map((r) => r.customer_id).filter(Boolean)),
       ];
-      const { data: customersData } = await supabase
-        .from("users")
-        .select("id, firstname, lastname, profile_pic_url")
-        .in("id", customerIds);
+      const ratingBookingIds = [
+        ...new Set(ratingsData.map((r) => r.booking_id).filter((id): id is number => id !== null)),
+      ];
+
+      const [customersResult, ratingBookingsResult] = await Promise.all([
+        supabase
+          .from("users")
+          .select("id, firstname, lastname, profile_pic_url")
+          .in("id", customerIds),
+        ratingBookingIds.length > 0
+          ? supabase.from("bookings").select("id, category_id").in("id", ratingBookingIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      type RatingBookingRow = { id: number; category_id: number | null };
+      const ratingBookingRows = (ratingBookingsResult.data ?? []) as RatingBookingRow[];
+      const ratingCatIds = [
+        ...new Set(ratingBookingRows.map((b) => b.category_id).filter((id): id is number => id !== null)),
+      ];
+
+      let ratingCategoryNameMap = new Map<number, string>();
+      if (ratingCatIds.length > 0) {
+        type RatingCategory = { id: number; name: string };
+        const { data: ratingCatsData } = await supabase
+          .from("categories")
+          .select("id, name")
+          .in("id", ratingCatIds);
+        ratingCategoryNameMap = new Map(
+          ((ratingCatsData ?? []) as RatingCategory[]).map((c) => [c.id, c.name]),
+        );
+      }
+
+      const ratingBookingToCatName = new Map<number, string>(
+        ratingBookingRows.map((b) => [
+          b.id,
+          b.category_id !== null ? (ratingCategoryNameMap.get(b.category_id) ?? "") : "",
+        ]),
+      );
 
       type CustomerRow = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
       const customerMap = new Map(
-        ((customersData ?? []) as CustomerRow[]).map((c) => [c.id, c]),
+        ((customersResult.data ?? []) as CustomerRow[]).map((c) => [c.id, c]),
       );
 
       setReviews(
         ratingsData.map((r) => {
           const cu = customerMap.get(r.customer_id);
+          const categoryName = r.booking_id !== null ? (ratingBookingToCatName.get(r.booking_id) ?? "") : "";
           return {
             id: r.id,
             author: cu ? `${cu.firstname} ${cu.lastname}` : "Anonymous",
@@ -316,6 +351,7 @@ export default function ProfilePage() {
             date: timeAgo(r.created_at),
             comment: r.review_comment ?? "",
             avatar: cu?.profile_pic_url ?? "",
+            categoryName,
           };
         }),
       );
@@ -702,15 +738,31 @@ export default function ProfilePage() {
         );
       }
       case "gallery":
-        return <ProfileGallery portfolio={portfolio} />;
-      case "reviews":
+        return <ProfileGallery portfolio={activeSubProfileId ? [] : portfolio} />;
+      case "reviews": {
+        let displayedReviews = reviews;
+        if (activeSubProfileId) {
+          const activeSubProfile = subProfiles.find((sp) => sp.id === activeSubProfileId);
+          if (activeSubProfile) {
+            const profession = activeSubProfile.profession.toLowerCase();
+            displayedReviews = reviews.filter((r) => {
+              const cat = r.categoryName.toLowerCase();
+              return cat.includes(profession) || profession.includes(cat);
+            });
+          }
+        }
+        const displayedRating =
+          displayedReviews.length > 0
+            ? Math.round((displayedReviews.reduce((sum, r) => sum + r.rating, 0) / displayedReviews.length) * 10) / 10
+            : 0;
         return (
           <ProfileTestimonials
-            rating={profile.rating}
-            reviewCount={profile.reviews}
-            reviews={reviews}
+            rating={activeSubProfileId ? displayedRating : profile.rating}
+            reviewCount={activeSubProfileId ? displayedReviews.length : profile.reviews}
+            reviews={displayedReviews}
           />
         );
+      }
       case "invoices":
         return <ProfileInvoices invoices={[] as Invoice[]} />;
       case "settings":
