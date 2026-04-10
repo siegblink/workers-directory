@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Slider } from "@/components/ui/slider";
 import { Spinner } from "@/components/ui/spinner";
 
 type CropArea = { x: number; y: number; width: number; height: number };
@@ -118,16 +117,33 @@ export function AvatarCropDialog({
           />
         </div>
 
-        {/* Zoom slider */}
+        {/* Zoom slider — native <input type="range"> avoids Radix pointer-capture
+            conflicts with react-easy-crop's own pointer event handling */}
         <div className="px-6 py-5 space-y-2">
           <p className="text-sm font-medium">Zoom</p>
-          <Slider
+          <input
+            type="range"
             min={1}
             max={4}
             step={0.01}
-            value={[zoom]}
-            onValueChange={([v]) => setZoom(v)}
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
             disabled={saving}
+            className="w-full h-2 rounded-full appearance-none cursor-pointer
+              bg-secondary
+              [&::-webkit-slider-thumb]:appearance-none
+              [&::-webkit-slider-thumb]:w-4
+              [&::-webkit-slider-thumb]:h-4
+              [&::-webkit-slider-thumb]:rounded-full
+              [&::-webkit-slider-thumb]:bg-primary
+              [&::-webkit-slider-thumb]:cursor-pointer
+              [&::-moz-range-thumb]:w-4
+              [&::-moz-range-thumb]:h-4
+              [&::-moz-range-thumb]:rounded-full
+              [&::-moz-range-thumb]:bg-primary
+              [&::-moz-range-thumb]:border-0
+              [&::-moz-range-thumb]:cursor-pointer
+              disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
