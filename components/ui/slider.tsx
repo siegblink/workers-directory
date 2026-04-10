@@ -19,9 +19,10 @@ type SliderProps = {
   className?: string;
 };
 
-// Shared Tailwind classes for the native thumb across both modes.
-const THUMB =
-  // webkit
+// Thumb styles shared across single and range modes.
+// No track-height overrides here — we let the input's own height serve as
+// the track reference so webkit positions the thumb center automatically.
+const THUMB_CLASSES =
   "[&::-webkit-slider-thumb]:appearance-none " +
   "[&::-webkit-slider-thumb]:size-4 " +
   "[&::-webkit-slider-thumb]:rounded-full " +
@@ -31,14 +32,7 @@ const THUMB =
   "[&::-webkit-slider-thumb]:shadow-sm " +
   "[&::-webkit-slider-thumb]:cursor-pointer " +
   "[&::-webkit-slider-thumb]:transition-[box-shadow] " +
-  "[&::-webkit-slider-thumb]:hover:ring-4 " +
-  "[&::-webkit-slider-thumb]:hover:ring-ring/50 " +
-  // Native track: transparent but same height as our custom track (h-1.5 = 6px).
-  // webkit centers the thumb on the native track — if track height is 0 it
-  // anchors to the top of the input instead of the center, misaligning the thumb.
   "[&::-webkit-slider-runnable-track]:bg-transparent " +
-  "[&::-webkit-slider-runnable-track]:h-1.5 " +
-  // firefox
   "[&::-moz-range-thumb]:size-4 " +
   "[&::-moz-range-thumb]:rounded-full " +
   "[&::-moz-range-thumb]:bg-white " +
@@ -47,9 +41,7 @@ const THUMB =
   "[&::-moz-range-thumb]:border-primary " +
   "[&::-moz-range-thumb]:shadow-sm " +
   "[&::-moz-range-thumb]:cursor-pointer " +
-  // Same fix for Firefox — h-1.5 keeps the thumb centered on the track line
-  "[&::-moz-range-track]:bg-transparent " +
-  "[&::-moz-range-track]:h-1.5";
+  "[&::-moz-range-track]:bg-transparent";
 
 export function Slider({
   value,
@@ -67,19 +59,15 @@ export function Slider({
   const lowerPct = ((lower - min) / (max - min)) * 100;
   const upperPct = ((upper - min) / (max - min)) * 100;
 
-  // ─── Single value ────────────────────────────────────────────────────────
+  // ─── Single value ─────────────────────────────────────────────────────────
 
   if (!isRange) {
     return (
       <div className={cn("relative flex w-full items-center", className)}>
-        {/* Custom track */}
+        {/* Muted track background */}
         <div className="pointer-events-none absolute w-full top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted">
-          <div
-            className="h-full bg-primary rounded-full"
-            style={{ width: `${upperPct}%` }}
-          />
+          <div className="h-full bg-primary rounded-full" style={{ width: `${upperPct}%` }} />
         </div>
-
         <input
           type="range"
           min={min}
@@ -89,16 +77,18 @@ export function Slider({
           onChange={(e) => onValueChange([Number(e.target.value)])}
           disabled={disabled}
           className={cn(
-            "relative w-full h-5 appearance-none bg-transparent cursor-pointer",
+            // h-1.5 matches the visual track height — webkit centers the
+            // thumb on the input height automatically, no extra CSS needed
+            "relative w-full h-1.5 appearance-none bg-transparent cursor-pointer",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            THUMB,
+            THUMB_CLASSES,
           )}
         />
       </div>
     );
   }
 
-  // ─── Range (two thumbs) ──────────────────────────────────────────────────
+  // ─── Range (two thumbs) ───────────────────────────────────────────────────
 
   function handleLower(e: React.ChangeEvent<HTMLInputElement>) {
     const v = Math.min(Number(e.target.value), upper - step);
@@ -110,27 +100,27 @@ export function Slider({
     onValueChange([lower, v]);
   }
 
-  // When lower thumb reaches the upper limit, raise its z-index so it stays
-  // accessible when both thumbs are stacked at the same position.
-  const lowerOnTop = lower >= max - step;
-
-  // Both inputs are pointer-events:none so only their thumbs receive events.
-  // inset-0 pins all four edges to the containing block — more reliable than
-  // w-full/h-full which can resolve against a different ancestor in flex layouts.
-  const rangeInput = cn(
-    "absolute inset-0 appearance-none bg-transparent cursor-pointer",
-    "pointer-events-none",
-    // re-enable pointer events on thumb only (webkit + firefox)
+  // Strategy: both inputs are the same h-1.5 height, centered on the track
+  // line via top-1/2 + -translate-y-1/2. pointer-events:none keeps the track
+  // area non-interactive; only the thumb pseudo-element gets pointer events.
+  // The container (h-5) provides extra vertical hit area for the thumb.
+  const rangeInputClass = cn(
+    "absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5",
+    "appearance-none bg-transparent cursor-pointer",
+    "disabled:opacity-50 disabled:cursor-not-allowed",
     "[&::-webkit-slider-thumb]:pointer-events-auto",
     "[&::-moz-range-thumb]:pointer-events-auto",
-    "disabled:opacity-50 disabled:cursor-not-allowed",
-    THUMB,
+    THUMB_CLASSES,
   );
 
+  // Flip z-index when lower thumb reaches the upper limit so both remain
+  // accessible when stacked at the same position.
+  const lowerOnTop = lower >= max - step;
+
   return (
-    <div className={cn("relative flex w-full items-center h-5", className)}>
-      {/* Custom track */}
-      <div className="pointer-events-none absolute w-full top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted">
+    <div className={cn("relative w-full h-5", className)}>
+      {/* Muted track background + active fill */}
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted">
         <div
           className="absolute h-full bg-primary rounded-full"
           style={{ left: `${lowerPct}%`, width: `${upperPct - lowerPct}%` }}
@@ -146,7 +136,8 @@ export function Slider({
         value={lower}
         onChange={handleLower}
         disabled={disabled}
-        className={cn(rangeInput, lowerOnTop ? "z-[3]" : "z-[1]")}
+        style={{ pointerEvents: "none" }}
+        className={cn(rangeInputClass, lowerOnTop ? "z-[3]" : "z-[1]")}
       />
 
       {/* Upper thumb */}
@@ -158,7 +149,8 @@ export function Slider({
         value={upper}
         onChange={handleUpper}
         disabled={disabled}
-        className={cn(rangeInput, lowerOnTop ? "z-[1]" : "z-[3]")}
+        style={{ pointerEvents: "none" }}
+        className={cn(rangeInputClass, lowerOnTop ? "z-[1]" : "z-[3]")}
       />
     </div>
   );
