@@ -33,9 +33,11 @@ const THUMB =
   "[&::-webkit-slider-thumb]:transition-[box-shadow] " +
   "[&::-webkit-slider-thumb]:hover:ring-4 " +
   "[&::-webkit-slider-thumb]:hover:ring-ring/50 " +
-  // hide the native webkit track (we draw our own)
+  // Native track: transparent but same height as our custom track (h-1.5 = 6px).
+  // webkit centers the thumb on the native track — if track height is 0 it
+  // anchors to the top of the input instead of the center, misaligning the thumb.
   "[&::-webkit-slider-runnable-track]:bg-transparent " +
-  "[&::-webkit-slider-runnable-track]:h-0 " +
+  "[&::-webkit-slider-runnable-track]:h-1.5 " +
   // firefox
   "[&::-moz-range-thumb]:size-4 " +
   "[&::-moz-range-thumb]:rounded-full " +
@@ -45,9 +47,9 @@ const THUMB =
   "[&::-moz-range-thumb]:border-primary " +
   "[&::-moz-range-thumb]:shadow-sm " +
   "[&::-moz-range-thumb]:cursor-pointer " +
-  // hide the native firefox track
+  // Same fix for Firefox — h-1.5 keeps the thumb centered on the track line
   "[&::-moz-range-track]:bg-transparent " +
-  "[&::-moz-range-track]:h-0";
+  "[&::-moz-range-track]:h-1.5";
 
 export function Slider({
   value,
