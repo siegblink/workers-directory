@@ -70,6 +70,7 @@ export type SubProfile = {
   user_id: string;
   label: string;          // display name, user-editable (e.g. "Electrician")
   profession: string;
+  bio: string | null;
   skills: string[];
   hourly_rate_min: number | null;
   hourly_rate_max: number | null;

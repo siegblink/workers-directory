@@ -126,6 +126,7 @@ export default function BecomeWorkerPage() {
         user_id: userId,
         label: formData.jobTitle,
         profession: formData.jobTitle,
+        bio: formData.bio.trim() || null,
         years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
         status: "available",
       });

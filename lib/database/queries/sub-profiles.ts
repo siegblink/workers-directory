@@ -83,6 +83,7 @@ export async function updateSubProfile(
       SubProfile,
       | "label"
       | "profession"
+      | "bio"
       | "skills"
       | "hourly_rate_min"
       | "hourly_rate_max"

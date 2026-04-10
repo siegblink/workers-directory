@@ -598,13 +598,8 @@ export default function ProfilePage() {
 
   async function handleAboutSaveForActiveProfile(data: ProfileAboutFormValues) {
     if (activeSubProfileId) {
-      // Bio is user-level; skills are per sub-profile
-      if (userId) {
-        const supabase = createClient();
-        await supabase.from("users").update({ bio: data.bio }).eq("id", userId);
-        setBio(data.bio);
-      }
-      await handleSubProfileSave(activeSubProfileId, { skills: data.skills });
+      // Both bio and skills are per sub-profile
+      await handleSubProfileSave(activeSubProfileId, { bio: data.bio, skills: data.skills });
     } else {
       await handleAboutSave(data);
     }
@@ -625,7 +620,7 @@ export default function ProfilePage() {
         return (
           <>
             <ProfileAbout
-              bio={bio}
+              bio={activeSubProfile ? (activeSubProfile.bio ?? "") : bio}
               skills={activeSubProfile ? activeSubProfile.skills : skills}
               profileLabel={activeSubProfile ? activeSubProfile.label : "Main Profile"}
               onSave={handleAboutSaveForActiveProfile}
