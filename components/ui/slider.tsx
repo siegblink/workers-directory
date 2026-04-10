@@ -113,8 +113,10 @@ export function Slider({
   const lowerOnTop = lower >= max - step;
 
   // Both inputs are pointer-events:none so only their thumbs receive events.
+  // inset-0 pins all four edges to the containing block — more reliable than
+  // w-full/h-full which can resolve against a different ancestor in flex layouts.
   const rangeInput = cn(
-    "absolute w-full h-full appearance-none bg-transparent cursor-pointer",
+    "absolute inset-0 appearance-none bg-transparent cursor-pointer",
     "pointer-events-none",
     // re-enable pointer events on thumb only (webkit + firefox)
     "[&::-webkit-slider-thumb]:pointer-events-auto",
