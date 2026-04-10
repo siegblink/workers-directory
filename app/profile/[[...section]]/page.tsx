@@ -855,7 +855,10 @@ export default function ProfilePage() {
                   />
 
                   {/* Detail panel */}
-                  <div className="flex-1 min-w-0 space-y-6">
+                  <div
+                    key={activeSubProfileId ?? "main"}
+                    className="flex-1 min-w-0 space-y-6"
+                  >
                     {renderDetailPanel()}
                   </div>
                 </div>
