@@ -209,7 +209,7 @@ export default function ProfilePage() {
         .maybeSingle(),
       supabase
         .from("workers")
-        .select("id, profession, skills, hourly_rate_min, is_verified, jobs_completed, response_time_minutes")
+        .select("id, profession, skills, hourly_rate_min, is_verified, jobs_completed, response_time_minutes, availability")
         .eq("user_id", user.id)
         .is("deleted_at", null)
         .maybeSingle(),
@@ -235,6 +235,7 @@ export default function ProfilePage() {
       is_verified: boolean | null;
       jobs_completed: number | null;
       response_time_minutes: number | null;
+      availability: ProfileAvailabilityFormValues | null;
     } | null;
 
     const wid = wd?.id ?? null;
@@ -293,6 +294,7 @@ export default function ProfilePage() {
 
     setBio(ud?.bio ?? "");
     setSkills(wd?.skills ?? []);
+    setAvailability(wd?.availability ?? defaultAvailability);
 
     // Portfolio from workers_posts
     type PostRow = { id: number; title: string | null; content: string | null; media_url: string | null };
@@ -627,6 +629,13 @@ export default function ProfilePage() {
     if (activeSubProfileId) {
       await handleSubProfileSave(activeSubProfileId, { availability: data });
     } else {
+      if (workerId) {
+        const supabase = createClient();
+        await supabase
+          .from("workers")
+          .update({ availability: data })
+          .eq("id", workerId);
+      }
       setAvailability(data);
     }
     toast.success("Availability saved");

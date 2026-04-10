@@ -6,17 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { ProfileAvailability } from "@/components/profile/profile-availability";
+import type { ProfileAvailabilityFormValues } from "@/lib/schemas/profile";
 import { createClient } from "@/lib/supabase/client";
+
+const defaultAvailability: ProfileAvailabilityFormValues = {
+  monday: "9:00 AM - 5:00 PM",
+  tuesday: "9:00 AM - 5:00 PM",
+  wednesday: "9:00 AM - 5:00 PM",
+  thursday: "9:00 AM - 5:00 PM",
+  friday: "9:00 AM - 5:00 PM",
+  saturday: "Closed",
+  sunday: "Closed",
+};
 
 export default function SettingsPage() {
   // ─── Notification preferences (local-only — no DB table) ──────────────────
@@ -46,6 +51,10 @@ export default function SettingsPage() {
   const [accountError, setAccountError] = useState<string | null>(null);
   const [accountSuccess, setAccountSuccess] = useState(false);
 
+  // ─── Availability tab state ───────────────────────────────────────────────
+  const [availability, setAvailability] =
+    useState<ProfileAvailabilityFormValues>(defaultAvailability);
+
   // ─── Password tab state ───────────────────────────────────────────────────
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -73,7 +82,7 @@ export default function SettingsPage() {
           .maybeSingle(),
         supabase
           .from("workers")
-          .select("id, profession, hourly_rate_min")
+          .select("id, profession, hourly_rate_min, availability")
           .eq("user_id", user.id)
           .is("deleted_at", null)
           .maybeSingle(),
@@ -96,6 +105,7 @@ export default function SettingsPage() {
         id: string;
         profession: string | null;
         hourly_rate_min: number | null;
+        availability: ProfileAvailabilityFormValues | null;
       } | null;
 
       if (ud) {
@@ -110,6 +120,7 @@ export default function SettingsPage() {
         setProfession(wd.profession ?? "");
         setHourlyRate(wd.hourly_rate_min != null ? String(wd.hourly_rate_min) : "");
         setWorkerId(wd.id);
+        setAvailability(wd.availability ?? defaultAvailability);
       }
     }
 
@@ -187,6 +198,16 @@ export default function SettingsPage() {
 
     setProfileSuccess(true);
     setProfileSaving(false);
+  }
+
+  async function handleSaveAvailability(data: ProfileAvailabilityFormValues) {
+    if (!workerId) return;
+    const supabase = createClient();
+    await supabase
+      .from("workers")
+      .update({ availability: data })
+      .eq("id", workerId);
+    setAvailability(data);
   }
 
   async function handleUpdateAccount() {
@@ -358,66 +379,10 @@ export default function SettingsPage() {
 
           {/* Availability Tab */}
           <TabsContent value="availability">
-            <Card>
-              <CardHeader>
-                <CardTitle>Weekly Availability</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ].map((day) => (
-                  <div key={day} className="flex items-center gap-4">
-                    <div className="w-32">
-                      <Label>{day}</Label>
-                    </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      <Select defaultValue="09:00">
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 24 }, (_, i) => {
-                            const hour = i.toString().padStart(2, "0");
-                            return (
-                              <SelectItem key={hour} value={`${hour}:00`}>
-                                {hour}:00
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <span className="text-muted-foreground">to</span>
-                      <Select defaultValue="18:00">
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 24 }, (_, i) => {
-                            const hour = i.toString().padStart(2, "0");
-                            return (
-                              <SelectItem key={hour} value={`${hour}:00`}>
-                                {hour}:00
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <Switch defaultChecked={day !== "Sunday"} />
-                    </div>
-                  </div>
-                ))}
-
-                <p className="text-sm text-muted-foreground mt-2">
-                  Availability scheduling is coming soon.
-                </p>
-              </CardContent>
-            </Card>
+            <ProfileAvailability
+              availability={availability}
+              onSave={handleSaveAvailability}
+            />
           </TabsContent>
 
           {/* Notifications Tab */}
