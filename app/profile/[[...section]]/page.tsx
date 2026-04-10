@@ -61,12 +61,12 @@ const BOOKING_STATUS_LABEL: Record<string, string> = {
 // ─── Defaults & helpers ───────────────────────────────────────────────────────
 
 const defaultAvailability: ProfileAvailabilityFormValues = {
-  monday: "9:00 AM - 6:00 PM",
-  tuesday: "9:00 AM - 6:00 PM",
-  wednesday: "9:00 AM - 6:00 PM",
-  thursday: "9:00 AM - 6:00 PM",
+  monday: "9:00 AM - 5:00 PM",
+  tuesday: "9:00 AM - 5:00 PM",
+  wednesday: "9:00 AM - 5:00 PM",
+  thursday: "9:00 AM - 5:00 PM",
   friday: "9:00 AM - 5:00 PM",
-  saturday: "10:00 AM - 3:00 PM",
+  saturday: "Closed",
   sunday: "Closed",
 };
 
@@ -690,8 +690,11 @@ export default function ProfilePage() {
   }
 
   async function handleAvailabilitySave(data: ProfileAvailabilityFormValues) {
-    // No DB table for availability — local state only
-    setAvailability(data);
+    if (activeSubProfileId) {
+      await handleSubProfileSave(activeSubProfileId, { availability: data });
+    } else {
+      setAvailability(data);
+    }
   }
 
   async function handleSubProfileSave(id: string, updates: Partial<SubProfile>) {
@@ -720,6 +723,9 @@ export default function ProfilePage() {
         const activeSubProfile = activeSubProfileId
           ? (subProfiles.find((sp) => sp.id === activeSubProfileId) ?? null)
           : null;
+        const displayedAvailability = activeSubProfile
+          ? activeSubProfile.availability
+          : availability;
         return (
           <>
             <ProfileAbout
@@ -729,7 +735,7 @@ export default function ProfilePage() {
               onSave={handleAboutSaveForActiveProfile}
             />
             <ProfileAvailability
-              availability={availability}
+              availability={displayedAvailability}
               onSave={handleAvailabilitySave}
             />
           </>

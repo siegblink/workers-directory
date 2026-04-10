@@ -65,6 +65,16 @@ export type Worker = {
   deleted_at: string | null;
 };
 
+export type WeeklyAvailability = {
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+};
+
 export type SubProfile = {
   id: string;
   user_id: string;
@@ -76,6 +86,7 @@ export type SubProfile = {
   hourly_rate_max: number | null;
   years_experience: number | null;
   status: "available" | "busy" | "offline";
+  availability: WeeklyAvailability;
   created_at: string;
   deleted_at: string | null;
 };

@@ -129,6 +129,15 @@ export default function BecomeWorkerPage() {
         bio: formData.bio.trim() || null,
         years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
         status: "available",
+        availability: {
+          monday: "9:00 AM - 5:00 PM",
+          tuesday: "9:00 AM - 5:00 PM",
+          wednesday: "9:00 AM - 5:00 PM",
+          thursday: "9:00 AM - 5:00 PM",
+          friday: "9:00 AM - 5:00 PM",
+          saturday: "Closed",
+          sunday: "Closed",
+        },
       });
     }
 

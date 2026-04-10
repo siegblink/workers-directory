@@ -89,6 +89,7 @@ export async function updateSubProfile(
       | "hourly_rate_max"
       | "years_experience"
       | "status"
+      | "availability"
     >
   >,
 ): Promise<ApiResponse<SubProfile>> {
