@@ -84,6 +84,7 @@ export function WorkerGallery({ portfolio, onBookNow }: WorkerGalleryProps) {
                           src={item.image}
                           alt={item.title}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform group-hover:scale-105"
                         />
                       )}
@@ -131,6 +132,7 @@ export function WorkerGallery({ portfolio, onBookNow }: WorkerGalleryProps) {
                   src={portfolio[selectedImageIndex].image}
                   alt={portfolio[selectedImageIndex]?.title || "Gallery image"}
                   fill
+                  sizes="95vw"
                   className="object-cover"
                   priority
                 />
@@ -208,6 +210,7 @@ export function WorkerGallery({ portfolio, onBookNow }: WorkerGalleryProps) {
                       src={item.image}
                       alt={item.title}
                       fill
+                      sizes="(max-width: 768px) 25vw, 16vw"
                       className="object-cover"
                     />
                   )}
