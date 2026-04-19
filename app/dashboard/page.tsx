@@ -132,8 +132,7 @@ export default function WorkerDashboardPage() {
     }
 
     setIsWorker(true);
-    // wid = workers table PK (used for workers_with_details view and ratings)
-    // user.id = auth UUID stored in bookings.worker_id (matches the original FK to users.id)
+    // wid = workers table PK — bookings.worker_id REFERENCES workers(id)
     const wid = workerResult.data.id as string;
 
     // Parallel: all bookings for stats, view data, pending, upcoming, active, reviews
@@ -148,7 +147,7 @@ export default function WorkerDashboardPage() {
       supabase
         .from("bookings")
         .select("id, status, requested_at")
-        .eq("worker_id", user.id),
+        .eq("worker_id", wid),
       supabase
         .from("workers_with_details")
         .select("average_rating, review_count")
@@ -159,7 +158,7 @@ export default function WorkerDashboardPage() {
         .select(
           "id, status, description, requested_at, customer_id, category_id",
         )
-        .eq("worker_id", user.id)
+        .eq("worker_id", wid)
         .eq("status", "pending")
         .order("requested_at", { ascending: false }),
       supabase
@@ -167,7 +166,7 @@ export default function WorkerDashboardPage() {
         .select(
           "id, status, description, requested_at, customer_id, category_id",
         )
-        .eq("worker_id", user.id)
+        .eq("worker_id", wid)
         .eq("status", "accepted")
         .order("requested_at", { ascending: true }),
       supabase
@@ -175,7 +174,7 @@ export default function WorkerDashboardPage() {
         .select(
           "id, status, description, requested_at, customer_id, category_id",
         )
-        .eq("worker_id", user.id)
+        .eq("worker_id", wid)
         .eq("status", "in_progress")
         .order("requested_at", { ascending: true }),
       supabase

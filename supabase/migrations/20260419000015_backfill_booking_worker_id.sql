@@ -1,7 +1,4 @@
--- Backfill: old bookings stored workers.id as worker_id.
--- The correct value is workers.user_id (auth UUID), matching the original FK
--- to users.id and the RLS policy worker_id = auth.uid().
-UPDATE bookings b
-SET worker_id = w.user_id
-FROM workers w
-WHERE b.worker_id = w.id;
+-- Intentionally empty.
+-- A prior version of this migration attempted to backfill bookings.worker_id
+-- to auth UUIDs, but the live FK is REFERENCES workers(id) so that direction
+-- is wrong. worker_id must store workers.id. No data change needed.

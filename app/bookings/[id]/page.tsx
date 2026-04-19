@@ -192,7 +192,7 @@ export default function BookingDetailPage({
       const { data: workerData } = await supabase
         .from("workers")
         .select("id, profession, user_id")
-        .eq("user_id", bookingData.worker_id)
+        .eq("id", bookingData.worker_id)
         .maybeSingle();
 
       let workerUser = null;

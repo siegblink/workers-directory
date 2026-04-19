@@ -162,7 +162,7 @@ export default function BookingsPage() {
         supabase
           .from("workers")
           .select("id, profession, user_id")
-          .in("user_id", workerIds),
+          .in("id", workerIds),
         supabase.from("categories").select("id, name").in("id", categoryIds),
       ]);
 
