@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +69,28 @@ function formatBookingTime(dateString: string | null): string {
   });
 }
 
+const VALID_TABS = ["pending", "upcoming", "active", "performance"] as const;
+type TabValue = (typeof VALID_TABS)[number];
+
 export default function WorkerDashboardPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = (
+    VALID_TABS.includes(searchParams.get("tab") as TabValue)
+      ? searchParams.get("tab")
+      : "pending"
+  ) as TabValue;
+
+  useEffect(() => {
+    if (!VALID_TABS.includes(searchParams.get("tab") as TabValue)) {
+      router.replace("/dashboard?tab=pending");
+    }
+  }, [router, searchParams]);
+
+  function handleTabChange(tab: string) {
+    router.replace(`/dashboard?tab=${tab}`);
+  }
+
   const [verificationStatus, setVerificationStatus] = useState<
     "loading" | "verified" | "pending" | "not_verified"
   >("loading");
@@ -98,31 +120,18 @@ export default function WorkerDashboardPage() {
       return;
     }
 
-    // Parallel: find worker record + check verification status
-    const [workerResult, verificationResult] = await Promise.all([
-      supabase
-        .from("workers")
-        .select("id")
-        .eq("user_id", user.id)
-        .is("deleted_at", null)
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("verifications")
-        .select("status")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-    ]);
+    // Find worker record (is_verified drives the verification banner)
+    const workerResult = await supabase
+      .from("workers")
+      .select("id, is_verified")
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .limit(1)
+      .maybeSingle();
 
-    // Set verification banner state
-    const verification = verificationResult.data;
-    if (!verification) {
-      setVerificationStatus("not_verified");
-    } else if (verification.status === "approved") {
-      setVerificationStatus("verified");
-    } else {
-      setVerificationStatus("pending");
-    }
+    setVerificationStatus(
+      workerResult.data?.is_verified ? "verified" : "not_verified",
+    );
 
     // No worker profile — show non-worker empty state
     if (!workerResult.data) {
@@ -534,7 +543,7 @@ export default function WorkerDashboardPage() {
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="pending" className="space-y-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               <TabsList>
                 <TabsTrigger value="pending">
                   Pending Requests
@@ -544,11 +553,18 @@ export default function WorkerDashboardPage() {
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="upcoming">Upcoming Jobs</TabsTrigger>
+                <TabsTrigger value="upcoming">
+                  Upcoming Jobs
+                  {upcomingBookings.length > 0 && (
+                    <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full bg-blue-600 text-white">
+                      {upcomingBookings.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="active">
                   Active Jobs
                   {activeBookings.length > 0 && (
-                    <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full bg-purple-600">
+                    <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full bg-purple-600 text-white">
                       {activeBookings.length}
                     </Badge>
                   )}
@@ -703,7 +719,7 @@ export default function WorkerDashboardPage() {
 
                           <div className="flex flex-col items-end justify-center gap-2">
                             <Button
-                              className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto"
+                              className="bg-purple-600 hover:bg-purple-700 text-white w-full md:w-auto"
                               onClick={() => handleStart(job.id)}
                             >
                               <Play />
