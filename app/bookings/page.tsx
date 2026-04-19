@@ -36,11 +36,13 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSupabaseClient } from "@/lib/database/base-query";
+import { fireNotificationEmail } from "@/lib/notify";
 
 type BookingItem = {
   id: string;
   worker: {
     id: string;
+    userId: string | null;
     name: string;
     profession: string;
     avatar: string | null | undefined;
@@ -195,6 +197,7 @@ export default function BookingsPage() {
             id: String(b.id),
             worker: {
               id: worker?.id ?? "",
+              userId: worker?.user_id ?? null,
               name: workerUser
                 ? `${workerUser.firstname} ${workerUser.lastname}`
                 : "Unknown Worker",
@@ -222,9 +225,32 @@ export default function BookingsPage() {
     const supabase = getSupabaseClient();
     await supabase
       .from("bookings")
-      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .update({
+        status: "canceled",
+        canceled_at: new Date().toISOString(),
+        canceled_by: userId,
+      })
       .eq("id", cancelConfirmId)
       .eq("customer_id", userId);
+
+    // Notify the worker
+    const booking = bookings.find((b) => b.id === cancelConfirmId);
+    if (booking?.worker.userId) {
+      const { data: customerProfile } = await supabase
+        .from("users")
+        .select("firstname, lastname")
+        .eq("id", userId)
+        .maybeSingle();
+      const actorName = customerProfile
+        ? `${customerProfile.firstname} ${customerProfile.lastname}`
+        : "The customer";
+      fireNotificationEmail({
+        type: "booking_canceled",
+        recipientId: booking.worker.userId,
+        actorName,
+        bookingId: cancelConfirmId,
+      });
+    }
 
     setBookings((prev) =>
       prev.map((b) =>
@@ -432,7 +458,7 @@ export default function BookingsPage() {
             <AlertDialogAction
               onClick={handleCancelConfirm}
               disabled={canceling}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 !text-white"
             >
               {canceling ? (
                 <>

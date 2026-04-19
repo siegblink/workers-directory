@@ -31,6 +31,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseClient } from "@/lib/database/base-query";
+import { fireNotificationEmail } from "@/lib/notify";
 
 type Category = {
   id: string;
@@ -128,18 +129,41 @@ export function BookingModal({
       return;
     }
 
-    const { error: insertError } = await supabase.from("bookings").insert({
-      customer_id: user.id,
-      worker_id: workerId,
-      ...(categoryId ? { category_id: categoryId } : {}),
-      description: description.trim() || null,
-      status: "pending",
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("bookings")
+      .insert({
+        customer_id: user.id,
+        worker_id: workerId,
+        ...(categoryId ? { category_id: categoryId } : {}),
+        description: description.trim() || null,
+        status: "pending",
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
+    if (insertError || !inserted) {
       setError("Failed to create booking. Please try again.");
       setSubmitting(false);
       return;
+    }
+
+    // Resolve worker auth UUID then fire email notification (best-effort)
+    const { data: workerRow } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", workerId)
+      .maybeSingle();
+    if (workerRow?.user_id) {
+      const actorName =
+        [user.user_metadata?.first_name, user.user_metadata?.last_name]
+          .filter(Boolean)
+          .join(" ") || user.email?.split("@")[0] || "A customer";
+      fireNotificationEmail({
+        type: "booking_new",
+        recipientId: workerRow.user_id,
+        actorName,
+        bookingId: inserted.id,
+      });
     }
 
     handleOpenChange(false);

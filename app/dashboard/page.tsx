@@ -13,7 +13,8 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
+import { fireNotificationEmail } from "@/lib/notify";
 
 type DashboardStats = {
   totalBookings: number;
@@ -36,6 +38,7 @@ type DashboardStats = {
 
 type DashboardBooking = {
   id: string;
+  customerId: string;
   customer: { name: string; avatar: string | null | undefined };
   category: string | null;
   description: string | null;
@@ -96,6 +99,7 @@ export default function WorkerDashboardPage() {
   >("loading");
   const [loading, setLoading] = useState(true);
   const [isWorker, setIsWorker] = useState<boolean | null>(null);
+  const currentUserRef = useRef<SupabaseUser | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pendingBookings, setPendingBookings] = useState<DashboardBooking[]>(
     [],
@@ -119,6 +123,7 @@ export default function WorkerDashboardPage() {
       setLoading(false);
       return;
     }
+    currentUserRef.current = user;
 
     // Find worker record (is_verified drives the verification banner)
     const workerResult = await supabase
@@ -292,6 +297,7 @@ export default function WorkerDashboardPage() {
       const cat = b.category_id ? categoryMap.get(b.category_id) : null;
       return {
         id: String(b.id),
+        customerId: b.customer_id,
         customer: {
           name: cu ? `${cu.firstname} ${cu.lastname}` : "Unknown Customer",
           avatar: cu?.profile_pic_url,
@@ -327,12 +333,39 @@ export default function WorkerDashboardPage() {
     loadDashboard();
   }, [loadDashboard]);
 
+  function getWorkerActorName() {
+    const u = currentUserRef.current;
+    if (!u) return "Your worker";
+    return (
+      [u.user_metadata?.first_name, u.user_metadata?.last_name]
+        .filter(Boolean)
+        .join(" ") || u.email?.split("@")[0] || "Your worker"
+    );
+  }
+
+  function findBooking(bookingId: string) {
+    return (
+      pendingBookings.find((b) => b.id === bookingId) ??
+      upcomingBookings.find((b) => b.id === bookingId) ??
+      activeBookings.find((b) => b.id === bookingId)
+    );
+  }
+
   async function handleAccept(bookingId: string) {
     const supabase = createClient();
     await supabase
       .from("bookings")
       .update({ status: "accepted", accepted_at: new Date().toISOString() })
       .eq("id", bookingId);
+    const booking = findBooking(bookingId);
+    if (booking) {
+      fireNotificationEmail({
+        type: "booking_accepted",
+        recipientId: booking.customerId,
+        actorName: getWorkerActorName(),
+        bookingId,
+      });
+    }
     loadDashboard();
   }
 
@@ -340,8 +373,21 @@ export default function WorkerDashboardPage() {
     const supabase = createClient();
     await supabase
       .from("bookings")
-      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .update({
+        status: "canceled",
+        canceled_at: new Date().toISOString(),
+        canceled_by: currentUserRef.current?.id ?? null,
+      })
       .eq("id", bookingId);
+    const booking = findBooking(bookingId);
+    if (booking) {
+      fireNotificationEmail({
+        type: "booking_canceled",
+        recipientId: booking.customerId,
+        actorName: getWorkerActorName(),
+        bookingId,
+      });
+    }
     loadDashboard();
   }
 
@@ -369,6 +415,15 @@ export default function WorkerDashboardPage() {
       .from("bookings")
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", bookingId);
+    const booking = findBooking(bookingId);
+    if (booking) {
+      fireNotificationEmail({
+        type: "booking_completed",
+        recipientId: booking.customerId,
+        actorName: getWorkerActorName(),
+        bookingId,
+      });
+    }
     loadDashboard();
   }
 

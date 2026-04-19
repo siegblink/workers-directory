@@ -38,6 +38,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseClient } from "@/lib/database/base-query";
+import { fireNotificationEmail } from "@/lib/notify";
 
 type BookingDetail = {
   id: string;
@@ -51,6 +52,7 @@ type BookingDetail = {
   canceled_at: string | null;
   worker: {
     id: string;
+    userId: string | null;
     name: string;
     profession: string;
     avatar: string | null | undefined;
@@ -192,7 +194,7 @@ export default function BookingDetailPage({
       const { data: workerData } = await supabase
         .from("workers")
         .select("id, profession, user_id")
-        .eq("id", bookingData.worker_id)
+        .eq("id", String(bookingData.worker_id))
         .maybeSingle();
 
       let workerUser = null;
@@ -227,6 +229,7 @@ export default function BookingDetailPage({
         canceled_at: bookingData.canceled_at,
         worker: {
           id: workerData?.id ?? "",
+          userId: workerData?.user_id ?? null,
           name: workerUser
             ? `${workerUser.firstname} ${workerUser.lastname}`
             : "Unknown Worker",
@@ -249,9 +252,31 @@ export default function BookingDetailPage({
     const supabase = getSupabaseClient();
     await supabase
       .from("bookings")
-      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .update({
+        status: "canceled",
+        canceled_at: new Date().toISOString(),
+        canceled_by: currentUserId,
+      })
       .eq("id", booking.id)
       .eq("customer_id", currentUserId);
+
+    // Notify the worker that the customer cancelled
+    if (booking.worker.userId) {
+      const { data: customerProfile } = await supabase
+        .from("users")
+        .select("firstname, lastname")
+        .eq("id", currentUserId)
+        .maybeSingle();
+      const actorName = customerProfile
+        ? `${customerProfile.firstname} ${customerProfile.lastname}`
+        : "The customer";
+      fireNotificationEmail({
+        type: "booking_canceled",
+        recipientId: booking.worker.userId,
+        actorName,
+        bookingId: booking.id,
+      });
+    }
 
     setBooking((prev) =>
       prev
@@ -506,7 +531,7 @@ export default function BookingDetailPage({
             <AlertDialogAction
               onClick={handleCancel}
               disabled={canceling}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 !text-white"
             >
               {canceling ? (
                 <>

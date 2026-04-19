@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DirectoriesMenu } from "@/components/directories-menu";
 import { Logo } from "@/components/logo";
+import { NotificationsBell } from "@/components/notifications-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -204,6 +205,7 @@ export function Navigation() {
                 <Button variant="outline" asChild>
                   <Link href="/credits">{creditsBalance} Credits</Link>
                 </Button>
+                <NotificationsBell userId={user.id} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -289,6 +291,7 @@ export function Navigation() {
 
           {/* Mobile Navigation */}
           <div className="lg:hidden ml-auto lg:ml-0 flex items-center gap-2">
+            {isLoggedIn && user && <NotificationsBell userId={user.id} />}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
