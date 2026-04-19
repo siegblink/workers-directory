@@ -135,6 +135,7 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                           src={item.image}
                           alt={item.title}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform group-hover:scale-105"
                         />
                       )}
@@ -178,6 +179,7 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                   src={portfolio[selectedImageIndex].image}
                   alt={portfolio[selectedImageIndex]?.title || "Gallery image"}
                   fill
+                  sizes="(max-width: 896px) 95vw, 896px"
                   className="object-cover"
                   priority
                 />
@@ -237,6 +239,7 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                       src={item.image}
                       alt={item.title}
                       fill
+                      sizes="(max-width: 768px) 25vw, 150px"
                       className="object-cover"
                     />
                   )}

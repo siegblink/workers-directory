@@ -120,6 +120,7 @@ export function GalleryItemsList({
                       src={item.image}
                       alt={item.title}
                       fill
+                      sizes="128px"
                       className="object-cover"
                     />
                   </div>
