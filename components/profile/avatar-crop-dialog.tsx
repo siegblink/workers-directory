@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -96,9 +97,9 @@ export function AvatarCropDialog({
       <DialogContent className="max-w-lg gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>Adjust Profile Photo</DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription>
             Drag to reposition · Scroll or use the slider to zoom
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         {/* Crop viewport */}

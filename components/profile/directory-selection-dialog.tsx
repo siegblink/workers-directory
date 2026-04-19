@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -43,6 +44,9 @@ export function DirectorySelectionDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Choose a Directory</DialogTitle>
+          <DialogDescription className="sr-only">
+            Select a service directory to add to your profile
+          </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
           {directories.map((dir) => (

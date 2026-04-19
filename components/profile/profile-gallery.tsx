@@ -16,6 +16,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -165,6 +166,9 @@ export function ProfileGallery({ portfolio }: ProfileGalleryProps) {
                 {selectedImageIndex + 1} / {portfolio.length}
               </span>
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Browse portfolio images
+            </DialogDescription>
           </DialogHeader>
 
           <div className="relative px-4">
