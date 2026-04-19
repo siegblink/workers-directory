@@ -250,7 +250,7 @@ export default function WorkerProfilePage({
       <BookingModal
         open={bookingModalOpen}
         onOpenChange={setBookingModalOpen}
-        workerId={worker.id}
+        workerId={worker.user_id}
         workerName={workerHeaderData.name}
         workerProfession={workerHeaderData.profession}
         hourlyRate={workerHeaderData.hourlyRate}
