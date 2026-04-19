@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Crown,
+  Play,
   Star,
   TrendingUp,
   XCircle,
@@ -33,7 +34,7 @@ type DashboardStats = {
 };
 
 type DashboardBooking = {
-  id: number;
+  id: string;
   customer: { name: string; avatar: string | null | undefined };
   category: string | null;
   description: string | null;
@@ -42,7 +43,7 @@ type DashboardBooking = {
 };
 
 type DashboardReview = {
-  id: number;
+  id: string;
   customerName: string;
   rating: number;
   comment: string | null;
@@ -80,6 +81,7 @@ export default function WorkerDashboardPage() {
   const [upcomingBookings, setUpcomingBookings] = useState<DashboardBooking[]>(
     [],
   );
+  const [activeBookings, setActiveBookings] = useState<DashboardBooking[]>([]);
   const [recentReviews, setRecentReviews] = useState<DashboardReview[]>([]);
 
   const loadDashboard = useCallback(async () => {
@@ -132,12 +134,13 @@ export default function WorkerDashboardPage() {
     setIsWorker(true);
     const wid = workerResult.data.id as string;
 
-    // Parallel: all bookings for stats, view data, pending, upcoming, reviews
+    // Parallel: all bookings for stats, view data, pending, upcoming, active, reviews
     const [
       allBookingsResult,
       viewResult,
       pendingResult,
       upcomingResult,
+      activeResult,
       reviewsResult,
     ] = await Promise.all([
       supabase
@@ -164,6 +167,14 @@ export default function WorkerDashboardPage() {
         )
         .eq("worker_id", wid)
         .eq("status", "accepted")
+        .order("requested_at", { ascending: true }),
+      supabase
+        .from("bookings")
+        .select(
+          "id, status, description, requested_at, customer_id, category_id",
+        )
+        .eq("worker_id", wid)
+        .eq("status", "in_progress")
         .order("requested_at", { ascending: true }),
       supabase
         .from("ratings")
@@ -213,6 +224,7 @@ export default function WorkerDashboardPage() {
     // Batch-resolve names for bookings + reviews
     const pendingData = pendingResult.data ?? [];
     const upcomingData = upcomingResult.data ?? [];
+    const activeData = activeResult.data ?? [];
     const reviewsData = reviewsResult.data ?? [];
 
     const bookingCustomerIds = [
@@ -220,6 +232,7 @@ export default function WorkerDashboardPage() {
         [
           ...pendingData.map((b) => b.customer_id),
           ...upcomingData.map((b) => b.customer_id),
+          ...activeData.map((b) => b.customer_id),
         ].filter(Boolean),
       ),
     ];
@@ -235,6 +248,7 @@ export default function WorkerDashboardPage() {
         [
           ...pendingData.map((b) => b.category_id),
           ...upcomingData.map((b) => b.category_id),
+          ...activeData.map((b) => b.category_id),
         ].filter(Boolean),
       ),
     ];
@@ -257,7 +271,7 @@ export default function WorkerDashboardPage() {
     );
 
     function toBookingItem(b: {
-      id: number;
+      id: string | number;
       customer_id: string;
       category_id: number | null;
       description: string | null;
@@ -267,7 +281,7 @@ export default function WorkerDashboardPage() {
       const cu = userMap.get(b.customer_id);
       const cat = b.category_id ? categoryMap.get(b.category_id) : null;
       return {
-        id: b.id,
+        id: String(b.id),
         customer: {
           name: cu ? `${cu.firstname} ${cu.lastname}` : "Unknown Customer",
           avatar: cu?.profile_pic_url,
@@ -281,12 +295,13 @@ export default function WorkerDashboardPage() {
 
     setPendingBookings(pendingData.map(toBookingItem));
     setUpcomingBookings(upcomingData.map(toBookingItem));
+    setActiveBookings(activeData.map(toBookingItem));
 
     setRecentReviews(
       reviewsData.map((r) => {
         const cu = userMap.get(r.customer_id);
         return {
-          id: r.id,
+          id: String(r.id),
           customerName: cu ? `${cu.firstname} ${cu.lastname}` : "Anonymous",
           rating: r.rating_value ?? 0,
           comment: r.review_comment,
@@ -302,7 +317,7 @@ export default function WorkerDashboardPage() {
     loadDashboard();
   }, [loadDashboard]);
 
-  async function handleAccept(bookingId: number) {
+  async function handleAccept(bookingId: string) {
     const supabase = createClient();
     await supabase
       .from("bookings")
@@ -311,7 +326,7 @@ export default function WorkerDashboardPage() {
     loadDashboard();
   }
 
-  async function handleDecline(bookingId: number) {
+  async function handleDecline(bookingId: string) {
     const supabase = createClient();
     await supabase
       .from("bookings")
@@ -320,11 +335,29 @@ export default function WorkerDashboardPage() {
     loadDashboard();
   }
 
-  async function handleCancel(bookingId: number) {
+  async function handleCancel(bookingId: string) {
     const supabase = createClient();
     await supabase
       .from("bookings")
       .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .eq("id", bookingId);
+    loadDashboard();
+  }
+
+  async function handleStart(bookingId: string) {
+    const supabase = createClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "in_progress", started_at: new Date().toISOString() })
+      .eq("id", bookingId);
+    loadDashboard();
+  }
+
+  async function handleComplete(bookingId: string) {
+    const supabase = createClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", bookingId);
     loadDashboard();
   }
@@ -511,6 +544,14 @@ export default function WorkerDashboardPage() {
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="upcoming">Upcoming Jobs</TabsTrigger>
+                <TabsTrigger value="active">
+                  Active Jobs
+                  {activeBookings.length > 0 && (
+                    <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full bg-purple-600">
+                      {activeBookings.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
               </TabsList>
 
@@ -660,13 +701,21 @@ export default function WorkerDashboardPage() {
                           </div>
 
                           <div className="flex flex-col items-end justify-center gap-2">
-                            <Button variant="outline" asChild>
+                            <Button
+                              className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto"
+                              onClick={() => handleStart(job.id)}
+                            >
+                              <Play />
+                              Mark In Progress
+                            </Button>
+                            <Button variant="outline" size="sm" asChild>
                               <Link href={`/bookings/${job.id}`}>
                                 View Details
                               </Link>
                             </Button>
                             <Button
                               variant="outline"
+                              size="sm"
                               className="text-red-600 hover:text-red-700 bg-transparent"
                               onClick={() => handleCancel(job.id)}
                             >
@@ -687,6 +736,95 @@ export default function WorkerDashboardPage() {
                         </h3>
                         <p className="text-muted-foreground">
                           Accepted bookings will appear here.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Active Jobs Tab */}
+              <TabsContent value="active">
+                <div className="space-y-4">
+                  {activeBookings.map((job) => (
+                    <Card key={job.id}>
+                      <CardContent>
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="flex items-start gap-4 flex-1">
+                            <Avatar className="w-16 h-16">
+                              <AvatarImage
+                                src={job.customer.avatar || undefined}
+                                alt={job.customer.name}
+                              />
+                              <AvatarFallback>
+                                {job.customer.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold text-lg text-foreground">
+                                {job.customer.name}
+                              </h3>
+                              {job.category && (
+                                <p className="text-sm text-muted-foreground">
+                                  {job.category}
+                                </p>
+                              )}
+                              {job.description && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {job.description}
+                                </p>
+                              )}
+                              <Badge className="mt-2 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                In Progress
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                {formatBookingDate(job.requestedAt)}
+                                {job.requestedAt && (
+                                  <> at {formatBookingTime(job.requestedAt)}</>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end justify-center gap-2">
+                            <Button
+                              className="bg-green-600 hover:bg-green-700 w-full md:w-auto"
+                              onClick={() => handleComplete(job.id)}
+                            >
+                              <CheckCircle2 />
+                              Mark Complete
+                            </Button>
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/bookings/${job.id}`}>
+                                View Details
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {activeBookings.length === 0 && (
+                    <Card>
+                      <CardContent className="text-center">
+                        <Play className="text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2 text-foreground">
+                          No Active Jobs
+                        </h3>
+                        <p className="text-muted-foreground">
+                          Jobs you&apos;ve started will appear here. Mark an
+                          upcoming job as &quot;In Progress&quot; when you
+                          arrive on-site.
                         </p>
                       </CardContent>
                     </Card>

@@ -14,7 +14,12 @@ export type Json =
 // ENUMS
 // =====================================================
 
-export type BookingStatus = "pending" | "completed" | "canceled";
+export type BookingStatus =
+  | "pending"
+  | "accepted"
+  | "in_progress"
+  | "completed"
+  | "canceled";
 export type UserStatus = "active" | "inactive" | "suspended";
 export type WorkerStatus = "available" | "busy" | "unavailable";
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
@@ -98,19 +103,20 @@ export interface Category {
   created_at: string;
 }
 
-export interface Booking {
-  id: number;
-  customer_id: number;
-  worker_id: number;
-  category_id: number;
+export type Booking = {
+  id: string; // UUID
+  customer_id: string; // UUID → users.id
+  worker_id: string; // UUID → workers.id
+  category_id: string; // UUID → categories.id
   description: string | null;
   requested_at: string | null;
   accepted_at: string | null;
+  started_at: string | null;
   completed_at: string | null;
   canceled_at: string | null;
   status: BookingStatus;
   created_at: string;
-}
+};
 
 export interface Chat {
   id: number;

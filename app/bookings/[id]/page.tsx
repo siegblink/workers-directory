@@ -12,6 +12,16 @@ import {
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,11 +40,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseClient } from "@/lib/database/base-query";
 
 type BookingDetail = {
-  id: number;
+  id: string;
   status: string;
   description: string | null;
+  customer_id: string;
   requested_at: string | null;
   accepted_at: string | null;
+  started_at: string | null;
   completed_at: string | null;
   canceled_at: string | null;
   worker: {
@@ -77,6 +89,12 @@ function buildTimeline(booking: BookingDetail): TimelineStep[] {
   });
 
   steps.push({
+    label: "Job In Progress",
+    timestamp: booking.started_at,
+    completed: !!booking.started_at,
+  });
+
+  steps.push({
     label: "Service Completed",
     timestamp: booking.completed_at,
     completed: !!booking.completed_at,
@@ -100,8 +118,11 @@ function formatTimestamp(ts: string | null): string {
 function getStatusColor(status: string): string {
   switch (status) {
     case "pending":
+      return "bg-yellow-100 text-yellow-700";
     case "accepted":
       return "bg-blue-100 text-blue-700";
+    case "in_progress":
+      return "bg-purple-100 text-purple-700";
     case "completed":
       return "bg-green-100 text-green-700";
     case "canceled":
@@ -117,6 +138,8 @@ function getStatusLabel(status: string): string {
       return "Pending";
     case "accepted":
       return "Upcoming";
+    case "in_progress":
+      return "In Progress";
     case "completed":
       return "Completed";
     case "canceled":
@@ -136,19 +159,26 @@ export default function BookingDetailPage({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [booking, setBooking] = useState<BookingDetail | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
     async function load() {
       const supabase = getSupabaseClient();
 
-      // Fetch booking base fields without joins to avoid FK inference issues
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) setCurrentUserId(user.id);
+
       const { data: bookingData, error } = await supabase
         .from("bookings")
         .select(
-          "id, status, description, requested_at, accepted_at, completed_at, canceled_at, worker_id, category_id",
+          "id, status, description, customer_id, requested_at, accepted_at, started_at, completed_at, canceled_at, worker_id, category_id",
         )
         .eq("id", id)
         .maybeSingle();
@@ -159,7 +189,6 @@ export default function BookingDetailPage({
         return;
       }
 
-      // Fetch worker + their user record separately
       const { data: workerData } = await supabase
         .from("workers")
         .select("id, profession, user_id")
@@ -176,7 +205,6 @@ export default function BookingDetailPage({
         workerUser = data;
       }
 
-      // Fetch category separately
       let categoryName: string | null = null;
       if (bookingData.category_id) {
         const { data: catData } = await supabase
@@ -188,11 +216,13 @@ export default function BookingDetailPage({
       }
 
       setBooking({
-        id: bookingData.id,
+        id: String(bookingData.id),
         status: bookingData.status,
         description: bookingData.description,
+        customer_id: bookingData.customer_id,
         requested_at: bookingData.requested_at,
         accepted_at: bookingData.accepted_at,
+        started_at: bookingData.started_at,
         completed_at: bookingData.completed_at,
         canceled_at: bookingData.canceled_at,
         worker: {
@@ -211,6 +241,26 @@ export default function BookingDetailPage({
 
     load();
   }, [id]);
+
+  async function handleCancel() {
+    if (!booking || !currentUserId) return;
+    setCanceling(true);
+
+    const supabase = getSupabaseClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .eq("id", booking.id)
+      .eq("customer_id", currentUserId);
+
+    setBooking((prev) =>
+      prev
+        ? { ...prev, status: "canceled", canceled_at: new Date().toISOString() }
+        : prev,
+    );
+    setCanceling(false);
+    setCancelConfirmOpen(false);
+  }
 
   const handleSubmitReview = () => {
     setReviewModalOpen(false);
@@ -239,6 +289,8 @@ export default function BookingDetailPage({
   }
 
   const timeline = buildTimeline(booking);
+  const isCustomer = currentUserId === booking.customer_id;
+  const cancelableStatuses = new Set(["pending", "accepted"]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -392,6 +444,31 @@ export default function BookingDetailPage({
             </CardContent>
           </Card>
 
+          {/* Customer Actions */}
+          {isCustomer && cancelableStatuses.has(booking.status) && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold mb-1 text-foreground">
+                      Need to cancel?
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Please cancel as early as possible so the worker is notified.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="text-red-600 dark:text-red-400 hover:text-red-700"
+                    onClick={() => setCancelConfirmOpen(true)}
+                  >
+                    Cancel Booking
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Leave Review */}
           {booking.status === "completed" && (
             <Card>
@@ -414,6 +491,35 @@ export default function BookingDetailPage({
           )}
         </div>
       </div>
+
+      {/* Cancel Confirmation */}
+      <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The worker will be notified. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={canceling}>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              disabled={canceling}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {canceling ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Cancelling...
+                </>
+              ) : (
+                "Yes, Cancel"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Review Modal */}
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>

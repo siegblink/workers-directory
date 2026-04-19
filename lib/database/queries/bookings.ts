@@ -175,6 +175,7 @@ export async function updateBookingStatus(
   const timestampField = {
     pending: null,
     accepted: "accepted_at",
+    in_progress: "started_at",
     completed: "completed_at",
     canceled: "canceled_at",
   }[status];

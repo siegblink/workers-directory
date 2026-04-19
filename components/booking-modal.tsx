@@ -1,9 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
-import { CalendarIcon, Clock, MapPin } from "lucide-react";
+import { AlertCircle, CalendarIcon, Clock } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -13,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -27,39 +28,126 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { getSupabaseClient } from "@/lib/database/base-query";
 
-interface BookingModalProps {
+type Category = {
+  id: string;
+  name: string;
+};
+
+type BookingModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  workerId: string;
   workerName: string;
   workerProfession: string;
   hourlyRate: number;
-}
+};
 
 export function BookingModal({
   open,
   onOpenChange,
+  workerId,
   workerName,
   workerProfession,
   hourlyRate,
 }: BookingModalProps) {
+  const router = useRouter();
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("");
-  const [duration, setDuration] = useState("2");
-  const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const estimatedCost = hourlyRate * Number.parseInt(duration || "0", 10);
+  useEffect(() => {
+    if (!open || !workerId) return;
 
-  const handleSubmit = (e: React.FormEvent) => {
+    setLoadingCategories(true);
+    const supabase = getSupabaseClient();
+
+    async function fetchCategories() {
+      const { data: wc } = await supabase
+        .from("workers_categories")
+        .select("category_id")
+        .eq("worker_id", workerId);
+
+      if (!wc?.length) {
+        setLoadingCategories(false);
+        return;
+      }
+
+      const categoryIds = wc.map((w) => w.category_id);
+      const { data: cats } = await supabase
+        .from("categories")
+        .select("id, name")
+        .in("id", categoryIds);
+
+      if (cats) {
+        const parsed = cats.map((c) => ({ id: String(c.id), name: c.name ?? "Unknown" }));
+        setCategories(parsed);
+        if (parsed.length > 0) setCategoryId(parsed[0].id);
+      }
+      setLoadingCategories(false);
+    }
+
+    fetchCategories();
+  }, [open, workerId]);
+
+  function resetForm() {
+    setDate(undefined);
+    setTime("");
+    setDescription("");
+    setCategoryId("");
+    setCategories([]);
+    setError(null);
+    setSubmitting(false);
+  }
+
+  function handleOpenChange(value: boolean) {
+    if (!value) resetForm();
+    onOpenChange(value);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Handle booking submission
-    onOpenChange(false);
-  };
+    setSubmitting(true);
+    setError(null);
+
+    const supabase = getSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("bookings").insert({
+      customer_id: user.id,
+      worker_id: workerId,
+      ...(categoryId ? { category_id: categoryId } : {}),
+      description: description.trim() || null,
+      status: "pending",
+    });
+
+    if (insertError) {
+      setError("Failed to create booking. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    handleOpenChange(false);
+    router.push("/bookings");
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Book {workerName}</DialogTitle>
@@ -69,14 +157,50 @@ export function BookingModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Service Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Service Category</Label>
+            {loadingCategories ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Spinner className="size-4" />
+                Loading categories...
+              </div>
+            ) : categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No service categories listed for this worker.
+              </p>
+            ) : (
+              <Select value={categoryId} onValueChange={setCategoryId} disabled={submitting}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           {/* Date Selection */}
           <div className="space-y-2">
-            <Label>Select Date</Label>
+            <Label>Preferred Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className="w-full justify-start text-left font-normal bg-transparent"
+                  disabled={submitting}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -88,65 +212,31 @@ export function BookingModal({
                   selected={date}
                   onSelect={setDate}
                   initialFocus
-                  disabled={(date) => date < new Date()}
+                  disabled={(d) => d < new Date()}
                 />
               </PopoverContent>
             </Popover>
           </div>
 
           {/* Time Selection */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="time">Time</Label>
-              <Select value={time} onValueChange={setTime}>
-                <SelectTrigger id="time">
-                  <Clock className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 24 }, (_, i) => {
-                    const hour = i.toString().padStart(2, "0");
-                    return (
-                      <SelectItem key={hour} value={`${hour}:00`}>
-                        {hour}:00
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (hours)</Label>
-              <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger id="duration">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
-                    <SelectItem key={hours} value={hours.toString()}>
-                      {hours} {hours === 1 ? "hour" : "hours"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="location">Service Location</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                id="location"
-                placeholder="Enter your address"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="pl-9"
-                required
-              />
-            </div>
+            <Label htmlFor="time">Preferred Time</Label>
+            <Select value={time} onValueChange={setTime} disabled={submitting}>
+              <SelectTrigger id="time">
+                <Clock className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Select time" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 24 }, (_, i) => {
+                  const hour = i.toString().padStart(2, "0");
+                  return (
+                    <SelectItem key={hour} value={`${hour}:00`}>
+                      {hour}:00
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Description */}
@@ -158,29 +248,8 @@ export function BookingModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              required
+              disabled={submitting}
             />
-          </div>
-
-          {/* Cost Summary */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Hourly Rate</span>
-              <span className="font-medium">₱{hourlyRate}/hour</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Duration</span>
-              <span className="font-medium">{duration} hours</span>
-            </div>
-            <div className="border-t pt-2 flex items-center justify-between">
-              <span className="font-semibold">Estimated Total</span>
-              <span className="text-2xl font-bold text-blue-600">
-                ₱{estimatedCost}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">
-              Final cost may vary based on actual time spent
-            </p>
           </div>
 
           {/* Actions */}
@@ -188,13 +257,25 @@ export function BookingModal({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               className="flex-1 bg-transparent"
+              disabled={submitting}
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
-              Confirm Booking
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Sending Request...
+                </>
+              ) : (
+                "Send Booking Request"
+              )}
             </Button>
           </div>
         </form>

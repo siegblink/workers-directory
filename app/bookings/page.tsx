@@ -4,6 +4,16 @@ import { Calendar, Filter, Lightbulb, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +38,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSupabaseClient } from "@/lib/database/base-query";
 
 type BookingItem = {
-  id: number;
+  id: string;
   worker: {
     id: string;
     name: string;
@@ -47,6 +57,8 @@ function getStatusLabel(status: string): string {
       return "Pending";
     case "accepted":
       return "Upcoming";
+    case "in_progress":
+      return "In Progress";
     case "completed":
       return "Completed";
     case "canceled":
@@ -59,8 +71,11 @@ function getStatusLabel(status: string): string {
 function getStatusColor(status: string): string {
   switch (status) {
     case "pending":
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
     case "accepted":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    case "in_progress":
+      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
     case "completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     case "canceled":
@@ -94,6 +109,9 @@ export default function BookingsPage() {
   const [sortBy, setSortBy] = useState("date-desc");
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<BookingItem[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -109,14 +127,15 @@ export default function BookingsPage() {
         return;
       }
 
-      // Fetch bookings base fields without joins
+      setUserId(user.id);
+
       let query = supabase
         .from("bookings")
         .select("id, status, description, requested_at, worker_id, category_id")
         .eq("customer_id", user.id);
 
       if (filterStatus === "upcoming") {
-        query = query.in("status", ["pending", "accepted"]);
+        query = query.in("status", ["pending", "accepted", "in_progress"]);
       } else if (filterStatus === "completed") {
         query = query.eq("status", "completed");
       } else if (filterStatus === "cancelled") {
@@ -127,11 +146,11 @@ export default function BookingsPage() {
 
       const { data: bookingsData } = await query;
       if (!bookingsData || bookingsData.length === 0) {
+        setBookings([]);
         setLoading(false);
         return;
       }
 
-      // Batch-fetch all workers referenced by these bookings
       const workerIds = [
         ...new Set(bookingsData.map((b) => b.worker_id).filter(Boolean)),
       ];
@@ -147,7 +166,6 @@ export default function BookingsPage() {
         supabase.from("categories").select("id, name").in("id", categoryIds),
       ]);
 
-      // Batch-fetch all user records for those workers
       const userIds = [
         ...new Set(
           (workersResult.data ?? []).map((w) => w.user_id).filter(Boolean),
@@ -160,22 +178,21 @@ export default function BookingsPage() {
             .in("id", userIds)
         : { data: [] };
 
-      // Build lookup maps
       const userMap = new Map((usersData ?? []).map((u) => [u.id, u]));
       const workerMap = new Map(
         (workersResult.data ?? []).map((w) => [w.id, w]),
       );
       const categoryMap = new Map(
-        (categoriesResult.data ?? []).map((c) => [c.id, c]),
+        (categoriesResult.data ?? []).map((c) => [String(c.id), c]),
       );
 
       setBookings(
         bookingsData.map((b) => {
           const worker = workerMap.get(b.worker_id);
           const workerUser = worker ? userMap.get(worker.user_id) : null;
-          const category = categoryMap.get(b.category_id);
+          const category = categoryMap.get(String(b.category_id));
           return {
-            id: b.id,
+            id: String(b.id),
             worker: {
               id: worker?.id ?? "",
               name: workerUser
@@ -197,6 +214,29 @@ export default function BookingsPage() {
 
     load();
   }, [filterStatus, sortBy]);
+
+  async function handleCancelConfirm() {
+    if (!cancelConfirmId || !userId) return;
+    setCanceling(true);
+
+    const supabase = getSupabaseClient();
+    await supabase
+      .from("bookings")
+      .update({ status: "canceled", canceled_at: new Date().toISOString() })
+      .eq("id", cancelConfirmId)
+      .eq("customer_id", userId);
+
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === cancelConfirmId ? { ...b, status: "canceled" } : b,
+      ),
+    );
+
+    setCanceling(false);
+    setCancelConfirmId(null);
+  }
+
+  const cancelableStatuses = new Set(["pending", "accepted"]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -347,12 +387,12 @@ export default function BookingsPage() {
                           View Details
                         </Link>
                       </Button>
-                      {(booking.status === "pending" ||
-                        booking.status === "accepted") && (
+                      {cancelableStatuses.has(booking.status) && (
                         <Button
                           variant="outline"
                           size="sm"
                           className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                          onClick={() => setCancelConfirmId(booking.id)}
                         >
                           Cancel Booking
                         </Button>
@@ -372,6 +412,40 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Cancel Confirmation */}
+      <AlertDialog
+        open={cancelConfirmId !== null}
+        onOpenChange={(open) => !open && setCancelConfirmId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The worker will be notified. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={canceling}>
+              Keep Booking
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              disabled={canceling}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {canceling ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Cancelling...
+                </>
+              ) : (
+                "Yes, Cancel"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
