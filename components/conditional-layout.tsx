@@ -4,9 +4,11 @@ import { usePathname } from "next/navigation";
 import type React from "react";
 import { Footer } from "@/components/footer";
 import { Navigation } from "@/components/navigation";
+import { usePresence } from "@/hooks/use-presence";
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  usePresence();
 
   // Hide Navigation and Footer on authentication pages
   const isAuthPage =
