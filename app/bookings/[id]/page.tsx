@@ -383,7 +383,7 @@ export default function BookingDetailPage({
         <div className="grid gap-6">
           {/* Worker Info */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar className="w-20 h-20">
@@ -535,7 +535,7 @@ export default function BookingDetailPage({
           {/* Leave Review */}
           {isCustomer && booking.status === "completed" && (
             <Card>
-              <CardContent className="p-6">
+              <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold mb-1 text-foreground">
@@ -578,7 +578,7 @@ export default function BookingDetailPage({
             <AlertDialogAction
               onClick={handleCancel}
               disabled={canceling}
-              className="bg-red-600 hover:bg-red-700 !text-white"
+              className="bg-red-600 hover:bg-red-700 text-white!"
             >
               {canceling ? (
                 <>
