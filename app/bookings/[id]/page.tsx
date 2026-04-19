@@ -165,6 +165,9 @@ export default function BookingDetailPage({
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [hasReview, setHasReview] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
@@ -239,6 +242,13 @@ export default function BookingDetailPage({
         category: categoryName,
       });
 
+      const { data: existingRating } = await supabase
+        .from("ratings")
+        .select("id")
+        .eq("booking_id", id)
+        .maybeSingle();
+      if (existingRating) setHasReview(true);
+
       setLoading(false);
     }
 
@@ -287,9 +297,37 @@ export default function BookingDetailPage({
     setCancelConfirmOpen(false);
   }
 
-  const handleSubmitReview = () => {
+  async function handleSubmitReview() {
+    if (!booking || !currentUserId || rating === 0) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.from("ratings").insert({
+      booking_id: booking.id,
+      customer_id: currentUserId,
+      worker_id: booking.worker.id,
+      rating_value: rating,
+      review_comment: reviewText.trim() || null,
+    });
+
+    setSubmittingReview(false);
+
+    if (error) {
+      if (error.code === "23505") {
+        setReviewError("You've already submitted a review for this booking.");
+        setHasReview(true);
+      } else {
+        setReviewError("Something went wrong. Please try again.");
+      }
+      return;
+    }
+
+    setHasReview(true);
     setReviewModalOpen(false);
-  };
+    setRating(0);
+    setReviewText("");
+  }
 
   if (loading) {
     return (
@@ -495,7 +533,7 @@ export default function BookingDetailPage({
           )}
 
           {/* Leave Review */}
-          {booking.status === "completed" && (
+          {isCustomer && booking.status === "completed" && (
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -504,12 +542,21 @@ export default function BookingDetailPage({
                       How was your experience?
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Leave a review to help other customers
+                      {hasReview
+                        ? "Thank you for your review!"
+                        : "Leave a review to help other customers"}
                     </p>
                   </div>
-                  <Button onClick={() => setReviewModalOpen(true)}>
-                    Leave Review
-                  </Button>
+                  {hasReview ? (
+                    <Badge className="bg-green-100 text-green-700">
+                      <CheckCircle2 className="w-4 h-4 mr-1" />
+                      Review Submitted
+                    </Badge>
+                  ) : (
+                    <Button onClick={() => setReviewModalOpen(true)}>
+                      Leave Review
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -547,7 +594,13 @@ export default function BookingDetailPage({
       </AlertDialog>
 
       {/* Review Modal */}
-      <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
+      <Dialog
+        open={reviewModalOpen}
+        onOpenChange={(open) => {
+          setReviewModalOpen(open);
+          if (!open) setReviewError(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Leave a Review</DialogTitle>
@@ -565,7 +618,8 @@ export default function BookingDetailPage({
                     key={star}
                     type="button"
                     onClick={() => setRating(star)}
-                    className="transition-transform hover:scale-110"
+                    disabled={submittingReview}
+                    className="transition-transform hover:scale-110 disabled:opacity-50"
                   >
                     <Star
                       className={`w-8 h-8 ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
@@ -583,23 +637,38 @@ export default function BookingDetailPage({
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 rows={4}
+                disabled={submittingReview}
               />
             </div>
+
+            {reviewError && (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {reviewError}
+              </p>
+            )}
 
             <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={() => setReviewModalOpen(false)}
                 className="flex-1 bg-transparent"
+                disabled={submittingReview}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmitReview}
                 className="flex-1"
-                disabled={rating === 0 || !reviewText.trim()}
+                disabled={rating === 0 || !reviewText.trim() || submittingReview}
               >
-                Submit Review
+                {submittingReview ? (
+                  <>
+                    <Spinner className="mr-2" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Review"
+                )}
               </Button>
             </div>
           </div>
