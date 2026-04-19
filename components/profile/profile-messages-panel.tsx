@@ -76,7 +76,7 @@ export function ProfileMessagesPanel({
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {conversation.timestamp}
                   </span>
                   <Button variant="outline" size="sm" asChild>

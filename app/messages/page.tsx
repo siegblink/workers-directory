@@ -229,6 +229,22 @@ export default function MessagesPage() {
         setLoadingMessages(false);
       });
 
+    // Mark all unread messages in this chat as read
+    supabase
+      .from("messages")
+      .update({ status: "read" })
+      .eq("chat_id", selectedChatId)
+      .eq("receiver_id", currentUserId)
+      .neq("status", "read")
+      .then(() => {
+        if (cancelled) return;
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.chatId === selectedChatId ? { ...c, unread: 0 } : c,
+          ),
+        );
+      });
+
     // Supabase Realtime subscription for new messages
     const channel = supabase
       .channel(`chat-${selectedChatId}`)
