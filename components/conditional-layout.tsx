@@ -28,9 +28,10 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     "/messages",
   ];
 
-  // Pages that should hide only the footer (keep navigation)
+  // Pages that should hide only the footer (keep navigation).
+  // Use startsWith so nested routes like /bookings/[id] are also covered.
   const hideFooterPages =
-    appPages.includes(pathname) ||
+    appPages.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/worker/");
 
