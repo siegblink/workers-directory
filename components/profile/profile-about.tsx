@@ -243,7 +243,9 @@ export function ProfileAbout({
             <div className="mt-6 pt-6 border-t border-border grid grid-cols-2 gap-4">
               {hourlyRateMin != null && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Hourly Rate</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Hourly Rate
+                  </p>
                   <p className="font-semibold text-foreground">
                     ₱{hourlyRateMin}
                     {hourlyRateMax != null && hourlyRateMax > hourlyRateMin
@@ -257,7 +259,9 @@ export function ProfileAbout({
               )}
               {yearsExperience != null && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Experience</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Experience
+                  </p>
                   <p className="font-semibold text-foreground">
                     {yearsExperience}{" "}
                     <span className="text-sm font-normal text-muted-foreground">

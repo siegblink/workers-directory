@@ -94,8 +94,11 @@ export function ProfileSubProfileSettings({
           <Alert>
             <AlertDescription>
               <p>
-                You&apos;re viewing your main profile. Select a sub-profile above to manage its settings, or visit{" "}
-                <Link href="/settings" className="underline underline-offset-2">Settings</Link>{" "}
+                You&apos;re viewing your main profile. Select a sub-profile
+                above to manage its settings, or visit{" "}
+                <Link href="/settings" className="underline underline-offset-2">
+                  Settings
+                </Link>{" "}
                 to update your main profile.
               </p>
             </AlertDescription>
@@ -110,9 +113,15 @@ export function ProfileSubProfileSettings({
     await onSave(activeSubProfileId, {
       label: data.label,
       profession: data.profession,
-      hourly_rate_min: data.hourly_rate_min ? parseFloat(data.hourly_rate_min) : null,
-      hourly_rate_max: data.hourly_rate_max ? parseFloat(data.hourly_rate_max) : null,
-      years_experience: data.years_experience ? parseInt(data.years_experience, 10) : null,
+      hourly_rate_min: data.hourly_rate_min
+        ? parseFloat(data.hourly_rate_min)
+        : null,
+      hourly_rate_max: data.hourly_rate_max
+        ? parseFloat(data.hourly_rate_max)
+        : null,
+      years_experience: data.years_experience
+        ? parseInt(data.years_experience, 10)
+        : null,
     });
     toast.success("Changes saved");
   }
@@ -198,7 +207,9 @@ export function ProfileSubProfileSettings({
                   name="hourly_rate_min"
                   render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel htmlFor="sp-rate-min">Min Rate (₱/hr)</FieldLabel>
+                      <FieldLabel htmlFor="sp-rate-min">
+                        Min Rate (₱/hr)
+                      </FieldLabel>
                       <InputGroup>
                         <InputGroupInput
                           id="sp-rate-min"
@@ -220,7 +231,9 @@ export function ProfileSubProfileSettings({
                   name="hourly_rate_max"
                   render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel htmlFor="sp-rate-max">Max Rate (₱/hr)</FieldLabel>
+                      <FieldLabel htmlFor="sp-rate-max">
+                        Max Rate (₱/hr)
+                      </FieldLabel>
                       <InputGroup>
                         <InputGroupInput
                           id="sp-rate-max"
@@ -243,7 +256,9 @@ export function ProfileSubProfileSettings({
                 name="years_experience"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={!!fieldState.error}>
-                    <FieldLabel htmlFor="sp-experience">Years of Experience</FieldLabel>
+                    <FieldLabel htmlFor="sp-experience">
+                      Years of Experience
+                    </FieldLabel>
                     <InputGroup>
                       <InputGroupInput
                         id="sp-experience"
@@ -326,7 +341,8 @@ export function ProfileSubProfileSettings({
                 <DialogDescription asChild>
                   <div className="space-y-3 pt-2">
                     <p>
-                      To confirm, type <strong>{activeProfile.label}</strong> in the box below.
+                      To confirm, type <strong>{activeProfile.label}</strong> in
+                      the box below.
                     </p>
                   </div>
                 </DialogDescription>
@@ -348,7 +364,9 @@ export function ProfileSubProfileSettings({
                 </Button>
                 <Button
                   variant="destructive"
-                  disabled={deleteConfirmText !== activeProfile.label || isDeleting}
+                  disabled={
+                    deleteConfirmText !== activeProfile.label || isDeleting
+                  }
                   onClick={handleConfirmDelete}
                 >
                   {isDeleting ? (

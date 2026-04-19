@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Chat with service workers and customers on Direktory.",
 };
 
-export default function MessagesLayout({ children }: { children: React.ReactNode }) {
+export default function MessagesLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

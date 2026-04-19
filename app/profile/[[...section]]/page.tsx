@@ -43,7 +43,10 @@ import {
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 import { useSubProfile } from "@/contexts/sub-profile-context";
-import { deleteSubProfile, updateSubProfile } from "@/lib/database/queries/sub-profiles";
+import {
+  deleteSubProfile,
+  updateSubProfile,
+} from "@/lib/database/queries/sub-profiles";
 import type { SubProfile } from "@/lib/database/types";
 import type {
   ProfileAboutFormValues,
@@ -164,15 +167,32 @@ export default function ProfilePage() {
   const [availability, setAvailability] =
     useState<ProfileAvailabilityFormValues>(defaultAvailability);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [reviews, setReviews] = useState<(Review & { categoryName: string })[]>([]);
+  const [reviews, setReviews] = useState<(Review & { categoryName: string })[]>(
+    [],
+  );
   const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   // Real data for panels
   const [chatPreviews, setChatPreviews] = useState<
-    { id: number | string; name: string; profession: string; avatar: string; lastMessage: string; timestamp: string; unread: number; categoryName: string }[]
+    {
+      id: number | string;
+      name: string;
+      profession: string;
+      avatar: string;
+      lastMessage: string;
+      timestamp: string;
+      unread: number;
+      categoryName: string;
+    }[]
   >([]);
   const [bookingPreviews, setBookingPreviews] = useState<
-    { id: number | string; worker: string; service: string; date: string; status: string }[]
+    {
+      id: number | string;
+      worker: string;
+      service: string;
+      date: string;
+      status: string;
+    }[]
   >([]);
   // Sub-profile dialog
   const [directoryDialogOpen, setDirectoryDialogOpen] = useState(false);
@@ -205,12 +225,16 @@ export default function ProfilePage() {
     const [userResult, workerResult] = await Promise.all([
       supabase
         .from("users")
-        .select("id, firstname, lastname, profile_pic_url, bio, city, state, created_at, status_emoji, status_text")
+        .select(
+          "id, firstname, lastname, profile_pic_url, bio, city, state, created_at, status_emoji, status_text",
+        )
         .eq("id", user.id)
         .maybeSingle(),
       supabase
         .from("workers")
-        .select("id, profession, skills, hourly_rate_min, is_verified, jobs_completed, response_time_minutes, availability")
+        .select(
+          "id, profession, skills, hourly_rate_min, is_verified, jobs_completed, response_time_minutes, availability",
+        )
         .eq("user_id", user.id)
         .is("deleted_at", null)
         .maybeSingle(),
@@ -261,7 +285,9 @@ export default function ProfilePage() {
       wid
         ? supabase
             .from("ratings")
-            .select("id, customer_id, rating_value, review_comment, created_at, booking_id")
+            .select(
+              "id, customer_id, rating_value, review_comment, created_at, booking_id",
+            )
             .eq("worker_id", wid)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
@@ -284,7 +310,9 @@ export default function ProfilePage() {
       profession: wd?.profession ?? "",
       isOnline: vd?.is_online ?? false,
       verified: wd?.is_verified ?? false,
-      rating: vd ? Math.round(parseFloat(String(vd.average_rating)) * 10) / 10 || 0 : 0,
+      rating: vd
+        ? Math.round(parseFloat(String(vd.average_rating)) * 10) / 10 || 0
+        : 0,
       reviews: vd ? parseInt(String(vd.review_count), 10) || 0 : 0,
       location: locationParts,
       joinedDate: ud?.created_at ? formatJoinedDate(ud.created_at) : "",
@@ -298,7 +326,12 @@ export default function ProfilePage() {
     setAvailability(wd?.availability ?? defaultAvailability);
 
     // Portfolio from workers_posts
-    type PostRow = { id: number; title: string | null; content: string | null; media_url: string | null };
+    type PostRow = {
+      id: number;
+      title: string | null;
+      content: string | null;
+      media_url: string | null;
+    };
     const posts = (postsResult.data ?? []) as PostRow[];
     setPortfolio(
       posts.map((p) => ({
@@ -311,7 +344,14 @@ export default function ProfilePage() {
     );
 
     // Reviews from ratings — batch-resolve customer names + booking category names
-    type RatingRow = { id: number; customer_id: string; rating_value: number | null; review_comment: string | null; created_at: string; booking_id: number | null };
+    type RatingRow = {
+      id: number;
+      customer_id: string;
+      rating_value: number | null;
+      review_comment: string | null;
+      created_at: string;
+      booking_id: number | null;
+    };
     const ratingsData = (ratingsResult.data ?? []) as RatingRow[];
 
     if (ratingsData.length > 0) {
@@ -319,7 +359,11 @@ export default function ProfilePage() {
         ...new Set(ratingsData.map((r) => r.customer_id).filter(Boolean)),
       ];
       const ratingBookingIds = [
-        ...new Set(ratingsData.map((r) => r.booking_id).filter((id): id is number => id !== null)),
+        ...new Set(
+          ratingsData
+            .map((r) => r.booking_id)
+            .filter((id): id is number => id !== null),
+        ),
       ];
 
       const [customersResult, ratingBookingsResult] = await Promise.all([
@@ -328,14 +372,22 @@ export default function ProfilePage() {
           .select("id, firstname, lastname, profile_pic_url")
           .in("id", customerIds),
         ratingBookingIds.length > 0
-          ? supabase.from("bookings").select("id, category_id").in("id", ratingBookingIds)
+          ? supabase
+              .from("bookings")
+              .select("id, category_id")
+              .in("id", ratingBookingIds)
           : Promise.resolve({ data: [] }),
       ]);
 
       type RatingBookingRow = { id: number; category_id: number | null };
-      const ratingBookingRows = (ratingBookingsResult.data ?? []) as RatingBookingRow[];
+      const ratingBookingRows = (ratingBookingsResult.data ??
+        []) as RatingBookingRow[];
       const ratingCatIds = [
-        ...new Set(ratingBookingRows.map((b) => b.category_id).filter((id): id is number => id !== null)),
+        ...new Set(
+          ratingBookingRows
+            .map((b) => b.category_id)
+            .filter((id): id is number => id !== null),
+        ),
       ];
 
       let ratingCategoryNameMap = new Map<number, string>();
@@ -346,18 +398,28 @@ export default function ProfilePage() {
           .select("id, name")
           .in("id", ratingCatIds);
         ratingCategoryNameMap = new Map(
-          ((ratingCatsData ?? []) as RatingCategory[]).map((c) => [c.id, c.name]),
+          ((ratingCatsData ?? []) as RatingCategory[]).map((c) => [
+            c.id,
+            c.name,
+          ]),
         );
       }
 
       const ratingBookingToCatName = new Map<number, string>(
         ratingBookingRows.map((b) => [
           b.id,
-          b.category_id !== null ? (ratingCategoryNameMap.get(b.category_id) ?? "") : "",
+          b.category_id !== null
+            ? (ratingCategoryNameMap.get(b.category_id) ?? "")
+            : "",
         ]),
       );
 
-      type CustomerRow = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
+      type CustomerRow = {
+        id: string;
+        firstname: string;
+        lastname: string;
+        profile_pic_url: string | null;
+      };
       const customerMap = new Map(
         ((customersResult.data ?? []) as CustomerRow[]).map((c) => [c.id, c]),
       );
@@ -365,7 +427,10 @@ export default function ProfilePage() {
       setReviews(
         ratingsData.map((r) => {
           const cu = customerMap.get(r.customer_id);
-          const categoryName = r.booking_id !== null ? (ratingBookingToCatName.get(r.booking_id) ?? "") : "";
+          const categoryName =
+            r.booking_id !== null
+              ? (ratingBookingToCatName.get(r.booking_id) ?? "")
+              : "";
           return {
             id: r.id,
             author: cu ? `${cu.firstname} ${cu.lastname}` : "Anonymous",
@@ -392,7 +457,9 @@ export default function ProfilePage() {
       };
       const { data: invoiceRows } = await supabase
         .from("invoices")
-        .select("id, invoice_number, customer_id, service, amount, status, created_at")
+        .select(
+          "id, invoice_number, customer_id, service, amount, status, created_at",
+        )
         .eq("worker_id", wid)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -400,7 +467,11 @@ export default function ProfilePage() {
       if (invoiceRows && invoiceRows.length > 0) {
         const rows = invoiceRows as InvoiceRow[];
         const invoiceCustomerIds = [...new Set(rows.map((r) => r.customer_id))];
-        type InvoiceUserRow = { id: string; firstname: string; lastname: string };
+        type InvoiceUserRow = {
+          id: string;
+          firstname: string;
+          lastname: string;
+        };
         const { data: invoiceUsersData } = await supabase
           .from("users")
           .select("id, firstname, lastname")
@@ -434,9 +505,25 @@ export default function ProfilePage() {
 
     // Load chat previews for the messages panel
     // Avoid FK hint joins — query chats, users, and messages separately
-    type RawChat = { id: number; customer_id: string; worker_id: string; booking_id: number | null };
-    type RawUser = { id: string; firstname: string; lastname: string; profile_pic_url: string | null };
-    type RawMsg = { chat_id: number; message_text: string | null; created_at: string; receiver_id: string; status: string };
+    type RawChat = {
+      id: number;
+      customer_id: string;
+      worker_id: string;
+      booking_id: number | null;
+    };
+    type RawUser = {
+      id: string;
+      firstname: string;
+      lastname: string;
+      profile_pic_url: string | null;
+    };
+    type RawMsg = {
+      chat_id: number;
+      message_text: string | null;
+      created_at: string;
+      receiver_id: string;
+      status: string;
+    };
 
     const { data: chatsRaw } = await supabase
       .from("chats")
@@ -458,7 +545,11 @@ export default function ProfilePage() {
         ),
       ];
       const chatBookingIds = [
-        ...new Set(chats.map((c) => c.booking_id).filter((id): id is number => id !== null)),
+        ...new Set(
+          chats
+            .map((c) => c.booking_id)
+            .filter((id): id is number => id !== null),
+        ),
       ];
 
       const [usersResult, msgsResult, chatBookingsResult] = await Promise.all([
@@ -472,16 +563,24 @@ export default function ProfilePage() {
           .in("chat_id", chatIds)
           .order("created_at", { ascending: false }),
         chatBookingIds.length > 0
-          ? supabase.from("bookings").select("id, category_id").in("id", chatBookingIds)
+          ? supabase
+              .from("bookings")
+              .select("id, category_id")
+              .in("id", chatBookingIds)
           : Promise.resolve({ data: [] }),
       ]);
 
       // Resolve category names for chat bookings
       type RawChatBooking = { id: number; category_id: number | null };
       type RawChatCategory = { id: number; name: string };
-      const chatBookingRows = (chatBookingsResult.data ?? []) as RawChatBooking[];
+      const chatBookingRows = (chatBookingsResult.data ??
+        []) as RawChatBooking[];
       const chatCatIds = [
-        ...new Set(chatBookingRows.map((b) => b.category_id).filter((id): id is number => id !== null)),
+        ...new Set(
+          chatBookingRows
+            .map((b) => b.category_id)
+            .filter((id): id is number => id !== null),
+        ),
       ];
 
       let chatCategoryNameMap = new Map<number, string>();
@@ -491,14 +590,19 @@ export default function ProfilePage() {
           .select("id, name")
           .in("id", chatCatIds);
         chatCategoryNameMap = new Map(
-          ((chatCatsData ?? []) as RawChatCategory[]).map((c) => [c.id, c.name]),
+          ((chatCatsData ?? []) as RawChatCategory[]).map((c) => [
+            c.id,
+            c.name,
+          ]),
         );
       }
 
       const bookingToCatName = new Map<number, string>(
         chatBookingRows.map((b) => [
           b.id,
-          b.category_id !== null ? (chatCategoryNameMap.get(b.category_id) ?? "") : "",
+          b.category_id !== null
+            ? (chatCategoryNameMap.get(b.category_id) ?? "")
+            : "",
         ]),
       );
 
@@ -517,7 +621,10 @@ export default function ProfilePage() {
           const unread = chatMsgs.filter(
             (m) => m.receiver_id === user.id && m.status !== "read",
           ).length;
-          const categoryName = chat.booking_id !== null ? (bookingToCatName.get(chat.booking_id) ?? "") : "";
+          const categoryName =
+            chat.booking_id !== null
+              ? (bookingToCatName.get(chat.booking_id) ?? "")
+              : "";
           return {
             id: chat.id,
             name: otherUser
@@ -535,7 +642,13 @@ export default function ProfilePage() {
     }
 
     // Load booking previews — avoid FK hints; use plain queries merged in memory
-    type RawBooking = { id: number; status: string; requested_at: string | null; worker_id: string | null; category_id: number | null };
+    type RawBooking = {
+      id: number;
+      status: string;
+      requested_at: string | null;
+      worker_id: string | null;
+      category_id: number | null;
+    };
     type RawWorkerRow = { id: string; user_id: string };
     type RawWorkerUser = { id: string; firstname: string; lastname: string };
     type RawCategory = { id: number; name: string };
@@ -549,37 +662,77 @@ export default function ProfilePage() {
 
     if (rawBookings && rawBookings.length > 0) {
       const bookings = rawBookings as RawBooking[];
-      const bookingWorkerIds = [...new Set(bookings.map((b) => b.worker_id).filter((id): id is string => !!id))];
-      const bookingCategoryIds = [...new Set(bookings.map((b) => b.category_id).filter((id): id is number => id !== null))];
+      const bookingWorkerIds = [
+        ...new Set(
+          bookings.map((b) => b.worker_id).filter((id): id is string => !!id),
+        ),
+      ];
+      const bookingCategoryIds = [
+        ...new Set(
+          bookings
+            .map((b) => b.category_id)
+            .filter((id): id is number => id !== null),
+        ),
+      ];
 
       const [workersResult, categoriesResult] = await Promise.all([
         bookingWorkerIds.length > 0
-          ? supabase.from("workers").select("id, user_id").in("id", bookingWorkerIds)
+          ? supabase
+              .from("workers")
+              .select("id, user_id")
+              .in("id", bookingWorkerIds)
           : Promise.resolve({ data: [] }),
         bookingCategoryIds.length > 0
-          ? supabase.from("categories").select("id, name").in("id", bookingCategoryIds)
+          ? supabase
+              .from("categories")
+              .select("id, name")
+              .in("id", bookingCategoryIds)
           : Promise.resolve({ data: [] }),
       ]);
 
       const workerRows = (workersResult.data ?? []) as RawWorkerRow[];
-      const workerUserIds = [...new Set(workerRows.map((w) => w.user_id).filter(Boolean))];
+      const workerUserIds = [
+        ...new Set(workerRows.map((w) => w.user_id).filter(Boolean)),
+      ];
 
-      const { data: workerUsersData } = workerUserIds.length > 0
-        ? await supabase.from("users").select("id, firstname, lastname").in("id", workerUserIds)
-        : { data: [] };
+      const { data: workerUsersData } =
+        workerUserIds.length > 0
+          ? await supabase
+              .from("users")
+              .select("id, firstname, lastname")
+              .in("id", workerUserIds)
+          : { data: [] };
 
-      const workerToUserIdMap = new Map(workerRows.map((w) => [w.id, w.user_id]));
-      const workerUserMap = new Map(((workerUsersData ?? []) as RawWorkerUser[]).map((u) => [u.id, u]));
-      const categoryMap = new Map(((categoriesResult.data ?? []) as RawCategory[]).map((c) => [c.id, c.name]));
+      const workerToUserIdMap = new Map(
+        workerRows.map((w) => [w.id, w.user_id]),
+      );
+      const workerUserMap = new Map(
+        ((workerUsersData ?? []) as RawWorkerUser[]).map((u) => [u.id, u]),
+      );
+      const categoryMap = new Map(
+        ((categoriesResult.data ?? []) as RawCategory[]).map((c) => [
+          c.id,
+          c.name,
+        ]),
+      );
 
       setBookingPreviews(
         bookings.map((b) => {
-          const workerUserId = b.worker_id ? workerToUserIdMap.get(b.worker_id) : null;
-          const workerUser = workerUserId ? workerUserMap.get(workerUserId) : null;
+          const workerUserId = b.worker_id
+            ? workerToUserIdMap.get(b.worker_id)
+            : null;
+          const workerUser = workerUserId
+            ? workerUserMap.get(workerUserId)
+            : null;
           return {
             id: b.id,
-            worker: workerUser ? `${workerUser.firstname} ${workerUser.lastname}` : "Unknown Worker",
-            service: b.category_id !== null ? (categoryMap.get(b.category_id) ?? "Service") : "Service",
+            worker: workerUser
+              ? `${workerUser.firstname} ${workerUser.lastname}`
+              : "Unknown Worker",
+            service:
+              b.category_id !== null
+                ? (categoryMap.get(b.category_id) ?? "Service")
+                : "Service",
             date: b.requested_at
               ? new Date(b.requested_at).toLocaleDateString("en-US", {
                   month: "short",
@@ -603,7 +756,10 @@ export default function ProfilePage() {
   // Chats/bookings/reviews have no sub_profile_id FK — they belong to the main
   // worker profile. Show empty state for all three panels under a sub-profile tab.
   const activeChatPreviews = activeSubProfileId ? [] : chatPreviews;
-  const unreadMessagesCount = activeChatPreviews.reduce((sum, c) => sum + c.unread, 0);
+  const unreadMessagesCount = activeChatPreviews.reduce(
+    (sum, c) => sum + c.unread,
+    0,
+  );
   const newReviewsCount = 0; // real reviews don't carry an isNew flag
 
   async function handleHeaderSave(data: ProfileHeaderFormValues) {
@@ -626,7 +782,14 @@ export default function ProfilePage() {
 
     await supabase
       .from("users")
-      .update({ firstname, lastname, city, state, status_emoji: data.statusEmoji ?? "", status_text: data.statusText ?? "" })
+      .update({
+        firstname,
+        lastname,
+        city,
+        state,
+        status_emoji: data.statusEmoji ?? "",
+        status_text: data.statusText ?? "",
+      })
       .eq("id", userId);
 
     if (workerId) {
@@ -637,7 +800,11 @@ export default function ProfilePage() {
     } else if (data.profession) {
       const { data: newWorker } = await supabase
         .from("workers")
-        .insert({ user_id: userId, profession: data.profession, status: "available" })
+        .insert({
+          user_id: userId,
+          profession: data.profession,
+          status: "available",
+        })
         .select("id")
         .single();
       if (newWorker) setWorkerId((newWorker as { id: string }).id);
@@ -665,9 +832,9 @@ export default function ProfilePage() {
       toast.error("Failed to upload avatar");
       return;
     }
-    const { data: { publicUrl } } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(path);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("avatars").getPublicUrl(path);
     await supabase
       .from("users")
       .update({ profile_pic_url: publicUrl })
@@ -683,7 +850,10 @@ export default function ProfilePage() {
     await Promise.all([
       supabase.from("users").update({ bio: data.bio }).eq("id", userId),
       workerId
-        ? supabase.from("workers").update({ skills: data.skills }).eq("id", workerId)
+        ? supabase
+            .from("workers")
+            .update({ skills: data.skills })
+            .eq("id", workerId)
         : Promise.resolve(),
     ]);
 
@@ -707,7 +877,10 @@ export default function ProfilePage() {
     toast.success("Availability saved");
   }
 
-  async function handleSubProfileSave(id: string, updates: Partial<SubProfile>) {
+  async function handleSubProfileSave(
+    id: string,
+    updates: Partial<SubProfile>,
+  ) {
     await updateSubProfile(id, updates);
     await refreshSubProfiles();
   }
@@ -715,7 +888,10 @@ export default function ProfilePage() {
   async function handleAboutSaveForActiveProfile(data: ProfileAboutFormValues) {
     if (activeSubProfileId) {
       // Both bio and skills are per sub-profile
-      await handleSubProfileSave(activeSubProfileId, { bio: data.bio, skills: data.skills });
+      await handleSubProfileSave(activeSubProfileId, {
+        bio: data.bio,
+        skills: data.skills,
+      });
     } else {
       await handleAboutSave(data);
     }
@@ -742,10 +918,20 @@ export default function ProfilePage() {
             <ProfileAbout
               bio={activeSubProfile ? (activeSubProfile.bio ?? "") : bio}
               skills={activeSubProfile ? activeSubProfile.skills : skills}
-              profileLabel={activeSubProfile ? activeSubProfile.label : "Main Profile"}
-              hourlyRateMin={activeSubProfile ? activeSubProfile.hourly_rate_min : (profile.hourlyRate || null)}
-              hourlyRateMax={activeSubProfile ? activeSubProfile.hourly_rate_max : null}
-              yearsExperience={activeSubProfile ? activeSubProfile.years_experience : null}
+              profileLabel={
+                activeSubProfile ? activeSubProfile.label : "Main Profile"
+              }
+              hourlyRateMin={
+                activeSubProfile
+                  ? activeSubProfile.hourly_rate_min
+                  : profile.hourlyRate || null
+              }
+              hourlyRateMax={
+                activeSubProfile ? activeSubProfile.hourly_rate_max : null
+              }
+              yearsExperience={
+                activeSubProfile ? activeSubProfile.years_experience : null
+              }
               onSave={handleAboutSaveForActiveProfile}
             />
             <ProfileAvailability
@@ -765,7 +951,9 @@ export default function ProfilePage() {
           />
         );
       case "gallery":
-        return <ProfileGallery portfolio={activeSubProfileId ? [] : portfolio} />;
+        return (
+          <ProfileGallery portfolio={activeSubProfileId ? [] : portfolio} />
+        );
       case "reviews":
         return (
           <ProfileTestimonials
@@ -775,7 +963,9 @@ export default function ProfilePage() {
           />
         );
       case "invoices":
-        return <ProfileInvoices invoices={activeSubProfileId ? [] : invoices} />;
+        return (
+          <ProfileInvoices invoices={activeSubProfileId ? [] : invoices} />
+        );
       case "settings":
         return (
           <ProfileSubProfileSettings

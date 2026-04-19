@@ -23,7 +23,10 @@ type AvatarCropDialogProps = {
   onSave: (blob: Blob) => Promise<void>;
 };
 
-async function getCroppedBlob(imageSrc: string, pixelCrop: CropArea): Promise<Blob> {
+async function getCroppedBlob(
+  imageSrc: string,
+  pixelCrop: CropArea,
+): Promise<Blob> {
   const image = new Image();
   image.src = imageSrc;
   await new Promise<void>((resolve) => {
@@ -68,7 +71,9 @@ export function AvatarCropDialog({
 }: AvatarCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
 
   const onCropComplete = useCallback(
@@ -133,11 +138,7 @@ export function AvatarCropDialog({
         </div>
 
         <DialogFooter className="px-6 pb-6">
-          <Button
-            variant="ghost"
-            onClick={onCancel}
-            disabled={saving}
-          >
+          <Button variant="ghost" onClick={onCancel} disabled={saving}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={saving}>

@@ -144,302 +144,319 @@ export function ProfileHeader({
   const displayAvatar = avatarPreview || profile.avatar;
 
   return (
-  <>
-    <Card className="mb-6">
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Avatar with edit overlay */}
-          <button
-            type="button"
-            className="relative group cursor-pointer self-start border-0 bg-transparent p-0"
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="Change profile picture"
-          >
-            <Avatar className="w-32 h-32">
-              <AvatarImage
-                src={displayAvatar || undefined}
-                alt={profile.name}
-              />
-              <AvatarFallback className="bg-blue-800 text-white text-5xl">
-                {profile.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
-              <span className="text-white text-sm mt-1">Edit</span>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </button>
-
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-              {isEditing ? (
-                /* Edit Mode */
-                <form onSubmit={handleSubmit} className="flex-1">
-                  <FieldGroup>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Controller
-                        control={form.control}
-                        name="name"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel htmlFor="name">Name</FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                id="name"
-                                placeholder="Your name"
-                                {...field}
-                                disabled={form.formState.isSubmitting}
-                                aria-invalid={!!fieldState.error}
-                              />
-                            </InputGroup>
-                            <FieldError>{fieldState.error?.message}</FieldError>
-                          </Field>
-                        )}
-                      />
-
-                      <Controller
-                        control={form.control}
-                        name="profession"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel htmlFor="profession">
-                              Profession
-                            </FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                id="profession"
-                                placeholder="Your profession"
-                                {...field}
-                                disabled={form.formState.isSubmitting}
-                                aria-invalid={!!fieldState.error}
-                              />
-                            </InputGroup>
-                            <FieldError>{fieldState.error?.message}</FieldError>
-                          </Field>
-                        )}
-                      />
-
-                      <Controller
-                        control={form.control}
-                        name="statusEmoji"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel htmlFor="statusEmoji">
-                              Status Emoji
-                            </FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                id="statusEmoji"
-                                placeholder="🔧"
-                                {...field}
-                                disabled={form.formState.isSubmitting}
-                                aria-invalid={!!fieldState.error}
-                              />
-                            </InputGroup>
-                            <FieldError>{fieldState.error?.message}</FieldError>
-                          </Field>
-                        )}
-                      />
-
-                      <Controller
-                        control={form.control}
-                        name="statusText"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel htmlFor="statusText">
-                              Status Message
-                            </FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                id="statusText"
-                                placeholder="What are you up to?"
-                                {...field}
-                                disabled={form.formState.isSubmitting}
-                                aria-invalid={!!fieldState.error}
-                              />
-                            </InputGroup>
-                            <FieldError>{fieldState.error?.message}</FieldError>
-                          </Field>
-                        )}
-                      />
-
-                      <Controller
-                        control={form.control}
-                        name="location"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel htmlFor="location">Location</FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                id="location"
-                                placeholder="City, Country"
-                                {...field}
-                                disabled={form.formState.isSubmitting}
-                                aria-invalid={!!fieldState.error}
-                              />
-                            </InputGroup>
-                            <FieldError>{fieldState.error?.message}</FieldError>
-                          </Field>
-                        )}
-                      />
-
-                    </div>
-
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleCancel}
-                        disabled={form.formState.isSubmitting}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        type="submit"
-                        size="sm"
-                        disabled={form.formState.isSubmitting}
-                      >
-                        {form.formState.isSubmitting ? (
-                          <>
-                            <Spinner className="mr-2" />
-                            Saving...
-                          </>
-                        ) : (
-                          "Save"
-                        )}
-                      </Button>
-                    </div>
-                  </FieldGroup>
-                </form>
-              ) : (
-                /* Display Mode */
-                <>
-                  <div>
-                    <h1 className="text-3xl font-bold text-foreground mb-2">
-                      {profile.name}
-                      {profile.username && (
-                        <span className="text-sm text-muted-foreground font-normal ml-2">
-                          @{profile.username}
-                        </span>
-                      )}
-                    </h1>
-                    {(profile.statusEmoji || profile.statusText) && (
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {profile.statusEmoji && (
-                          <span className="mr-2">{profile.statusEmoji}</span>
-                        )}
-                        {profile.statusText}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <Pill
-                        variant={profile.isOnline ? "success" : "error"}
-                        dot
-                      >
-                        {profile.isOnline ? "Online" : "Offline"}
-                      </Pill>
-                      {profile.verified && (
-                        <Pill variant="primary">
-                          <Shield />
-                          Verified
-                        </Pill>
-                      )}
-                      <span className={showWorkerInfo ? "contents" : "hidden"}>
-                        •
-                        <span className="text-sm text-muted-foreground">
-                          {profile.profession}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <div
-                        className={
-                          showWorkerInfo ? "flex items-center gap-1" : "hidden"
-                        }
-                      >
-                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{profile.rating}</span>
-                        <span className="text-muted-foreground">
-                          ({profile.reviews} reviews)
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <MapPin className="w-4 h-4" />
-                        {profile.location}
-                      </div>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        Joined {profile.joinedDate}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleEdit}
-                    className="w-full md:w-auto"
-                  >
-                    <Pencil />
-                    Edit
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Stats - visible only when not editing and profile exists */}
-            <div
-              className={
-                !isEditing && showWorkerInfo
-                  ? "grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border"
-                  : "hidden"
-              }
+    <>
+      <Card className="mb-6">
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Avatar with edit overlay */}
+            <button
+              type="button"
+              className="relative group cursor-pointer self-start border-0 bg-transparent p-0"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Change profile picture"
             >
-              <div>
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm">Jobs Completed</span>
-                </div>
-                <p className="text-2xl font-bold text-foreground">
-                  {profile.completedJobs}
-                </p>
+              <Avatar className="w-32 h-32">
+                <AvatarImage
+                  src={displayAvatar || undefined}
+                  alt={profile.name}
+                />
+                <AvatarFallback className="bg-blue-800 text-white text-5xl">
+                  {profile.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                <Camera className="w-6 h-6 text-white" />
+                <span className="text-white text-sm mt-1">Edit</span>
               </div>
-              <div>
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">Response Time</span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </button>
+
+            <div className="flex-1">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                {isEditing ? (
+                  /* Edit Mode */
+                  <form onSubmit={handleSubmit} className="flex-1">
+                    <FieldGroup>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Controller
+                          control={form.control}
+                          name="name"
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                              <FieldLabel htmlFor="name">Name</FieldLabel>
+                              <InputGroup>
+                                <InputGroupInput
+                                  id="name"
+                                  placeholder="Your name"
+                                  {...field}
+                                  disabled={form.formState.isSubmitting}
+                                  aria-invalid={!!fieldState.error}
+                                />
+                              </InputGroup>
+                              <FieldError>
+                                {fieldState.error?.message}
+                              </FieldError>
+                            </Field>
+                          )}
+                        />
+
+                        <Controller
+                          control={form.control}
+                          name="profession"
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                              <FieldLabel htmlFor="profession">
+                                Profession
+                              </FieldLabel>
+                              <InputGroup>
+                                <InputGroupInput
+                                  id="profession"
+                                  placeholder="Your profession"
+                                  {...field}
+                                  disabled={form.formState.isSubmitting}
+                                  aria-invalid={!!fieldState.error}
+                                />
+                              </InputGroup>
+                              <FieldError>
+                                {fieldState.error?.message}
+                              </FieldError>
+                            </Field>
+                          )}
+                        />
+
+                        <Controller
+                          control={form.control}
+                          name="statusEmoji"
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                              <FieldLabel htmlFor="statusEmoji">
+                                Status Emoji
+                              </FieldLabel>
+                              <InputGroup>
+                                <InputGroupInput
+                                  id="statusEmoji"
+                                  placeholder="🔧"
+                                  {...field}
+                                  disabled={form.formState.isSubmitting}
+                                  aria-invalid={!!fieldState.error}
+                                />
+                              </InputGroup>
+                              <FieldError>
+                                {fieldState.error?.message}
+                              </FieldError>
+                            </Field>
+                          )}
+                        />
+
+                        <Controller
+                          control={form.control}
+                          name="statusText"
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                              <FieldLabel htmlFor="statusText">
+                                Status Message
+                              </FieldLabel>
+                              <InputGroup>
+                                <InputGroupInput
+                                  id="statusText"
+                                  placeholder="What are you up to?"
+                                  {...field}
+                                  disabled={form.formState.isSubmitting}
+                                  aria-invalid={!!fieldState.error}
+                                />
+                              </InputGroup>
+                              <FieldError>
+                                {fieldState.error?.message}
+                              </FieldError>
+                            </Field>
+                          )}
+                        />
+
+                        <Controller
+                          control={form.control}
+                          name="location"
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                              <FieldLabel htmlFor="location">
+                                Location
+                              </FieldLabel>
+                              <InputGroup>
+                                <InputGroupInput
+                                  id="location"
+                                  placeholder="City, Country"
+                                  {...field}
+                                  disabled={form.formState.isSubmitting}
+                                  aria-invalid={!!fieldState.error}
+                                />
+                              </InputGroup>
+                              <FieldError>
+                                {fieldState.error?.message}
+                              </FieldError>
+                            </Field>
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCancel}
+                          disabled={form.formState.isSubmitting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          type="submit"
+                          size="sm"
+                          disabled={form.formState.isSubmitting}
+                        >
+                          {form.formState.isSubmitting ? (
+                            <>
+                              <Spinner className="mr-2" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save"
+                          )}
+                        </Button>
+                      </div>
+                    </FieldGroup>
+                  </form>
+                ) : (
+                  /* Display Mode */
+                  <>
+                    <div>
+                      <h1 className="text-3xl font-bold text-foreground mb-2">
+                        {profile.name}
+                        {profile.username && (
+                          <span className="text-sm text-muted-foreground font-normal ml-2">
+                            @{profile.username}
+                          </span>
+                        )}
+                      </h1>
+                      {(profile.statusEmoji || profile.statusText) && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {profile.statusEmoji && (
+                            <span className="mr-2">{profile.statusEmoji}</span>
+                          )}
+                          {profile.statusText}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <Pill
+                          variant={profile.isOnline ? "success" : "error"}
+                          dot
+                        >
+                          {profile.isOnline ? "Online" : "Offline"}
+                        </Pill>
+                        {profile.verified && (
+                          <Pill variant="primary">
+                            <Shield />
+                            Verified
+                          </Pill>
+                        )}
+                        <span
+                          className={showWorkerInfo ? "contents" : "hidden"}
+                        >
+                          •
+                          <span className="text-sm text-muted-foreground">
+                            {profile.profession}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-4 text-sm">
+                        <div
+                          className={
+                            showWorkerInfo
+                              ? "flex items-center gap-1"
+                              : "hidden"
+                          }
+                        >
+                          <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                          <span className="font-semibold">
+                            {profile.rating}
+                          </span>
+                          <span className="text-muted-foreground">
+                            ({profile.reviews} reviews)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          {profile.location}
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          Joined {profile.joinedDate}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEdit}
+                      className="w-full md:w-auto"
+                    >
+                      <Pencil />
+                      Edit
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {/* Stats - visible only when not editing and profile exists */}
+              <div
+                className={
+                  !isEditing && showWorkerInfo
+                    ? "grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border"
+                    : "hidden"
+                }
+              >
+                <div>
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-sm">Jobs Completed</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {profile.completedJobs}
+                  </p>
                 </div>
-                <p className="text-lg font-bold text-foreground">
-                  {profile.responseTime}
-                </p>
+                <div>
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm">Response Time</span>
+                  </div>
+                  <p className="text-lg font-bold text-foreground">
+                    {profile.responseTime}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
 
-    {rawImageSrc && (
-      <AvatarCropDialog
-        open={cropDialogOpen}
-        imageSrc={rawImageSrc}
-        onCancel={handleCropCancel}
-        onSave={handleCropSave}
-      />
-    )}
-  </>
+      {rawImageSrc && (
+        <AvatarCropDialog
+          open={cropDialogOpen}
+          imageSrc={rawImageSrc}
+          onCancel={handleCropCancel}
+          onSave={handleCropSave}
+        />
+      )}
+    </>
   );
 }

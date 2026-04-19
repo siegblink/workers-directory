@@ -89,7 +89,9 @@ export default function SettingsPage() {
       ]);
 
       if (workerResult.error) {
-        setProfileError(`Failed to load worker data: ${workerResult.error.message}`);
+        setProfileError(
+          `Failed to load worker data: ${workerResult.error.message}`,
+        );
       }
 
       const ud = userResult.data as {
@@ -118,7 +120,9 @@ export default function SettingsPage() {
 
       if (wd) {
         setProfession(wd.profession ?? "");
-        setHourlyRate(wd.hourly_rate_min != null ? String(wd.hourly_rate_min) : "");
+        setHourlyRate(
+          wd.hourly_rate_min != null ? String(wd.hourly_rate_min) : "",
+        );
         setWorkerId(wd.id);
         setAvailability(wd.availability ?? defaultAvailability);
       }
@@ -148,8 +152,7 @@ export default function SettingsPage() {
     const lastComma = location.lastIndexOf(",");
     const city =
       lastComma >= 0 ? location.slice(0, lastComma).trim() : location.trim();
-    const state =
-      lastComma >= 0 ? location.slice(lastComma + 1).trim() : null;
+    const state = lastComma >= 0 ? location.slice(lastComma + 1).trim() : null;
 
     const userUpdate = await supabase
       .from("users")
@@ -255,7 +258,8 @@ export default function SettingsPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
 
-  const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "?";
+  const initials =
+    `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "?";
 
   return (
     <div className="min-h-screen bg-background">
@@ -521,7 +525,10 @@ export default function SettingsPage() {
                     </p>
                   )}
 
-                  <Button onClick={handleUpdateAccount} disabled={accountSaving}>
+                  <Button
+                    onClick={handleUpdateAccount}
+                    disabled={accountSaving}
+                  >
                     {accountSaving ? "Saving…" : "Update Account"}
                   </Button>
                 </CardContent>

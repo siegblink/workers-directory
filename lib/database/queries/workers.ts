@@ -277,7 +277,12 @@ export async function searchWorkers(
 
       return {
         data: workers,
-        pagination: { page, limit, total, total_pages: Math.ceil(total / limit) },
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: Math.ceil(total / limit),
+        },
         error: null,
       };
     }

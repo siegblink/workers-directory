@@ -290,7 +290,10 @@ export default function SearchPage() {
               <InputGroupAddon>
                 <MapPin />
               </InputGroupAddon>
-              <InputGroupInput placeholder="Your location (coming soon)" disabled />
+              <InputGroupInput
+                placeholder="Your location (coming soon)"
+                disabled
+              />
             </InputGroup>
           </div>
           <div className="flex gap-2">

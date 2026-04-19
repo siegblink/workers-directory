@@ -74,8 +74,12 @@ export default function WorkerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isWorker, setIsWorker] = useState<boolean | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [pendingBookings, setPendingBookings] = useState<DashboardBooking[]>([]);
-  const [upcomingBookings, setUpcomingBookings] = useState<DashboardBooking[]>([]);
+  const [pendingBookings, setPendingBookings] = useState<DashboardBooking[]>(
+    [],
+  );
+  const [upcomingBookings, setUpcomingBookings] = useState<DashboardBooking[]>(
+    [],
+  );
   const [recentReviews, setRecentReviews] = useState<DashboardReview[]>([]);
 
   const loadDashboard = useCallback(async () => {
@@ -147,13 +151,17 @@ export default function WorkerDashboardPage() {
         .maybeSingle(),
       supabase
         .from("bookings")
-        .select("id, status, description, requested_at, customer_id, category_id")
+        .select(
+          "id, status, description, requested_at, customer_id, category_id",
+        )
         .eq("worker_id", wid)
         .eq("status", "pending")
         .order("requested_at", { ascending: false }),
       supabase
         .from("bookings")
-        .select("id, status, description, requested_at, customer_id, category_id")
+        .select(
+          "id, status, description, requested_at, customer_id, category_id",
+        )
         .eq("worker_id", wid)
         .eq("status", "accepted")
         .order("requested_at", { ascending: true }),
@@ -168,16 +176,23 @@ export default function WorkerDashboardPage() {
     // Compute stats
     const allBookings = allBookingsResult.data ?? [];
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const monthStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1,
+    ).toISOString();
 
     const pending = allBookings.filter((b) => b.status === "pending").length;
-    const completed = allBookings.filter((b) => b.status === "completed").length;
+    const completed = allBookings.filter(
+      (b) => b.status === "completed",
+    ).length;
     const canceled = allBookings.filter((b) => b.status === "canceled").length;
     const thisMonth = allBookings.filter(
       (b) => b.requested_at && b.requested_at >= monthStart,
     ).length;
     const nonPending = completed + canceled;
-    const completionRate = nonPending > 0 ? Math.round((completed / nonPending) * 100) : 0;
+    const completionRate =
+      nonPending > 0 ? Math.round((completed / nonPending) * 100) : 0;
 
     const viewData = viewResult.data;
     setStats({
@@ -185,8 +200,13 @@ export default function WorkerDashboardPage() {
       thisMonthBookings: thisMonth,
       pendingBookings: pending,
       completedJobs: completed,
-      averageRating: viewData ? Math.round((parseFloat(String(viewData.average_rating)) || 0) * 10) / 10 : 0,
-      totalReviews: viewData ? parseInt(String(viewData.review_count), 10) || 0 : 0,
+      averageRating: viewData
+        ? Math.round((parseFloat(String(viewData.average_rating)) || 0) * 10) /
+          10
+        : 0,
+      totalReviews: viewData
+        ? parseInt(String(viewData.review_count), 10) || 0
+        : 0,
       completionRate,
     });
 
@@ -196,21 +216,27 @@ export default function WorkerDashboardPage() {
     const reviewsData = reviewsResult.data ?? [];
 
     const bookingCustomerIds = [
-      ...new Set([
-        ...pendingData.map((b) => b.customer_id),
-        ...upcomingData.map((b) => b.customer_id),
-      ].filter(Boolean)),
+      ...new Set(
+        [
+          ...pendingData.map((b) => b.customer_id),
+          ...upcomingData.map((b) => b.customer_id),
+        ].filter(Boolean),
+      ),
     ];
     const reviewCustomerIds = [
       ...new Set(reviewsData.map((r) => r.customer_id).filter(Boolean)),
     ];
-    const allCustomerIds = [...new Set([...bookingCustomerIds, ...reviewCustomerIds])];
+    const allCustomerIds = [
+      ...new Set([...bookingCustomerIds, ...reviewCustomerIds]),
+    ];
 
     const categoryIds = [
-      ...new Set([
-        ...pendingData.map((b) => b.category_id),
-        ...upcomingData.map((b) => b.category_id),
-      ].filter(Boolean)),
+      ...new Set(
+        [
+          ...pendingData.map((b) => b.category_id),
+          ...upcomingData.map((b) => b.category_id),
+        ].filter(Boolean),
+      ),
     ];
 
     const [usersResult, categoriesResult] = await Promise.all([
@@ -225,9 +251,7 @@ export default function WorkerDashboardPage() {
         : Promise.resolve({ data: [] }),
     ]);
 
-    const userMap = new Map(
-      (usersResult.data ?? []).map((u) => [u.id, u]),
-    );
+    const userMap = new Map((usersResult.data ?? []).map((u) => [u.id, u]));
     const categoryMap = new Map(
       (categoriesResult.data ?? []).map((c) => [c.id, c]),
     );
@@ -500,9 +524,7 @@ export default function WorkerDashboardPage() {
                           <div className="flex items-start gap-4 flex-1">
                             <Avatar className="w-16 h-16">
                               <AvatarImage
-                                src={
-                                  request.customer.avatar || undefined
-                                }
+                                src={request.customer.avatar || undefined}
                                 alt={request.customer.name}
                               />
                               <AvatarFallback>

@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertCircle, Briefcase, Check, DollarSign, ExternalLink, TrendingUp, Users } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  Check,
+  DollarSign,
+  ExternalLink,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -41,7 +49,6 @@ const benefits = [
   },
 ];
 
-
 export default function BecomeWorkerPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -53,7 +60,9 @@ export default function BecomeWorkerPage() {
   const [jobTitleOptions, setJobTitleOptions] = useState<string[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState(false);
-  const [categoriesErrorTimestamp, setCategoriesErrorTimestamp] = useState<string | null>(null);
+  const [categoriesErrorTimestamp, setCategoriesErrorTimestamp] = useState<
+    string | null
+  >(null);
   const [termsError, setTermsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -68,7 +77,10 @@ export default function BecomeWorkerPage() {
 
       // Fetch categories and check for existing worker record in parallel
       const [catResult, authResult] = await Promise.all([
-        supabase.from("categories").select("name").order("name", { ascending: true }),
+        supabase
+          .from("categories")
+          .select("name")
+          .order("name", { ascending: true }),
         supabase.auth.getUser(),
       ]);
 
@@ -116,11 +128,16 @@ export default function BecomeWorkerPage() {
       await supabase.from("workers").insert({
         user_id: userId,
         profession: formData.jobTitle,
-        years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
+        years_experience: formData.experience
+          ? parseInt(formData.experience, 10)
+          : null,
         status: "available",
       });
       if (formData.bio.trim()) {
-        await supabase.from("users").update({ bio: formData.bio.trim() }).eq("id", userId);
+        await supabase
+          .from("users")
+          .update({ bio: formData.bio.trim() })
+          .eq("id", userId);
       }
     } else {
       // Create sub-profile (user already has a main worker profile)
@@ -131,7 +148,9 @@ export default function BecomeWorkerPage() {
           label: formData.jobTitle,
           profession: formData.jobTitle,
           bio: formData.bio.trim() || null,
-          years_experience: formData.experience ? parseInt(formData.experience, 10) : null,
+          years_experience: formData.experience
+            ? parseInt(formData.experience, 10)
+            : null,
           status: "available",
           availability: {
             monday: "9:00 AM - 5:00 PM",
@@ -431,8 +450,16 @@ export default function BecomeWorkerPage() {
                       Back
                     </Button>
                   )}
-                  <Button type="submit" className="flex-1" disabled={submitting}>
-                    {submitting ? "Submitting…" : step === 3 ? "Submit Application" : "Continue"}
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={submitting}
+                  >
+                    {submitting
+                      ? "Submitting…"
+                      : step === 3
+                        ? "Submit Application"
+                        : "Continue"}
                   </Button>
                 </div>
               </form>

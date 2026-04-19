@@ -15,10 +15,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import {
   Select,
   SelectContent,
@@ -43,7 +40,9 @@ const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Enter a valid email address"),
   subject: z.string().min(1, "Please choose a subject"),
-  message: z.string().min(20, "Please describe your issue (at least 20 characters)"),
+  message: z
+    .string()
+    .min(20, "Please describe your issue (at least 20 characters)"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -90,7 +89,7 @@ export default function ContactSupportPage() {
       const fullName =
         profile?.firstname && profile?.lastname
           ? `${profile.firstname} ${profile.lastname}`
-          : profile?.firstname ?? "";
+          : (profile?.firstname ?? "");
 
       if (fullName) form.setValue("name", fullName);
       if (user.email) form.setValue("email", user.email);

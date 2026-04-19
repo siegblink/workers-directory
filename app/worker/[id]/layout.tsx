@@ -21,7 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Worker Profile" };
   }
 
-  const userData = data.user_data as { firstname?: string; lastname?: string } | null;
+  const userData = data.user_data as {
+    firstname?: string;
+    lastname?: string;
+  } | null;
   const name =
     userData?.firstname && userData?.lastname
       ? `${userData.firstname} ${userData.lastname}`

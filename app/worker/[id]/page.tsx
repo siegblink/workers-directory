@@ -92,8 +92,8 @@ export default function WorkerProfilePage({
 
       const supabase = getSupabaseClient();
 
-      const [postsResult, ratingsResult, availabilityResult] = await Promise.all(
-        [
+      const [postsResult, ratingsResult, availabilityResult] =
+        await Promise.all([
           supabase
             .from("workers_posts")
             .select("id, title, content, media_url")
@@ -112,8 +112,7 @@ export default function WorkerProfilePage({
             .select("schedule")
             .eq("worker_id", id)
             .maybeSingle(),
-        ],
-      );
+        ]);
 
       if (postsResult.data) {
         setPortfolio(

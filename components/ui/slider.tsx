@@ -66,7 +66,10 @@ export function Slider({
       <div className={cn("relative flex w-full items-center", className)}>
         {/* Muted track background */}
         <div className="pointer-events-none absolute w-full top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted">
-          <div className="h-full bg-primary rounded-full" style={{ width: `${upperPct}%` }} />
+          <div
+            className="h-full bg-primary rounded-full"
+            style={{ width: `${upperPct}%` }}
+          />
         </div>
         <input
           type="range"

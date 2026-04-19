@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "View the details of your service booking on Direktory.",
 };
 
-export default function BookingDetailLayout({ children }: { children: React.ReactNode }) {
+export default function BookingDetailLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

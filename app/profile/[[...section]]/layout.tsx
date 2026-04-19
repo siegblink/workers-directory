@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "View and manage your public Direktory service worker profile.",
 };
 
-export default function ProfileLayout({ children }: { children: React.ReactNode }) {
+export default function ProfileLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

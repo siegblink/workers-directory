@@ -78,7 +78,7 @@ export type WeeklyAvailability = {
 export type SubProfile = {
   id: string;
   user_id: string;
-  label: string;          // display name, user-editable (e.g. "Electrician")
+  label: string; // display name, user-editable (e.g. "Electrician")
   profession: string;
   bio: string | null;
   skills: string[];

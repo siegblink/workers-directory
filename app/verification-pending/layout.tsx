@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "A verification email has been sent to your inbox.",
 };
 
-export default function VerificationPendingLayout({ children }: { children: React.ReactNode }) {
+export default function VerificationPendingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

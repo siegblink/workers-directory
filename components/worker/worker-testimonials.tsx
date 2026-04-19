@@ -55,10 +55,7 @@ function ReviewItem({ review }: { review: Review }) {
     <div className="border-b last:border-0 pb-6 last:pb-0">
       <div className="flex gap-4">
         <Avatar>
-          <AvatarImage
-            src={review.avatar || undefined}
-            alt={review.author}
-          />
+          <AvatarImage src={review.avatar || undefined} alt={review.author} />
           <AvatarFallback>{review.author[0]}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
@@ -116,7 +113,9 @@ export function WorkerTestimonials({
       const mapped = data
         .filter((r) => r.rating_value != null && r.review_comment)
         .map((r) => {
-          const customer = Array.isArray(r.customer) ? r.customer[0] : r.customer;
+          const customer = Array.isArray(r.customer)
+            ? r.customer[0]
+            : r.customer;
           const name = customer
             ? `${(customer as { firstname: string; lastname: string }).firstname} ${(customer as { firstname: string; lastname: string }).lastname[0]}.`
             : "Anonymous";
@@ -126,9 +125,8 @@ export function WorkerTestimonials({
             rating: r.rating_value as number,
             date: formatRelativeDate(r.created_at),
             comment: r.review_comment as string,
-            avatar:
-              (customer as { profile_pic_url: string | null } | null)
-                ?.profile_pic_url,
+            avatar: (customer as { profile_pic_url: string | null } | null)
+              ?.profile_pic_url,
           };
         });
 

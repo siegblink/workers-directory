@@ -53,10 +53,7 @@ export function WorkerProfileHeader({
       <CardContent>
         <div className="flex flex-col md:flex-row gap-6">
           <Avatar className="w-32 h-32">
-            <AvatarImage
-              src={worker.avatar || undefined}
-              alt={worker.name}
-            />
+            <AvatarImage src={worker.avatar || undefined} alt={worker.name} />
             <AvatarFallback className="bg-blue-800 text-white text-5xl">
               {worker.name
                 .split(" ")

@@ -132,18 +132,19 @@ export default function BookingsPage() {
       }
 
       // Batch-fetch all workers referenced by these bookings
-      const workerIds = [...new Set(bookingsData.map((b) => b.worker_id).filter(Boolean))];
-      const categoryIds = [...new Set(bookingsData.map((b) => b.category_id).filter(Boolean))];
+      const workerIds = [
+        ...new Set(bookingsData.map((b) => b.worker_id).filter(Boolean)),
+      ];
+      const categoryIds = [
+        ...new Set(bookingsData.map((b) => b.category_id).filter(Boolean)),
+      ];
 
       const [workersResult, categoriesResult] = await Promise.all([
         supabase
           .from("workers")
           .select("id, profession, user_id")
           .in("id", workerIds),
-        supabase
-          .from("categories")
-          .select("id, name")
-          .in("id", categoryIds),
+        supabase.from("categories").select("id, name").in("id", categoryIds),
       ]);
 
       // Batch-fetch all user records for those workers

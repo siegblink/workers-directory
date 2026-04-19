@@ -34,8 +34,8 @@ type ConversationItem = {
   lastMessageAt: string | null;
   unread: number;
   isOnline: boolean;
-  otherUserId: string;   // users.id of the other participant
-  chatWorkerId: string;  // workers.id from chats.worker_id (for URL param matching)
+  otherUserId: string; // users.id of the other participant
+  chatWorkerId: string; // workers.id from chats.worker_id (for URL param matching)
 };
 
 type MessageItem = {
@@ -188,7 +188,7 @@ export default function MessagesPage() {
       // workerId URL param is a workers.id — match against chatWorkerId
       if (workerIdParam) {
         const match = items.find((c) => c.chatWorkerId === workerIdParam);
-        setSelectedChatId(match ? match.chatId : items[0]?.chatId ?? null);
+        setSelectedChatId(match ? match.chatId : (items[0]?.chatId ?? null));
       } else if (items.length > 0) {
         setSelectedChatId(items[0].chatId);
       }
@@ -397,7 +397,9 @@ export default function MessagesPage() {
                       key={conversation.chatId}
                       onClick={() => setSelectedChatId(conversation.chatId)}
                       className={`w-full p-4 flex gap-3 hover:bg-accent transition-colors ${
-                        selectedChatId === conversation.chatId ? "bg-accent" : ""
+                        selectedChatId === conversation.chatId
+                          ? "bg-accent"
+                          : ""
                       }`}
                     >
                       <div className="relative">

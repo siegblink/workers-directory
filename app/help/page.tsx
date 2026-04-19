@@ -93,7 +93,7 @@ export default function HelpPage() {
       const matched = category.questions.filter(
         (item) =>
           item.q.toLowerCase().includes(query) ||
-          item.a.toLowerCase().includes(query)
+          item.a.toLowerCase().includes(query),
       );
       return matched.length > 0 ? { ...category, questions: matched } : null;
     })
@@ -138,7 +138,11 @@ export default function HelpPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Get help from our support team
               </p>
-              <Button variant="outline" size="sm" onClick={() => router.push("/contact-support")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/contact-support")}
+              >
                 Send Message
               </Button>
             </CardContent>
@@ -168,7 +172,11 @@ export default function HelpPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Learn about our safety measures
               </p>
-              <Button variant="outline" size="sm" onClick={() => router.push("/privacy")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/privacy")}
+              >
                 Learn More
               </Button>
             </CardContent>
@@ -218,7 +226,9 @@ export default function HelpPage() {
             <p className="text-muted-foreground mb-6">
               Our support team is here to assist you
             </p>
-            <Button size="lg" onClick={() => router.push("/contact-support")}>Contact Support</Button>
+            <Button size="lg" onClick={() => router.push("/contact-support")}>
+              Contact Support
+            </Button>
           </CardContent>
         </Card>
       </div>

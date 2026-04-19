@@ -3,9 +3,14 @@ import type React from "react";
 
 export const metadata: Metadata = {
   title: "Promote Your Profile",
-  description: "Boost your Direktory visibility and attract more customers with promotion options.",
+  description:
+    "Boost your Direktory visibility and attract more customers with promotion options.",
 };
 
-export default function PromoteLayout({ children }: { children: React.ReactNode }) {
+export default function PromoteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

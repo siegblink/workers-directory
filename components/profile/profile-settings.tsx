@@ -60,9 +60,7 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
     await removeSubProfile(subProfile.id);
     setDeleteDialogOpen(false);
     router.push("/profile");
-    toast.success(
-      `Sub-profile "${subProfile.label}" has been deleted`,
-    );
+    toast.success(`Sub-profile "${subProfile.label}" has been deleted`);
   }
 
   return (
@@ -169,9 +167,8 @@ export function ProfileSettings({ subProfile }: ProfileSettingsProps) {
                 <DialogDescription asChild>
                   <div className="space-y-3 pt-2">
                     <p>
-                      To confirm, type{" "}
-                      <strong>{subProfile.label}</strong> in the box
-                      below.
+                      To confirm, type <strong>{subProfile.label}</strong> in
+                      the box below.
                     </p>
                   </div>
                 </DialogDescription>

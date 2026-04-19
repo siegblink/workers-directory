@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Set a new password for your Direktory account.",
 };
 
-export default function ResetPasswordLayout({ children }: { children: React.ReactNode }) {
+export default function ResetPasswordLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

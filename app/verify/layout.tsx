@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Verify your email address to activate your Direktory account.",
 };
 
-export default function VerifyLayout({ children }: { children: React.ReactNode }) {
+export default function VerifyLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

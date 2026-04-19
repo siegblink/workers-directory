@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Read the Direktory Terms of Service and understand your rights and obligations when using our platform.",
+  description:
+    "Read the Direktory Terms of Service and understand your rights and obligations when using our platform.",
 };
 
 export default function TermsPage() {

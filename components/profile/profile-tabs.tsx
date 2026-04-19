@@ -41,7 +41,7 @@ type ProfileTabsProps = {
   bookings: Booking[];
   bookmarkedWorkers: BookmarkedWorker[];
   conversations: Conversation[];
-}
+};
 
 const VALID_TABS = ["bookings", "bookmarked", "messages"] as const;
 
