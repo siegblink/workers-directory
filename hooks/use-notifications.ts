@@ -16,8 +16,9 @@ export type AppNotification = {
 export function useNotifications(userId: string | null) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
-  const unreadCount = notifications.filter((n) => n.status === "delivered")
-    .length;
+  const unreadCount = notifications.filter(
+    (n) => n.status === "delivered",
+  ).length;
 
   useEffect(() => {
     if (!userId) return;
@@ -48,10 +49,7 @@ export function useNotifications(userId: string | null) {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          setNotifications((prev) => [
-            payload.new as AppNotification,
-            ...prev,
-          ]);
+          setNotifications((prev) => [payload.new as AppNotification, ...prev]);
         },
       )
       .subscribe();

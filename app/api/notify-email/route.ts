@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import * as z from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  sendNotificationEmail,
-  type NotificationEmailType,
-} from "@/lib/email";
+import { sendNotificationEmail, type NotificationEmailType } from "@/lib/email";
 
 const schema = z.object({
   type: z.enum([

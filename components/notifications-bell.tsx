@@ -15,11 +15,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { type AppNotification, useNotifications } from "@/hooks/use-notifications";
+import {
+  type AppNotification,
+  useNotifications,
+} from "@/hooks/use-notifications";
 
 function notificationIcon(type: string) {
-  if (type.startsWith("booking_")) return <Calendar className="size-4 shrink-0 text-muted-foreground" />;
-  if (type === "message_new") return <MessageSquare className="size-4 shrink-0 text-muted-foreground" />;
+  if (type.startsWith("booking_"))
+    return <Calendar className="size-4 shrink-0 text-muted-foreground" />;
+  if (type === "message_new")
+    return <MessageSquare className="size-4 shrink-0 text-muted-foreground" />;
   return <Bell className="size-4 shrink-0 text-muted-foreground" />;
 }
 
@@ -99,7 +104,9 @@ export function NotificationsBell({ userId }: Props) {
                 type="button"
                 onClick={() => handleClickNotification(n)}
                 className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
-                  n.status === "delivered" ? "bg-blue-50/40 dark:bg-blue-950/20" : ""
+                  n.status === "delivered"
+                    ? "bg-blue-50/40 dark:bg-blue-950/20"
+                    : ""
                 }`}
               >
                 <div className="mt-0.5">{notificationIcon(n.type)}</div>

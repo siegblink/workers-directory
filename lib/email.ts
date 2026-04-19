@@ -27,7 +27,13 @@ function buildEmailContent(params: EmailParams): {
 
   const configs: Record<
     NotificationEmailType,
-    { subject: string; heading: string; body: string; cta?: string; ctaUrl?: string }
+    {
+      subject: string;
+      heading: string;
+      body: string;
+      cta?: string;
+      ctaUrl?: string;
+    }
   > = {
     booking_new: {
       subject: "You have a new booking request",
@@ -108,8 +114,7 @@ export async function sendNotificationEmail(params: EmailParams) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return;
 
-  const fromEmail =
-    process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 
   const resend = new Resend(apiKey);
   const { subject, html } = buildEmailContent(params);
@@ -119,7 +124,7 @@ export async function sendNotificationEmail(params: EmailParams) {
     ? fromEmail
     : `${APP_NAME} <${fromEmail}>`;
 
-  const { data, error } = await resend.emails.send({
+  const { data: _data, error } = await resend.emails.send({
     from,
     to: params.recipientEmail,
     subject,

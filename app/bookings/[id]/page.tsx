@@ -517,7 +517,8 @@ export default function BookingDetailPage({
                       Need to cancel?
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Please cancel as early as possible so the worker is notified.
+                      Please cancel as early as possible so the worker is
+                      notified.
                     </p>
                   </div>
                   <Button
@@ -574,7 +575,9 @@ export default function BookingDetailPage({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={canceling}>Keep Booking</AlertDialogCancel>
+            <AlertDialogCancel disabled={canceling}>
+              Keep Booking
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancel}
               disabled={canceling}
@@ -659,7 +662,9 @@ export default function BookingDetailPage({
               <Button
                 onClick={handleSubmitReview}
                 className="flex-1"
-                disabled={rating === 0 || !reviewText.trim() || submittingReview}
+                disabled={
+                  rating === 0 || !reviewText.trim() || submittingReview
+                }
               >
                 {submittingReview ? (
                   <>

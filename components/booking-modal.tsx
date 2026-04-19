@@ -89,7 +89,10 @@ export function BookingModal({
         .in("id", categoryIds);
 
       if (cats) {
-        const parsed = cats.map((c) => ({ id: String(c.id), name: c.name ?? "Unknown" }));
+        const parsed = cats.map((c) => ({
+          id: String(c.id),
+          name: c.name ?? "Unknown",
+        }));
         setCategories(parsed);
         if (parsed.length > 0) setCategoryId(parsed[0].id);
       }
@@ -157,7 +160,9 @@ export function BookingModal({
       const actorName =
         [user.user_metadata?.first_name, user.user_metadata?.last_name]
           .filter(Boolean)
-          .join(" ") || user.email?.split("@")[0] || "A customer";
+          .join(" ") ||
+        user.email?.split("@")[0] ||
+        "A customer";
       fireNotificationEmail({
         type: "booking_new",
         recipientId: workerRow.user_id,
@@ -201,7 +206,11 @@ export function BookingModal({
                 No service categories listed for this worker.
               </p>
             ) : (
-              <Select value={categoryId} onValueChange={setCategoryId} disabled={submitting}>
+              <Select
+                value={categoryId}
+                onValueChange={setCategoryId}
+                disabled={submitting}
+              >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select a service" />
                 </SelectTrigger>
@@ -287,11 +296,7 @@ export function BookingModal({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={submitting}
-            >
+            <Button type="submit" className="flex-1" disabled={submitting}>
               {submitting ? (
                 <>
                   <Spinner className="mr-2" />

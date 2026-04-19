@@ -339,7 +339,9 @@ export default function WorkerDashboardPage() {
     return (
       [u.user_metadata?.first_name, u.user_metadata?.last_name]
         .filter(Boolean)
-        .join(" ") || u.email?.split("@")[0] || "Your worker"
+        .join(" ") ||
+      u.email?.split("@")[0] ||
+      "Your worker"
     );
   }
 
@@ -598,7 +600,11 @@ export default function WorkerDashboardPage() {
             </div>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={handleTabChange}
+              className="space-y-6"
+            >
               <TabsList>
                 <TabsTrigger value="pending">
                   Pending Requests
