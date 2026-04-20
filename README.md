@@ -82,7 +82,7 @@ Built with Next.js 16 · Supabase · shadcn/ui
 
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    ```
 
    > **Note:** Never commit your `.env.local` file. It's already included in `.gitignore`.
@@ -198,10 +198,10 @@ Components will be automatically added to the `components/ui/` directory.
 
 ## Environment Variables
 
-| Variable                        | Description            | Required |
-| ------------------------------- | ---------------------- | -------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL   | Yes      |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes      |
+| Variable                               | Description              | Required |
+| -------------------------------------- | ------------------------ | -------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase project URL     | Yes      |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key | Yes      |
 
 ## Deployment
 
@@ -213,7 +213,7 @@ Components will be automatically added to the `components/ui/` directory.
 2. Import your repository to [Vercel](https://vercel.com/new)
 3. Configure environment variables in Vercel dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 4. Deploy with one click
 
 Vercel will automatically detect Next.js and configure the build settings.

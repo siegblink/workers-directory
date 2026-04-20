@@ -56,14 +56,14 @@ To switch to using your local database:
 
    ```bash
    # NEXT_PUBLIC_SUPABASE_URL="https://[username].supabase.co"
-   # NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
+   # NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="supabase-publishable-key"
    ```
 
 3. **Uncomment local URLs** (lines 20-30):
 
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="supabase-publishable-key"
    ```
 
 4. **Restart dev server**:

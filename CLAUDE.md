@@ -269,7 +269,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 Required environment variables (should be in `.env.local`):
 
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Supabase publishable key
 
 ## Deployment
 

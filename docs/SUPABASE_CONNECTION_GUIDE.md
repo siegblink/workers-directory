@@ -98,8 +98,8 @@ Check `.env.local` file:
 # ⚠️ EXAMPLE ONLY - Replace with your actual values from .env.local
 # DO NOT commit real credentials to git!
 NEXT_PUBLIC_SUPABASE_URL="https://project-ref.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
-SUPABASE_SERVICE_ROLE_KEY="some-service-role-key"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="supabase-publishable-key"
+SUPABASE_SECRET_KEY="supabase-secret-key"
 POSTGRES_URL="postgres://postgres.[username]:[password]@[host]:6543/postgres"
 ```
 
@@ -297,12 +297,12 @@ Edit `.env.local` - comment out production, uncomment local:
 ```bash
 # Production (COMMENT OUT when using local)
 # NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
-# NEXT_PUBLIC_SUPABASE_ANON_KEY="your-production-anon-key"
+# NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="your-production-anon-key"
 
 # Local (UNCOMMENT when using local - these are standard local dev keys)
 NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="some-anon-key"
-SUPABASE_SERVICE_ROLE_KEY="some-service-role-key"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="supabase-publishable-key"
+SUPABASE_SECRET_KEY="supabase-secret-key"
 SUPABASE_JWT_SECRET="jwt-token-with-at-least-32-characters-long"
 POSTGRES_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 ```
@@ -399,12 +399,12 @@ JWT Secret: jwt-token-with-at-least-32-characters-long
 2. **Comment out** production lines (add `#`):
    ```bash
    # NEXT_PUBLIC_SUPABASE_URL="https://project-ref.supabase.co"
-   # NEXT_PUBLIC_SUPABASE_ANON_KEY="production-anon-key"
+   # NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="supabase-publishable-key"
    ```
 3. **Uncomment** local lines (remove `#`):
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="local-anon-key"
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="supabase-publishable-key"
    ```
 4. **Restart** dev server:
    ```bash
@@ -691,14 +691,14 @@ npm run dev
 
 🔒 **Keep These Secret:**
 
-- `SUPABASE_SERVICE_ROLE_KEY` - Full database access
+- `SUPABASE_SECRET_KEY` - Full database access
 - `POSTGRES_PASSWORD` - Direct database access
 - `SUPABASE_JWT_SECRET` - Token signing key
 
 ✅ **Safe to Share:**
 
 - `NEXT_PUBLIC_SUPABASE_URL` - Public URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Public anonymous key (has RLS)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Public publishable key (has RLS)
 
 ### Git Best Practices
 
