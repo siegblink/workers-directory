@@ -159,7 +159,7 @@ export default function PromoteProfilePage() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center mb-4">
             <Crown className="w-8 h-8 text-yellow-900 dark:text-yellow-950" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-4">
@@ -187,17 +187,17 @@ export default function PromoteProfilePage() {
         {/* Active promotion status */}
         {!loadingStatus && activePromotion && (
           <Card className="mb-8 border-yellow-400 dark:border-yellow-500 ring-1 ring-yellow-400 dark:ring-yellow-500">
-            <CardContent className="flex items-center gap-3">
-              <Crown className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+            <CardContent className="flex items-center gap-4">
+              <Crown className="w-7 h-7 text-yellow-600 dark:text-yellow-400 shrink-0" />
               <div>
-                <p className="font-semibold text-sm">
+                <p className="font-semibold text-base">
                   {promotionPlans.find((p) => p.id === activePromotion.plan)?.name ?? activePromotion.plan} active
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Expires {formatExpiry(activePromotion.expires_at)}
                 </p>
               </div>
-              <Badge className="ml-auto bg-yellow-500 hover:bg-yellow-500 text-yellow-950">Active</Badge>
+              <Badge className="ml-auto text-sm px-3 py-1 bg-yellow-500 hover:bg-yellow-500 text-yellow-950">Active</Badge>
             </CardContent>
           </Card>
         )}
@@ -205,8 +205,8 @@ export default function PromoteProfilePage() {
         {/* Benefits */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Card>
-            <CardContent className="text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CardContent>
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
                 <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="font-semibold mb-2">3x More Views</h3>
@@ -217,8 +217,8 @@ export default function PromoteProfilePage() {
           </Card>
 
           <Card>
-            <CardContent className="text-center">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CardContent>
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold mb-2">More Bookings</h3>
@@ -229,8 +229,8 @@ export default function PromoteProfilePage() {
           </Card>
 
           <Card>
-            <CardContent className="text-center">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CardContent>
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-4">
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="font-semibold mb-2">Stand Out</h3>
