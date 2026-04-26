@@ -159,7 +159,7 @@ export default function PromoteProfilePage() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Crown className="w-8 h-8 text-yellow-900 dark:text-yellow-950" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-4">
