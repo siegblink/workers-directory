@@ -19,8 +19,11 @@ function verifySignature(rawBody: string, signatureHeader: string, secret: strin
   }
 
   const timestamp = parts["t"];
-  // Use live signature in production, test signature in development
-  const hmacToVerify = process.env.NODE_ENV === "production" ? parts["li"] : parts["te"];
+  // Test secrets start with "whsk_test_", live secrets with "whsk_live_".
+  // PayMongo always sends both te and li in the header; pick the one that
+  // matches the type of secret we actually have.
+  const isTestSecret = secret.startsWith("whsk_test_");
+  const hmacToVerify = isTestSecret ? parts["te"] : parts["li"];
 
   if (!timestamp || !hmacToVerify) return false;
 
