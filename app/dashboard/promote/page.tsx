@@ -205,7 +205,7 @@ export default function PromoteProfilePage() {
         {/* Benefits */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Card>
-            <CardContent className="p-6 text-center">
+            <CardContent className="text-center">
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
@@ -217,7 +217,7 @@ export default function PromoteProfilePage() {
           </Card>
 
           <Card>
-            <CardContent className="p-6 text-center">
+            <CardContent className="text-center">
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
@@ -229,7 +229,7 @@ export default function PromoteProfilePage() {
           </Card>
 
           <Card>
-            <CardContent className="p-6 text-center">
+            <CardContent className="text-center">
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
@@ -296,7 +296,7 @@ export default function PromoteProfilePage() {
 
         {/* Action */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h3 className="font-semibold text-lg mb-1">
