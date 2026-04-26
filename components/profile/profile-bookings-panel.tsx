@@ -2,7 +2,6 @@
 
 import { Bookmark, Star } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import type {
   Booking,
   BookmarkedWorker,
@@ -17,6 +16,8 @@ type ProfileBookingsPanelProps = {
   bookings: Booking[];
   bookmarkedWorkers: BookmarkedWorker[];
   onUnsave?: (workerId: string) => void;
+  activeTab?: "bookings" | "saved";
+  onTabChange?: (tab: "bookings" | "saved") => void;
 };
 
 const PREVIEW_LIMIT = 5;
@@ -25,8 +26,9 @@ export function ProfileBookingsPanel({
   bookings,
   bookmarkedWorkers,
   onUnsave,
+  activeTab = "bookings",
+  onTabChange,
 }: ProfileBookingsPanelProps) {
-  const [activeTab, setActiveTab] = useState("bookings");
 
   return (
     <Card>
@@ -34,7 +36,10 @@ export function ProfileBookingsPanel({
         <CardTitle>Bookings</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => onTabChange?.(v as "bookings" | "saved")}
+        >
           <div className="flex items-center justify-between gap-4">
             <TabsList>
               <TabsTrigger value="bookings">My Bookings</TabsTrigger>

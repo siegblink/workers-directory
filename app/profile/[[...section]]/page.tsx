@@ -2,7 +2,7 @@
 
 import { User } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProfileAbout } from "@/components/profile/profile-about";
@@ -140,24 +140,62 @@ export default function ProfilePage() {
       : "profile";
   });
 
+  const [activeBookingsTab, setActiveBookingsTab] = useState<
+    "bookings" | "saved"
+  >(() => (params.section?.[1] === "saved-workers" ? "saved" : "bookings"));
+
   function handleSectionChange(section: ProfileSection) {
     setActiveSection(section);
+    setActiveBookingsTab("bookings");
     const url = section === "profile" ? "/profile" : `/profile/${section}`;
     window.history.pushState(null, "", url);
   }
 
-  // Keep activeSection in sync with browser back/forward buttons.
+  function handleBookingsTabChange(tab: "bookings" | "saved") {
+    setActiveBookingsTab(tab);
+    const url =
+      tab === "saved"
+        ? "/profile/bookings/saved-workers"
+        : "/profile/bookings";
+    window.history.pushState(null, "", url);
+  }
+
+  // Keep section + inner tab in sync with browser back/forward buttons
+  // (covers both pushState entries and App Router cache-restore).
   useEffect(() => {
     function onPopState() {
-      const slug = window.location.pathname.split("/profile/")[1] ?? "";
-      const section = validSections.includes(slug as ProfileSection)
-        ? (slug as ProfileSection)
+      const rest = window.location.pathname.replace(/^\/profile\/?/, "");
+      const [sectionSlug = "", subSlug = ""] = rest.split("/");
+      const section = validSections.includes(sectionSlug as ProfileSection)
+        ? (sectionSlug as ProfileSection)
         : "profile";
       setActiveSection(section);
+      if (section === "bookings") {
+        setActiveBookingsTab(
+          subSlug === "saved-workers" ? "saved" : "bookings",
+        );
+      }
     }
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  // Re-sync on real Next.js navigations (e.g. back from /saved-workers).
+  // usePathname() updates for router navigations but NOT for pushState,
+  // so sidebar pushState navigation is unaffected — those are handled
+  // directly by handleSectionChange / handleBookingsTabChange.
+  const pathname = usePathname();
+  useEffect(() => {
+    const rest = pathname.replace(/^\/profile\/?/, "");
+    const [sectionSlug = "", subSlug = ""] = rest.split("/");
+    const section = validSections.includes(sectionSlug as ProfileSection)
+      ? (sectionSlug as ProfileSection)
+      : "profile";
+    setActiveSection(section);
+    if (section === "bookings") {
+      setActiveBookingsTab(subSlug === "saved-workers" ? "saved" : "bookings");
+    }
+  }, [pathname]);
 
   const [loading, setLoading] = useState(true);
 
@@ -964,6 +1002,8 @@ export default function ProfilePage() {
             bookings={activeSubProfileId ? [] : bookingPreviews}
             bookmarkedWorkers={activeSubProfileId ? [] : savedWorkers}
             onUnsave={handleUnsaveWorker}
+            activeTab={activeBookingsTab}
+            onTabChange={handleBookingsTabChange}
           />
         );
       case "gallery":

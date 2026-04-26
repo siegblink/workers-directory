@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  Bookmark,
   Briefcase,
   Calendar,
   CheckCircle2,
@@ -25,6 +26,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { fireNotificationEmail } from "@/lib/notify";
+import {
+  getSavedWorkersWithDetails,
+  toggleSavedWorker,
+} from "@/lib/database/queries/saved-workers";
 
 type DashboardStats = {
   totalBookings: number;
@@ -54,6 +59,29 @@ type DashboardReview = {
   createdAt: string;
 };
 
+type CustomerDashboardStats = {
+  totalBookings: number;
+  activeBookings: number;
+  savedWorkersCount: number;
+};
+
+type CustomerDashboardBooking = {
+  id: string;
+  worker: { id: string; name: string; profession: string; avatar: string | null };
+  requestedAt: string | null;
+  status: string;
+  category: string | null;
+};
+
+type CustomerSavedWorker = {
+  id: string;
+  name: string;
+  profession: string;
+  rating: number;
+  hourlyRate: number;
+  avatar: string;
+};
+
 function formatBookingDate(dateString: string | null): string {
   if (!dateString) return "Date TBD";
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -72,6 +100,32 @@ function formatBookingTime(dateString: string | null): string {
   });
 }
 
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    pending: "Pending",
+    accepted: "Upcoming",
+    in_progress: "In Progress",
+    completed: "Completed",
+    canceled: "Cancelled",
+  };
+  return labels[status] ?? status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function getStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    pending:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    accepted:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    in_progress:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    completed:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    canceled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  };
+  return colors[status] ?? "bg-secondary text-foreground";
+}
+
 const VALID_TABS = ["pending", "upcoming", "active", "performance"] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
@@ -84,21 +138,28 @@ export default function WorkerDashboardPage() {
       : "pending"
   ) as TabValue;
 
-  useEffect(() => {
-    if (!VALID_TABS.includes(searchParams.get("tab") as TabValue)) {
-      router.replace("/dashboard?tab=pending");
-    }
-  }, [router, searchParams]);
-
-  function handleTabChange(tab: string) {
-    router.replace(`/dashboard?tab=${tab}`);
-  }
-
   const [verificationStatus, setVerificationStatus] = useState<
     "loading" | "verified" | "pending" | "not_verified"
   >("loading");
   const [loading, setLoading] = useState(true);
   const [isWorker, setIsWorker] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (isWorker === null) return; // still loading — don't touch the URL yet
+    if (isWorker === false) {
+      // Customers don't use URL-synced tabs; strip any worker tab param
+      if (searchParams.get("tab")) router.replace("/dashboard");
+      return;
+    }
+    // Worker: enforce a valid tab in the URL
+    if (!VALID_TABS.includes(searchParams.get("tab") as TabValue)) {
+      router.replace("/dashboard?tab=pending");
+    }
+  }, [isWorker, router, searchParams]);
+
+  function handleTabChange(tab: string) {
+    router.replace(`/dashboard?tab=${tab}`);
+  }
   const currentUserRef = useRef<SupabaseUser | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pendingBookings, setPendingBookings] = useState<DashboardBooking[]>(
@@ -109,6 +170,18 @@ export default function WorkerDashboardPage() {
   );
   const [activeBookings, setActiveBookings] = useState<DashboardBooking[]>([]);
   const [recentReviews, setRecentReviews] = useState<DashboardReview[]>([]);
+
+  const [customerStats, setCustomerStats] =
+    useState<CustomerDashboardStats | null>(null);
+  const [customerRecentBookings, setCustomerRecentBookings] = useState<
+    CustomerDashboardBooking[]
+  >([]);
+  const [customerSavedWorkers, setCustomerSavedWorkers] = useState<
+    CustomerSavedWorker[]
+  >([]);
+  const [customerTab, setCustomerTab] = useState<"bookings" | "saved">(
+    "bookings",
+  );
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -138,9 +211,108 @@ export default function WorkerDashboardPage() {
       workerResult.data?.is_verified ? "verified" : "not_verified",
     );
 
-    // No worker profile — show non-worker empty state
+    // No worker profile — load customer dashboard data
     if (!workerResult.data) {
       setIsWorker(false);
+
+      const [allCustResult, recentCustResult, savedWorkers] = await Promise.all(
+        [
+          supabase
+            .from("bookings")
+            .select("id, status")
+            .eq("customer_id", user.id),
+          supabase
+            .from("bookings")
+            .select(
+              "id, status, description, requested_at, worker_id, category_id",
+            )
+            .eq("customer_id", user.id)
+            .order("requested_at", { ascending: false })
+            .limit(5),
+          getSavedWorkersWithDetails(),
+        ],
+      );
+
+      const allCustBookings = allCustResult.data ?? [];
+      const activeStatuses = new Set(["pending", "accepted", "in_progress"]);
+      setCustomerStats({
+        totalBookings: allCustBookings.length,
+        activeBookings: allCustBookings.filter((b) =>
+          activeStatuses.has(b.status),
+        ).length,
+        savedWorkersCount: savedWorkers.length,
+      });
+      setCustomerSavedWorkers(savedWorkers.slice(0, 5) as CustomerSavedWorker[]);
+
+      const recentData = recentCustResult.data ?? [];
+      if (recentData.length > 0) {
+        const workerIds = [
+          ...new Set(recentData.map((b) => b.worker_id).filter(Boolean)),
+        ];
+        const categoryIds = [
+          ...new Set(recentData.map((b) => b.category_id).filter(Boolean)),
+        ];
+
+        const [workersResult, catsResult] = await Promise.all([
+          workerIds.length
+            ? supabase
+                .from("workers")
+                .select("id, profession, user_id")
+                .in("id", workerIds)
+            : Promise.resolve({ data: [] as { id: string; profession: string | null; user_id: string }[] }),
+          categoryIds.length
+            ? supabase
+                .from("categories")
+                .select("id, name")
+                .in("id", categoryIds)
+            : Promise.resolve({ data: [] as { id: number; name: string }[] }),
+        ]);
+
+        const workerUserIds = [
+          ...new Set(
+            (workersResult.data ?? []).map((w) => w.user_id).filter(Boolean),
+          ),
+        ];
+        const { data: workerUsersData } = workerUserIds.length
+          ? await supabase
+              .from("users")
+              .select("id, firstname, lastname, profile_pic_url")
+              .in("id", workerUserIds)
+          : { data: [] as { id: string; firstname: string; lastname: string; profile_pic_url: string | null }[] };
+
+        const workerMap = new Map(
+          (workersResult.data ?? []).map((w) => [w.id, w]),
+        );
+        const workerUserMap = new Map(
+          (workerUsersData ?? []).map((u) => [u.id, u]),
+        );
+        const catMap = new Map(
+          (catsResult.data ?? []).map((c) => [String(c.id), c]),
+        );
+
+        setCustomerRecentBookings(
+          recentData.map((b) => {
+            const w = workerMap.get(b.worker_id);
+            const wu = w ? workerUserMap.get(w.user_id) : null;
+            const cat = catMap.get(String(b.category_id));
+            return {
+              id: String(b.id),
+              worker: {
+                id: w?.id ?? "",
+                name: wu
+                  ? `${wu.firstname} ${wu.lastname}`
+                  : "Unknown Worker",
+                profession: w?.profession ?? "Service Provider",
+                avatar: wu?.profile_pic_url ?? null,
+              },
+              requestedAt: b.requested_at,
+              status: b.status,
+              category: cat?.name ?? null,
+            };
+          }),
+        );
+      }
+
       setLoading(false);
       return;
     }
@@ -429,6 +601,16 @@ export default function WorkerDashboardPage() {
     loadDashboard();
   }
 
+  async function handleCustomerUnsave(workerId: string) {
+    await toggleSavedWorker(workerId);
+    setCustomerSavedWorkers((prev) => prev.filter((w) => w.id !== workerId));
+    setCustomerStats((prev) =>
+      prev
+        ? { ...prev, savedWorkersCount: Math.max(0, prev.savedWorkersCount - 1) }
+        : null,
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
@@ -505,24 +687,255 @@ export default function WorkerDashboardPage() {
             <Spinner className="size-8" />
           </div>
         ) : isWorker === false ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-6">
-                <Briefcase className="size-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-xl font-semibold mb-2 text-foreground">
-                This area is for service workers
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-sm">
-                You don&apos;t have a worker profile yet. Register as a service
-                worker to manage bookings, track your performance, and grow your
-                business.
-              </p>
-              <Button asChild size="lg">
-                <Link href="/become-worker">Become a Worker</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <>
+            {/* Customer Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Bookings
+                  </CardTitle>
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {(customerStats?.totalBookings ?? 0).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    All-time bookings
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Active Bookings
+                  </CardTitle>
+                  <Clock className="w-4 h-4 text-blue-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {customerStats?.activeBookings ?? 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pending, upcoming &amp; in progress
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Saved Workers
+                  </CardTitle>
+                  <Bookmark className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {customerStats?.savedWorkersCount ?? 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Workers you&apos;ve bookmarked
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Customer Tabs */}
+            <Tabs
+              value={customerTab}
+              onValueChange={(v) =>
+                setCustomerTab(v as "bookings" | "saved")
+              }
+              className="space-y-6"
+            >
+              <TabsList>
+                <TabsTrigger value="bookings">My Bookings</TabsTrigger>
+                <TabsTrigger value="saved">Saved Workers</TabsTrigger>
+              </TabsList>
+
+              {/* My Bookings Tab */}
+              <TabsContent value="bookings">
+                <div className="space-y-4">
+                  {customerRecentBookings.length === 0 ? (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <Calendar className="text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2 text-foreground">
+                          No Bookings Yet
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Browse the directory to find and book a service worker.
+                        </p>
+                        <Button asChild>
+                          <Link href="/search">Browse Workers</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      {customerRecentBookings.map((booking) => (
+                        <Card key={booking.id}>
+                          <CardContent>
+                            <div className="flex flex-col md:flex-row gap-6">
+                              <div className="flex items-start gap-4 flex-1">
+                                <Avatar className="w-14 h-14">
+                                  <AvatarImage
+                                    src={booking.worker.avatar ?? undefined}
+                                    alt={booking.worker.name}
+                                  />
+                                  <AvatarFallback>
+                                    {booking.worker.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <h3 className="font-semibold text-foreground">
+                                    {booking.worker.name}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {booking.worker.profession}
+                                  </p>
+                                  {booking.category && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {booking.category}
+                                    </p>
+                                  )}
+                                  <Badge
+                                    className={`mt-2 ${getStatusColor(booking.status)}`}
+                                  >
+                                    {getStatusLabel(booking.status)}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Calendar className="w-4 h-4" />
+                                <span>
+                                  {formatBookingDate(booking.requestedAt)}
+                                  {booking.requestedAt && (
+                                    <>
+                                      {" "}
+                                      at{" "}
+                                      {formatBookingTime(booking.requestedAt)}
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex flex-col items-end justify-center gap-2">
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link href={`/bookings/${booking.id}`}>
+                                    View Details
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      <div className="flex justify-center pt-2">
+                        <Button variant="outline" asChild>
+                          <Link href="/bookings">View all bookings</Link>
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Saved Workers Tab */}
+              <TabsContent value="saved">
+                <div className="space-y-4">
+                  {customerSavedWorkers.length === 0 ? (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <Bookmark className="text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2 text-foreground">
+                          No Saved Workers
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Save workers you&apos;d like to book again for quick
+                          access.
+                        </p>
+                        <Button asChild>
+                          <Link href="/search">Find Workers</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      {customerSavedWorkers.map((worker) => (
+                        <Card key={worker.id}>
+                          <CardContent>
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-4">
+                                <Avatar className="w-14 h-14">
+                                  <AvatarImage
+                                    src={worker.avatar || undefined}
+                                    alt={worker.name}
+                                  />
+                                  <AvatarFallback>
+                                    {worker.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <h3 className="font-semibold text-foreground">
+                                    {worker.name}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {worker.profession}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-sm font-medium text-foreground">
+                                      {worker.rating || "—"}
+                                    </span>
+                                    {worker.hourlyRate > 0 && (
+                                      <span className="text-sm text-muted-foreground">
+                                        &middot; ₱{worker.hourlyRate}/hr
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() =>
+                                    handleCustomerUnsave(worker.id)
+                                  }
+                                >
+                                  <Bookmark className="fill-current" />
+                                </Button>
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link href={`/worker/${worker.id}`}>
+                                    View Profile
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      <div className="flex justify-center pt-2">
+                        <Button variant="outline" asChild>
+                          <Link href="/saved-workers">
+                            View all saved workers
+                          </Link>
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </>
         ) : (
           <>
             {/* Stats Grid */}

@@ -2,6 +2,7 @@
 
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
+  Bookmark,
   Calendar,
   CreditCard,
   Flame,
@@ -254,6 +255,12 @@ export function Navigation() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link href="/saved-workers">
+                          <Bookmark />
+                          Saved Workers
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link href="/credits">
                           <CreditCard />
                           Credits
@@ -380,6 +387,12 @@ export function Navigation() {
                         <Link href="/bookings">
                           <Calendar />
                           My Bookings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/saved-workers">
+                          <Bookmark />
+                          Saved Workers
                         </Link>
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
