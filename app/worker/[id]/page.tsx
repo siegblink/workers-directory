@@ -10,8 +10,13 @@ import { WorkerProfileHeader } from "@/components/worker/worker-profile-header";
 import { WorkerTestimonials } from "@/components/worker/worker-testimonials";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/database/base-query";
 import { getWorkerWithDetails } from "@/lib/database/queries/workers";
+import {
+  isWorkerSaved,
+  toggleSavedWorker,
+} from "@/lib/database/queries/saved-workers";
 import type { WorkerWithDetails } from "@/lib/database/types";
 
 type PortfolioItem = {
@@ -166,6 +171,9 @@ export default function WorkerProfilePage({
         setAvailability(ordered);
       }
 
+      const saved = await isWorkerSaved(id);
+      setIsBookmarked(saved);
+
       setLoading(false);
     }
 
@@ -190,6 +198,21 @@ export default function WorkerProfilePage({
         <Button onClick={() => router.push("/search")}>Browse Workers</Button>
       </div>
     );
+  }
+
+  async function handleBookmarkToggle(newValue: boolean) {
+    setIsBookmarked(newValue);
+    const supabase = getSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setIsBookmarked(!newValue);
+      toast.error("Please log in to save workers");
+      return;
+    }
+    await toggleSavedWorker(id);
+    toast.success(newValue ? "Worker saved" : "Removed from saved");
   }
 
   const u = worker.user;
@@ -221,7 +244,7 @@ export default function WorkerProfilePage({
           isBookmarked={isBookmarked}
           onMessage={() => router.push(`/messages?workerId=${worker.id}`)}
           onBookNow={() => setBookingModalOpen(true)}
-          onBookmarkToggle={setIsBookmarked}
+          onBookmarkToggle={handleBookmarkToggle}
         />
 
         {portfolio.length > 0 && (

@@ -29,9 +29,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { toast } from "sonner";
 import type { Worker as WorkerCardWorker } from "@/components/worker/worker-card";
 import { WorkerCard } from "@/components/worker/worker-card";
+import {
+  getSavedWorkerIds,
+  toggleSavedWorker,
+} from "@/lib/database/queries/saved-workers";
 import { searchWorkers } from "@/lib/database/queries/workers";
+import { createClient } from "@/lib/supabase/client";
 import type { WorkerWithDetails } from "@/lib/database/types";
 
 const professions = [
@@ -98,6 +104,7 @@ export default function SearchPage() {
   const [minResponseTime, setMinResponseTime] = useState(180);
   const [minJobsCompleted, setMinJobsCompleted] = useState(0);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  const [savedWorkerIds, setSavedWorkerIds] = useState<Set<string>>(new Set());
 
   const observerTarget = useRef<HTMLDivElement>(null);
   const fetchingRef = useRef(false);
@@ -147,6 +154,7 @@ export default function SearchPage() {
       onlineOnly: false,
       selectedRatings: [],
     });
+    getSavedWorkerIds().then((ids) => setSavedWorkerIds(new Set(ids)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -200,6 +208,25 @@ export default function SearchPage() {
       onlineOnly,
       selectedRatings,
     });
+  }
+
+  async function handleSaveWorker(workerId: string) {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please log in to save workers");
+      return;
+    }
+    const nowSaved = await toggleSavedWorker(workerId);
+    setSavedWorkerIds((prev) => {
+      const next = new Set(prev);
+      if (nowSaved) next.add(workerId);
+      else next.delete(workerId);
+      return next;
+    });
+    toast.success(nowSaved ? "Worker saved" : "Removed from saved");
   }
 
   function clearAllFilters() {
@@ -376,7 +403,12 @@ export default function SearchPage() {
             {/* Worker Cards - Single Column */}
             <div className="space-y-6">
               {workers.map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} />
+                <WorkerCard
+                  key={worker.id}
+                  worker={worker}
+                  isSaved={savedWorkerIds.has(worker.id)}
+                  onSave={handleSaveWorker}
+                />
               ))}
             </div>
 

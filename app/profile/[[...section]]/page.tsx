@@ -28,6 +28,7 @@ import {
   ProfileSidebar,
   validSections,
 } from "@/components/profile/profile-sidebar";
+import type { BookmarkedWorker } from "@/components/profile/profile-tabs";
 import {
   ProfileTestimonials,
   type Review,
@@ -47,6 +48,10 @@ import {
   deleteSubProfile,
   updateSubProfile,
 } from "@/lib/database/queries/sub-profiles";
+import {
+  getSavedWorkersWithDetails,
+  toggleSavedWorker,
+} from "@/lib/database/queries/saved-workers";
 import type { SubProfile } from "@/lib/database/types";
 import type {
   ProfileAboutFormValues,
@@ -171,6 +176,7 @@ export default function ProfilePage() {
     [],
   );
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [savedWorkers, setSavedWorkers] = useState<BookmarkedWorker[]>([]);
 
   // Real data for panels
   const [chatPreviews, setChatPreviews] = useState<
@@ -220,6 +226,9 @@ export default function ProfilePage() {
       return;
     }
     setUserId(user.id);
+
+    // Load saved workers in background (customer feature, non-blocking)
+    getSavedWorkersWithDetails().then(setSavedWorkers);
 
     // Parallel: user record + worker record
     const [userResult, workerResult] = await Promise.all([
@@ -898,6 +907,12 @@ export default function ProfilePage() {
     toast.success("About Me saved");
   }
 
+  async function handleUnsaveWorker(workerId: string) {
+    await toggleSavedWorker(workerId);
+    setSavedWorkers((prev) => prev.filter((w) => String(w.id) !== workerId));
+    toast.success("Removed from saved");
+  }
+
   async function handleSubProfileDelete(id: string) {
     await deleteSubProfile(id);
     setActiveSubProfileId(null);
@@ -947,7 +962,8 @@ export default function ProfilePage() {
         return (
           <ProfileBookingsPanel
             bookings={activeSubProfileId ? [] : bookingPreviews}
-            bookmarkedWorkers={[]}
+            bookmarkedWorkers={activeSubProfileId ? [] : savedWorkers}
+            onUnsave={handleUnsaveWorker}
           />
         );
       case "gallery":

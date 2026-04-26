@@ -41,6 +41,7 @@ type WorkerCardProps = {
   onMessage?: (workerId: string) => void;
   onBook?: (workerId: string) => void;
   onSave?: (workerId: string) => void;
+  isSaved?: boolean;
 };
 
 export function WorkerCard({
@@ -48,6 +49,7 @@ export function WorkerCard({
   onMessage,
   onBook,
   onSave,
+  isSaved = false,
 }: WorkerCardProps) {
   return (
     <Card
@@ -179,9 +181,10 @@ export function WorkerCard({
                 variant="outline"
                 size="sm"
                 onClick={() => onSave?.(worker.id)}
+                className={isSaved ? "text-primary border-primary" : ""}
               >
-                <Bookmark />
-                Save
+                <Bookmark className={isSaved ? "fill-current" : ""} />
+                {isSaved ? "Saved" : "Save"}
               </Button>
             </div>
           </div>

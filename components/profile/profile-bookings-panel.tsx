@@ -2,6 +2,7 @@
 
 import { Bookmark, Star } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import type {
   Booking,
   BookmarkedWorker,
@@ -15,27 +16,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type ProfileBookingsPanelProps = {
   bookings: Booking[];
   bookmarkedWorkers: BookmarkedWorker[];
+  onUnsave?: (workerId: string) => void;
 };
+
+const PREVIEW_LIMIT = 5;
 
 export function ProfileBookingsPanel({
   bookings,
   bookmarkedWorkers,
+  onUnsave,
 }: ProfileBookingsPanelProps) {
+  const [activeTab, setActiveTab] = useState("bookings");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Bookings</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="bookings">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between gap-4">
             <TabsList>
               <TabsTrigger value="bookings">My Bookings</TabsTrigger>
               <TabsTrigger value="saved">Saved Workers</TabsTrigger>
             </TabsList>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/bookings">View all bookings</Link>
-            </Button>
+            {activeTab === "bookings" ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/bookings">View all bookings</Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/saved-workers">View all saved workers</Link>
+              </Button>
+            )}
           </div>
 
           <TabsContent value="bookings">
@@ -102,7 +115,7 @@ export function ProfileBookingsPanel({
                   No saved workers yet.
                 </p>
               ) : (
-                bookmarkedWorkers.map((worker) => (
+                bookmarkedWorkers.slice(0, PREVIEW_LIMIT).map((worker) => (
                   <div
                     key={worker.id}
                     className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-primary/50 transition-colors"
@@ -139,7 +152,11 @@ export function ProfileBookingsPanel({
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="icon-sm">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => onUnsave?.(String(worker.id))}
+                      >
                         <Bookmark className="fill-current" />
                       </Button>
                       <Button variant="outline" size="sm" asChild>
