@@ -187,7 +187,7 @@ export default function PromoteProfilePage() {
         {/* Active promotion status */}
         {!loadingStatus && activePromotion && (
           <Card className="mb-8 border-yellow-400 dark:border-yellow-500 ring-1 ring-yellow-400 dark:ring-yellow-500">
-            <CardContent className="flex items-center gap-3 py-4">
+            <CardContent className="flex items-center gap-3">
               <Crown className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
               <div>
                 <p className="font-semibold text-sm">
