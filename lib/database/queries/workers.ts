@@ -294,6 +294,18 @@ export async function searchWorkers(
     const totalCount = data[0]?.total_count || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Fetch active promoted worker IDs and float them to the top of this page.
+    const { data: promotedData } = await supabase
+      .from("promoted_listings")
+      .select("worker_id")
+      .gt("expires_at", new Date().toISOString());
+
+    const promotedIds = new Set((promotedData ?? []).map((p: { worker_id: string }) => p.worker_id));
+    for (const w of workers) {
+      w.is_promoted = promotedIds.has(w.id);
+    }
+    workers.sort((a: WorkerWithDetails, b: WorkerWithDetails) => Number(b.is_promoted ?? false) - Number(a.is_promoted ?? false));
+
     // Category filter (if provided)
     let filteredWorkers = workers;
     if (filters.category_id || filters.category_ids) {

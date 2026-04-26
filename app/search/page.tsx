@@ -64,6 +64,7 @@ function toWorkerCardShape(w: WorkerWithDetails): WorkerCardWorker {
     yearsExperience: w.years_experience ?? 0,
     jobsCompleted: w.jobs_completed ?? 0,
     responseTime: w.response_time_minutes ?? 0,
+    isPromoted: w.is_promoted ?? false,
   };
 }
 

@@ -5,6 +5,7 @@ import {
   Briefcase,
   Calendar,
   CheckCircle2,
+  Crown,
   MapPin,
   MessageSquare,
   Star,
@@ -32,6 +33,7 @@ export type Worker = {
   yearsExperience: number;
   jobsCompleted: number;
   responseTime: number;
+  isPromoted?: boolean;
 };
 
 type WorkerCardProps = {
@@ -48,8 +50,20 @@ export function WorkerCard({
   onSave,
 }: WorkerCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow border-border">
+    <Card
+      className={`hover:shadow-md transition-shadow ${
+        worker.isPromoted
+          ? "border-yellow-400 dark:border-yellow-500 ring-1 ring-yellow-400 dark:ring-yellow-500"
+          : "border-border"
+      }`}
+    >
       <CardContent>
+        {worker.isPromoted && (
+          <div className="flex items-center gap-1.5 mb-3 text-yellow-700 dark:text-yellow-400">
+            <Crown className="w-3.5 h-3.5" />
+            <span className="text-xs font-semibold uppercase tracking-wide">Sponsored</span>
+          </div>
+        )}
         <div className="flex gap-4">
           {/* Avatar Section */}
           <div className="flex flex-col items-center border-1 border-border rounded-xl h-fit">

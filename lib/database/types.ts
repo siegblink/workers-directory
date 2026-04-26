@@ -267,6 +267,7 @@ export type WorkerWithDetails = Worker & {
   average_rating?: number;
   review_count?: number;
   total_bookings?: number;
+  is_promoted?: boolean;
 };
 
 export interface ChatWithDetails extends Chat {
