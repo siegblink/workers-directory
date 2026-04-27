@@ -8,9 +8,12 @@ import {
   CheckCircle2,
   Clock,
   Crown,
+  MapPin,
   Play,
+  PlusCircle,
   Star,
   TrendingUp,
+  Users,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +33,11 @@ import {
   getSavedWorkersWithDetails,
   toggleSavedWorker,
 } from "@/lib/database/queries/saved-workers";
+import {
+  closeJobPost,
+  getMyJobPosts,
+  type JobPost,
+} from "@/lib/database/queries/jobs";
 
 type DashboardStats = {
   totalBookings: number;
@@ -179,7 +187,8 @@ export default function WorkerDashboardPage() {
   const [customerSavedWorkers, setCustomerSavedWorkers] = useState<
     CustomerSavedWorker[]
   >([]);
-  const [customerTab, setCustomerTab] = useState<"bookings" | "saved">(
+  const [customerJobPosts, setCustomerJobPosts] = useState<JobPost[]>([]);
+  const [customerTab, setCustomerTab] = useState<"bookings" | "saved" | "jobs">(
     "bookings",
   );
 
@@ -215,8 +224,8 @@ export default function WorkerDashboardPage() {
     if (!workerResult.data) {
       setIsWorker(false);
 
-      const [allCustResult, recentCustResult, savedWorkers] = await Promise.all(
-        [
+      const [allCustResult, recentCustResult, savedWorkers, jobPosts] =
+        await Promise.all([
           supabase
             .from("bookings")
             .select("id, status")
@@ -230,8 +239,8 @@ export default function WorkerDashboardPage() {
             .order("requested_at", { ascending: false })
             .limit(5),
           getSavedWorkersWithDetails(),
-        ],
-      );
+          getMyJobPosts(),
+        ]);
 
       const allCustBookings = allCustResult.data ?? [];
       const activeStatuses = new Set(["pending", "accepted", "in_progress"]);
@@ -243,6 +252,7 @@ export default function WorkerDashboardPage() {
         savedWorkersCount: savedWorkers.length,
       });
       setCustomerSavedWorkers(savedWorkers.slice(0, 5) as CustomerSavedWorker[]);
+      setCustomerJobPosts(jobPosts);
 
       const recentData = recentCustResult.data ?? [];
       if (recentData.length > 0) {
@@ -601,6 +611,15 @@ export default function WorkerDashboardPage() {
     loadDashboard();
   }
 
+  async function handleCloseJob(jobId: string) {
+    const success = await closeJobPost(jobId);
+    if (success) {
+      setCustomerJobPosts((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, status: "closed" } : j)),
+      );
+    }
+  }
+
   async function handleCustomerUnsave(workerId: string) {
     await toggleSavedWorker(workerId);
     setCustomerSavedWorkers((prev) => prev.filter((w) => w.id !== workerId));
@@ -682,6 +701,33 @@ export default function WorkerDashboardPage() {
           </Card>
         )}
 
+        {/* Job Board Banner — workers only */}
+        {isWorker && (
+          <Card className="mb-6 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-400 dark:bg-blue-600 rounded-full flex items-center justify-center">
+                    <Briefcase className="w-6 h-6 text-blue-900 dark:text-blue-100" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1 text-foreground">
+                      Browse Open Jobs
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Customers are posting jobs — apply directly and grow your
+                      bookings
+                    </p>
+                  </div>
+                </div>
+                <Button variant="outline" asChild>
+                  <Link href="/jobs">View Jobs</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Spinner className="size-8" />
@@ -746,13 +792,22 @@ export default function WorkerDashboardPage() {
             <Tabs
               value={customerTab}
               onValueChange={(v) =>
-                setCustomerTab(v as "bookings" | "saved")
+                setCustomerTab(v as "bookings" | "saved" | "jobs")
               }
               className="space-y-6"
             >
               <TabsList>
                 <TabsTrigger value="bookings">My Bookings</TabsTrigger>
                 <TabsTrigger value="saved">Saved Workers</TabsTrigger>
+                <TabsTrigger value="jobs">
+                  My Job Posts
+                  {customerJobPosts.filter((j) => j.status === "open").length >
+                    0 && (
+                    <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full">
+                      {customerJobPosts.filter((j) => j.status === "open").length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
               </TabsList>
 
               {/* My Bookings Tab */}
@@ -927,6 +982,101 @@ export default function WorkerDashboardPage() {
                         <Button variant="outline" asChild>
                           <Link href="/saved-workers">
                             View all saved workers
+                          </Link>
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* My Job Posts Tab */}
+              <TabsContent value="jobs">
+                <div className="space-y-4">
+                  {customerJobPosts.length === 0 ? (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <Briefcase className="text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2 text-foreground">
+                          No Job Posts Yet
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Post a job and let skilled workers apply to you.
+                        </p>
+                        <Button asChild>
+                          <Link href="/post-job">
+                            <PlusCircle />
+                            Post a Job
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      {customerJobPosts.map((job) => (
+                        <Card key={job.id}>
+                          <CardContent>
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-foreground">
+                                    {job.title}
+                                  </h3>
+                                  <Badge
+                                    className={
+                                      job.status === "open"
+                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        : "bg-secondary text-muted-foreground"
+                                    }
+                                  >
+                                    {job.status === "open" ? "Open" : "Closed"}
+                                  </Badge>
+                                </div>
+                                {job.categoryName && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {job.categoryName}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                                  {job.location && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      {job.location}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-1">
+                                    <Users className="w-3 h-3" />
+                                    {job.applicantCount} applicant
+                                    {job.applicantCount !== 1 ? "s" : ""}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end justify-center gap-2 shrink-0">
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link href={`/jobs/${job.id}`}>
+                                    View Details
+                                  </Link>
+                                </Button>
+                                {job.status === "open" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-muted-foreground"
+                                    onClick={() => handleCloseJob(job.id)}
+                                  >
+                                    Close Job
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      <div className="flex justify-center pt-2">
+                        <Button asChild>
+                          <Link href="/post-job">
+                            <PlusCircle />
+                            Post Another Job
                           </Link>
                         </Button>
                       </div>

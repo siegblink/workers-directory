@@ -3,6 +3,7 @@
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   Bookmark,
+  Briefcase,
   Calendar,
   CreditCard,
   Flame,
@@ -194,6 +195,12 @@ export function Navigation() {
                 Suggest Jobs
               </Link>
             </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/jobs">
+                <Briefcase className="text-blue-500" />
+                Jobs
+              </Link>
+            </Button>
           </div>
 
           {/* Desktop Navigation */}
@@ -350,6 +357,12 @@ export function Navigation() {
                     <Link href="/suggest-jobs">
                       <Lightbulb className="text-yellow-500" />
                       Suggest Jobs
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/jobs">
+                      <Briefcase className="text-blue-500" />
+                      Jobs
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
