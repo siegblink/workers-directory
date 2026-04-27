@@ -29,7 +29,7 @@ import {
   type JobPost,
 } from "@/lib/database/queries/jobs";
 
-type Category = { id: number; name: string };
+type Category = { id: string; name: string };
 
 function formatBudget(min: number | null, max: number | null): string {
   if (!min && !max) return "Budget open";
@@ -134,7 +134,7 @@ export default function JobsPage() {
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               {categories.map((cat) => (
-                <SelectItem key={cat.id} value={String(cat.id)}>
+                <SelectItem key={cat.id} value={cat.id}>
                   {cat.name}
                 </SelectItem>
               ))}

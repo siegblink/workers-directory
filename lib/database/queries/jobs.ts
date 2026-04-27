@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/client";
 export type JobPost = {
   id: string;
   customerId: string;
-  categoryId: number | null;
+  categoryId: string | null;
   categoryName: string | null;
   title: string;
   description: string;
@@ -26,7 +26,7 @@ export type JobApplicant = {
 };
 
 type CreateJobPostInput = {
-  categoryId: number | null;
+  categoryId: string | null;
   title: string;
   description: string;
   budgetMin: number | null;
@@ -38,7 +38,7 @@ function toJobPost(
   p: {
     id: string;
     customer_id: string;
-    category_id: number | null;
+    category_id: string | null;
     title: string;
     description: string;
     budget_min: number | null;
@@ -47,7 +47,7 @@ function toJobPost(
     status: string;
     created_at: string;
   },
-  catMap: Map<number, string>,
+  catMap: Map<string, string>,
   countMap: Map<string, number>,
 ): JobPost {
   return {
@@ -68,15 +68,15 @@ function toJobPost(
 
 async function buildCatMap(
   supabase: ReturnType<typeof createClient>,
-  posts: { category_id: number | null }[],
-): Promise<Map<number, string>> {
-  const ids = [...new Set(posts.map((p) => p.category_id).filter(Boolean))] as number[];
+  posts: { category_id: string | null }[],
+): Promise<Map<string, string>> {
+  const ids = [...new Set(posts.map((p) => p.category_id).filter(Boolean))] as string[];
   if (!ids.length) return new Map();
   const { data } = await supabase
     .from("categories")
     .select("id, name")
     .in("id", ids);
-  return new Map((data ?? []).map((c: { id: number; name: string }) => [c.id, c.name]));
+  return new Map((data ?? []).map((c: { id: string; name: string }) => [c.id, c.name]));
 }
 
 async function buildCountMap(

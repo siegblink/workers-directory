@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { createJobPost } from "@/lib/database/queries/jobs";
 
-type Category = { id: number; name: string };
+type Category = { id: string; name: string };
 
 const schema = z
   .object({
@@ -106,7 +106,7 @@ export default function PostJobPage() {
     setError(null);
     const result = await createJobPost({
       title: values.title,
-      categoryId: values.categoryId ? parseInt(values.categoryId) : null,
+      categoryId: values.categoryId || null,
       description: values.description,
       budgetMin: values.budgetMin ? parseInt(values.budgetMin) : null,
       budgetMax: values.budgetMax ? parseInt(values.budgetMax) : null,
@@ -183,7 +183,7 @@ export default function PostJobPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat.id} value={String(cat.id)}>
+                            <SelectItem key={cat.id} value={cat.id}>
                               {cat.name}
                             </SelectItem>
                           ))}
