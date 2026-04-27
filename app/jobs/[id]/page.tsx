@@ -13,7 +13,18 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,6 +72,7 @@ export default function JobDetailPage() {
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -134,8 +146,12 @@ export default function JobDetailPage() {
     const success = await closeJobPost(id);
     if (success) {
       setJob((prev) => (prev ? { ...prev, status: "closed" } : null));
+      toast.success("Job closed — workers can no longer apply.");
+    } else {
+      toast.error("Failed to close the job. Please try again.");
     }
     setClosing(false);
+    setCloseConfirmOpen(false);
   }
 
   if (loading) {
@@ -178,15 +194,18 @@ export default function JobDetailPage() {
             <h1 className="text-3xl font-bold text-foreground flex-1">
               {job.title}
             </h1>
-            <Badge
-              className={
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border ${
                 job.status === "open"
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-secondary text-muted-foreground"
-              }
+                  ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700"
+                  : "bg-secondary text-muted-foreground border-border"
+              }`}
             >
+              {job.status === "open" && (
+                <span className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400 animate-pulse" />
+              )}
               {job.status === "open" ? "Open" : "Closed"}
-            </Badge>
+            </span>
           </div>
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
             {job.categoryName && (
@@ -237,17 +256,11 @@ export default function JobDetailPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleClose}
+                    onClick={() => setCloseConfirmOpen(true)}
                     disabled={closing}
                   >
-                    {closing ? (
-                      <Spinner />
-                    ) : (
-                      <>
-                        <XCircle />
-                        Close Job
-                      </>
-                    )}
+                    <XCircle />
+                    Close Job
                   </Button>
                 )}
               </CardTitle>
@@ -406,6 +419,32 @@ export default function JobDetailPage() {
           </Card>
         )}
       </div>
+
+      {/* Close job confirmation */}
+      <AlertDialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Close this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Workers will no longer be able to apply. You can still see existing
+              applicants and contact them directly. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={closing}>Keep Open</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClose} disabled={closing}>
+              {closing ? (
+                <>
+                  <Spinner />
+                  Closing...
+                </>
+              ) : (
+                "Yes, Close Job"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
