@@ -221,7 +221,7 @@ export default function JobsPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end justify-center gap-2 shrink-0">
+                    <div className="flex flex-col items-end justify-start gap-2 shrink-0">
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/jobs/${job.id}`}>View Details</Link>
                       </Button>

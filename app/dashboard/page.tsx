@@ -1051,7 +1051,7 @@ export default function WorkerDashboardPage() {
                                   </span>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end justify-center gap-2 shrink-0">
+                              <div className="flex flex-col items-end justify-start gap-2 shrink-0">
                                 <Button variant="outline" size="sm" asChild>
                                   <Link href={`/jobs/${job.id}`}>
                                     View Details
@@ -1072,7 +1072,7 @@ export default function WorkerDashboardPage() {
                           </CardContent>
                         </Card>
                       ))}
-                      <div className="flex justify-center pt-2">
+                      <div className="flex justify-start pt-2">
                         <Button asChild>
                           <Link href="/post-job">
                             <PlusCircle />

@@ -333,7 +333,7 @@ export default function JobDetailPage() {
             </CardHeader>
             <CardContent>
               {alreadyApplied ? (
-                <div className="flex items-center gap-3 py-2">
+                <div className="flex items-start gap-3 py-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground">
