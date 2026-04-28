@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, MapPin, PlusCircle } from "lucide-react";
+import { Briefcase, Lightbulb, MapPin, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -117,12 +117,21 @@ export default function JobsPage() {
               Open jobs posted by customers looking for skilled workers.
             </p>
           </div>
-          <Button asChild>
-            <Link href="/post-job">
-              <PlusCircle />
-              Post a Job
+          <div className="flex flex-col items-end gap-1.5">
+            <Button asChild>
+              <Link href="/post-job">
+                <PlusCircle />
+                Post a Job
+              </Link>
+            </Button>
+            <Link
+              href="/suggest-jobs"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Lightbulb className="w-3 h-3" />
+              Suggest a category
             </Link>
-          </Button>
+          </div>
         </div>
 
         {/* Category filter */}

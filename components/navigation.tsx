@@ -8,7 +8,6 @@ import {
   CreditCard,
   Flame,
   LayoutDashboard,
-  Lightbulb,
   LogOut,
   Menu,
   MessageSquare,
@@ -190,12 +189,6 @@ export function Navigation() {
               </Link>
             </Button>
             <Button variant="ghost" asChild>
-              <Link href="/suggest-jobs">
-                <Lightbulb className="text-yellow-500" />
-                Suggest Jobs
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
               <Link href="/jobs">
                 <Briefcase className="text-blue-500" />
                 Jobs
@@ -351,12 +344,6 @@ export function Navigation() {
                     <Link href="/hot">
                       <Flame className="text-orange-600" />
                       Hot
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/suggest-jobs">
-                      <Lightbulb className="text-yellow-500" />
-                      Suggest Jobs
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
