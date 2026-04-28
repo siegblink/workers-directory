@@ -42,6 +42,7 @@ import EarningsAnalytics, {
   type CompletedBooking,
   type InvoiceRecord,
 } from "@/components/worker/earnings-analytics";
+import { StarRating } from "@/components/ui/star-rating";
 
 type DashboardStats = {
   totalBookings: number;
@@ -79,7 +80,12 @@ type CustomerDashboardStats = {
 
 type CustomerDashboardBooking = {
   id: string;
-  worker: { id: string; name: string; profession: string; avatar: string | null };
+  worker: {
+    id: string;
+    name: string;
+    profession: string;
+    avatar: string | null;
+  };
   requestedAt: string | null;
   status: string;
   category: string | null;
@@ -138,7 +144,7 @@ function getStatusColor(status: string): string {
   return colors[status] ?? "bg-secondary text-foreground";
 }
 
-const VALID_TABS = ["pending", "upcoming", "active", "performance"] as const;
+const VALID_TABS = ["pending", "upcoming", "active"] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
 export default function WorkerDashboardPage() {
@@ -160,17 +166,18 @@ export default function WorkerDashboardPage() {
     if (isWorker === null) return; // still loading — don't touch the URL yet
     if (isWorker === false) {
       // Customers don't use URL-synced tabs; strip any worker tab param
-      if (searchParams.get("tab")) router.replace("/dashboard");
+      if (searchParams.get("tab"))
+        router.replace("/dashboard", { scroll: false });
       return;
     }
     // Worker: enforce a valid tab in the URL
     if (!VALID_TABS.includes(searchParams.get("tab") as TabValue)) {
-      router.replace("/dashboard?tab=pending");
+      router.replace("/dashboard?tab=pending", { scroll: false });
     }
   }, [isWorker, router, searchParams]);
 
   function handleTabChange(tab: string) {
-    router.replace(`/dashboard?tab=${tab}`);
+    router.replace(`/dashboard?tab=${tab}`, { scroll: false });
   }
   const currentUserRef = useRef<SupabaseUser | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -265,7 +272,9 @@ export default function WorkerDashboardPage() {
         ).length,
         savedWorkersCount: savedWorkers.length,
       });
-      setCustomerSavedWorkers(savedWorkers.slice(0, 5) as CustomerSavedWorker[]);
+      setCustomerSavedWorkers(
+        savedWorkers.slice(0, 5) as CustomerSavedWorker[],
+      );
       setCustomerJobPosts(jobPosts);
 
       const recentData = recentCustResult.data ?? [];
@@ -283,7 +292,13 @@ export default function WorkerDashboardPage() {
                 .from("workers")
                 .select("id, profession, user_id")
                 .in("id", workerIds)
-            : Promise.resolve({ data: [] as { id: string; profession: string | null; user_id: string }[] }),
+            : Promise.resolve({
+                data: [] as {
+                  id: string;
+                  profession: string | null;
+                  user_id: string;
+                }[],
+              }),
           categoryIds.length
             ? supabase
                 .from("categories")
@@ -302,7 +317,14 @@ export default function WorkerDashboardPage() {
               .from("users")
               .select("id, firstname, lastname, profile_pic_url")
               .in("id", workerUserIds)
-          : { data: [] as { id: string; firstname: string; lastname: string; profile_pic_url: string | null }[] };
+          : {
+              data: [] as {
+                id: string;
+                firstname: string;
+                lastname: string;
+                profile_pic_url: string | null;
+              }[],
+            };
 
         const workerMap = new Map(
           (workersResult.data ?? []).map((w) => [w.id, w]),
@@ -323,9 +345,7 @@ export default function WorkerDashboardPage() {
               id: String(b.id),
               worker: {
                 id: w?.id ?? "",
-                name: wu
-                  ? `${wu.firstname} ${wu.lastname}`
-                  : "Unknown Worker",
+                name: wu ? `${wu.firstname} ${wu.lastname}` : "Unknown Worker",
                 profession: w?.profession ?? "Service Provider",
                 avatar: wu?.profile_pic_url ?? null,
               },
@@ -407,7 +427,8 @@ export default function WorkerDashboardPage() {
       .filter((b) => b.status === "completed")
       .map((b) => ({
         id: String(b.id),
-        completedAt: (b as { completed_at?: string | null }).completed_at ?? null,
+        completedAt:
+          (b as { completed_at?: string | null }).completed_at ?? null,
         categoryId: (b as { category_id?: string | null }).category_id
           ? String((b as { category_id?: string | null }).category_id)
           : null,
@@ -672,7 +693,10 @@ export default function WorkerDashboardPage() {
     setCustomerSavedWorkers((prev) => prev.filter((w) => w.id !== workerId));
     setCustomerStats((prev) =>
       prev
-        ? { ...prev, savedWorkersCount: Math.max(0, prev.savedWorkersCount - 1) }
+        ? {
+            ...prev,
+            savedWorkersCount: Math.max(0, prev.savedWorkersCount - 1),
+          }
         : null,
     );
   }
@@ -851,7 +875,10 @@ export default function WorkerDashboardPage() {
                   {customerJobPosts.filter((j) => j.status === "open").length >
                     0 && (
                     <Badge className="ml-2 h-5 min-w-5 flex items-center justify-center rounded-full">
-                      {customerJobPosts.filter((j) => j.status === "open").length}
+                      {
+                        customerJobPosts.filter((j) => j.status === "open")
+                          .length
+                      }
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -868,7 +895,8 @@ export default function WorkerDashboardPage() {
                           No Bookings Yet
                         </h3>
                         <p className="text-muted-foreground mb-4">
-                          Browse the directory to find and book a service worker.
+                          Browse the directory to find and book a service
+                          worker.
                         </p>
                         <Button asChild>
                           <Link href="/search">Browse Workers</Link>
@@ -1209,6 +1237,106 @@ export default function WorkerDashboardPage() {
               </Card>
             </div>
 
+            {/* Analytics & Performance */}
+            <div className="grid gap-6 mb-8">
+              <EarningsAnalytics
+                completedBookings={analyticsBookings}
+                invoices={analyticsInvoices}
+                categoryNames={analyticsCategoryNames}
+              />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Metrics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">
+                          Completion Rate
+                        </span>
+                        <span className="text-sm font-bold">
+                          {stats?.completionRate ?? 0}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-blue-600 dark:bg-blue-700 h-2 rounded-full"
+                          style={{
+                            width: `${stats?.completionRate ?? 0}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Based on completed vs canceled jobs
+                      </p>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">
+                          Average Rating
+                        </span>
+                        <span className="text-sm font-bold">
+                          {stats?.averageRating
+                            ? `${stats.averageRating.toFixed(1)} / 5`
+                            : "No ratings yet"}
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-yellow-500 dark:bg-yellow-600 h-2 rounded-full"
+                          style={{
+                            width: `${((stats?.averageRating ?? 0) / 5) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {stats?.totalReviews ?? 0} total reviews
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t">
+                    <h4 className="font-semibold mb-4 text-foreground">
+                      Recent Reviews
+                    </h4>
+                    {recentReviews.length > 0 ? (
+                      <div className="space-y-8">
+                        {recentReviews.map((review) => (
+                          <div key={review.id} className="flex gap-4">
+                            <Avatar className="w-12 h-12 shrink-0">
+                              <AvatarFallback className="text-base">
+                                {review.customerName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="font-semibold text-base text-foreground">
+                                  {review.customerName}
+                                </span>
+                                <StarRating rating={review.rating} />
+                              </div>
+                              {review.comment && (
+                                <p className="text-sm text-muted-foreground">
+                                  {review.comment}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No reviews yet. Complete jobs to start receiving
+                        feedback.
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Tabs */}
             <Tabs
               value={activeTab}
@@ -1240,7 +1368,6 @@ export default function WorkerDashboardPage() {
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
               </TabsList>
 
               {/* Pending Requests Tab */}
@@ -1251,7 +1378,7 @@ export default function WorkerDashboardPage() {
                       <CardContent>
                         <div className="flex flex-col md:flex-row gap-6">
                           <div className="flex items-start gap-4 flex-1">
-                            <Avatar className="w-16 h-16">
+                            <Avatar className="w-12 h-12">
                               <AvatarImage
                                 src={request.customer.avatar || undefined}
                                 alt={request.customer.name}
@@ -1344,7 +1471,7 @@ export default function WorkerDashboardPage() {
                       <CardContent>
                         <div className="flex flex-col md:flex-row gap-6">
                           <div className="flex items-start gap-4 flex-1">
-                            <Avatar className="w-16 h-16">
+                            <Avatar className="w-12 h-12">
                               <AvatarImage
                                 src={job.customer.avatar || undefined}
                                 alt={job.customer.name}
@@ -1439,7 +1566,7 @@ export default function WorkerDashboardPage() {
                       <CardContent>
                         <div className="flex flex-col md:flex-row gap-6">
                           <div className="flex items-start gap-4 flex-1">
-                            <Avatar className="w-16 h-16">
+                            <Avatar className="w-12 h-12">
                               <AvatarImage
                                 src={job.customer.avatar || undefined}
                                 alt={job.customer.name}
@@ -1517,117 +1644,6 @@ export default function WorkerDashboardPage() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
-              </TabsContent>
-
-              {/* Performance Tab */}
-              <TabsContent value="performance">
-                <div className="grid gap-6">
-                  <EarningsAnalytics
-                    completedBookings={analyticsBookings}
-                    invoices={analyticsInvoices}
-                    categoryNames={analyticsCategoryNames}
-                  />
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Performance Metrics</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">
-                              Completion Rate
-                            </span>
-                            <span className="text-sm font-bold">
-                              {stats?.completionRate ?? 0}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div
-                              className="bg-blue-600 dark:bg-blue-700 h-2 rounded-full"
-                              style={{
-                                width: `${stats?.completionRate ?? 0}%`,
-                              }}
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Based on completed vs canceled jobs
-                          </p>
-                        </div>
-
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">
-                              Average Rating
-                            </span>
-                            <span className="text-sm font-bold">
-                              {stats?.averageRating
-                                ? `${stats.averageRating.toFixed(1)} / 5`
-                                : "No ratings yet"}
-                            </span>
-                          </div>
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div
-                              className="bg-yellow-500 dark:bg-yellow-600 h-2 rounded-full"
-                              style={{
-                                width: `${((stats?.averageRating ?? 0) / 5) * 100}%`,
-                              }}
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {stats?.totalReviews ?? 0} total reviews
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="pt-6 border-t">
-                        <h4 className="font-semibold mb-4 text-foreground">
-                          Recent Reviews
-                        </h4>
-                        {recentReviews.length > 0 ? (
-                          <div className="space-y-4">
-                            {recentReviews.map((review) => (
-                              <div key={review.id} className="flex gap-3">
-                                <Avatar>
-                                  <AvatarFallback>
-                                    {review.customerName[0]}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium text-sm text-foreground">
-                                      {review.customerName}
-                                    </span>
-                                    <div className="flex">
-                                      {Array.from({
-                                        length: review.rating,
-                                      }).map((_, i) => (
-                                        <Star
-                                          key={`${review.id}-star-${i}`}
-                                          className="w-3 h-3 fill-yellow-400 text-yellow-400"
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
-                                  {review.comment && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {review.comment}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            No reviews yet. Complete jobs to start receiving
-                            feedback.
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
               </TabsContent>
             </Tabs>

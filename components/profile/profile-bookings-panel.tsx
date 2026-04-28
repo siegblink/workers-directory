@@ -29,7 +29,6 @@ export function ProfileBookingsPanel({
   activeTab = "bookings",
   onTabChange,
 }: ProfileBookingsPanelProps) {
-
   return (
     <Card>
       <CardHeader>

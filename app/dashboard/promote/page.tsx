@@ -74,10 +74,13 @@ export default function PromoteProfilePage() {
   const justPaid = searchParams.get("success") === "true";
   const wasCanceled = searchParams.get("canceled") === "true";
 
-  const [selectedPlan, setSelectedPlan] = useState<"basic" | "pro" | "premium">("pro");
+  const [selectedPlan, setSelectedPlan] = useState<"basic" | "pro" | "premium">(
+    "pro",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activePromotion, setActivePromotion] = useState<ActivePromotion | null>(null);
+  const [activePromotion, setActivePromotion] =
+    useState<ActivePromotion | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
 
   useEffect(() => {
@@ -175,7 +178,8 @@ export default function PromoteProfilePage() {
         {justPaid && (
           <div className="mb-8 p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 text-sm font-medium flex items-center gap-2">
             <Check className="w-4 h-4 shrink-0" />
-            Payment successful! Your profile is now boosted. It may take a moment to appear in search results.
+            Payment successful! Your profile is now boosted. It may take a
+            moment to appear in search results.
           </div>
         )}
         {wasCanceled && (
@@ -191,13 +195,17 @@ export default function PromoteProfilePage() {
               <Crown className="w-7 h-7 text-yellow-600 dark:text-yellow-400 shrink-0" />
               <div>
                 <p className="font-semibold text-base">
-                  {promotionPlans.find((p) => p.id === activePromotion.plan)?.name ?? activePromotion.plan} active
+                  {promotionPlans.find((p) => p.id === activePromotion.plan)
+                    ?.name ?? activePromotion.plan}{" "}
+                  active
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Expires {formatExpiry(activePromotion.expires_at)}
                 </p>
               </div>
-              <Badge className="ml-auto text-sm px-3 py-1 bg-yellow-500 hover:bg-yellow-500 text-yellow-950">Active</Badge>
+              <Badge className="ml-auto text-sm px-3 py-1 bg-yellow-500 hover:bg-yellow-500 text-yellow-950">
+                Active
+              </Badge>
             </CardContent>
           </Card>
         )}
@@ -246,7 +254,10 @@ export default function PromoteProfilePage() {
           <h2 className="text-2xl font-bold text-center mb-8">
             Choose Your Plan
           </h2>
-          <RadioGroup value={selectedPlan} onValueChange={(v) => setSelectedPlan(v as typeof selectedPlan)}>
+          <RadioGroup
+            value={selectedPlan}
+            onValueChange={(v) => setSelectedPlan(v as typeof selectedPlan)}
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {promotionPlans.map((plan) => (
                 <Card
@@ -303,7 +314,8 @@ export default function PromoteProfilePage() {
                   Ready to boost your profile?
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Selected: {selectedPlanConfig.name} — ₱{selectedPlanConfig.price} / {selectedPlanConfig.duration}
+                  Selected: {selectedPlanConfig.name} — ₱
+                  {selectedPlanConfig.price} / {selectedPlanConfig.duration}
                 </p>
                 {error && (
                   <p className="text-sm text-destructive mt-1">{error}</p>

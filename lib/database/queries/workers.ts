@@ -300,11 +300,16 @@ export async function searchWorkers(
       .select("worker_id")
       .gt("expires_at", new Date().toISOString());
 
-    const promotedIds = new Set((promotedData ?? []).map((p: { worker_id: string }) => p.worker_id));
+    const promotedIds = new Set(
+      (promotedData ?? []).map((p: { worker_id: string }) => p.worker_id),
+    );
     for (const w of workers) {
       w.is_promoted = promotedIds.has(w.id);
     }
-    workers.sort((a: WorkerWithDetails, b: WorkerWithDetails) => Number(b.is_promoted ?? false) - Number(a.is_promoted ?? false));
+    workers.sort(
+      (a: WorkerWithDetails, b: WorkerWithDetails) =>
+        Number(b.is_promoted ?? false) - Number(a.is_promoted ?? false),
+    );
 
     // Category filter (if provided)
     let filteredWorkers = workers;

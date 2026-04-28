@@ -154,9 +154,7 @@ export default function ProfilePage() {
   function handleBookingsTabChange(tab: "bookings" | "saved") {
     setActiveBookingsTab(tab);
     const url =
-      tab === "saved"
-        ? "/profile/bookings/saved-workers"
-        : "/profile/bookings";
+      tab === "saved" ? "/profile/bookings/saved-workers" : "/profile/bookings";
     window.history.pushState(null, "", url);
   }
 

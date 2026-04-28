@@ -65,7 +65,7 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   return (
-    <div className="bg-popover border rounded-lg shadow-md px-3 py-2 text-sm min-w-[140px]">
+    <div className="bg-popover border rounded-lg shadow-md px-3 py-2 text-sm min-w-35">
       <p className="font-medium text-foreground mb-1">{label}</p>
       <p className="text-muted-foreground">
         Earnings:{" "}
@@ -238,7 +238,7 @@ export default function EarningsAnalytics({
           <ResponsiveContainer width="100%" height={220}>
             <BarChart
               data={chartData}
-              margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+              margin={{ top: 4, right: 4, left: -30, bottom: 0 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -297,18 +297,17 @@ export default function EarningsAnalytics({
               <div className="space-y-4">
                 {topServices.map((svc) => (
                   <div key={svc.name}>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-foreground truncate max-w-[60%]">
                         {svc.name}
                       </span>
                       <span className="text-xs text-muted-foreground shrink-0">
-                        {svc.count} job{svc.count !== 1 ? "s" : ""} · {svc.pct}
-                        %
+                        {svc.count} job{svc.count !== 1 ? "s" : ""} · {svc.pct}%
                       </span>
                     </div>
-                    <div className="w-full bg-secondary rounded-full h-1.5">
+                    <div className="w-full bg-secondary rounded-full h-2">
                       <div
-                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                         style={{ width: `${svc.pct}%` }}
                       />
                     </div>
@@ -332,7 +331,7 @@ export default function EarningsAnalytics({
                 Complete jobs to see your busiest days.
               </p>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-4">
                 {busiestDays.map((day) => {
                   const peak = day.pct === 100 && day.count > 0;
                   return (
@@ -342,9 +341,9 @@ export default function EarningsAnalytics({
                       >
                         {day.label}
                       </span>
-                      <div className="flex-1 bg-secondary rounded-full h-1.5">
+                      <div className="flex-1 bg-secondary rounded-full h-2">
                         <div
-                          className={`h-1.5 rounded-full transition-all duration-500 ${peak ? "bg-purple-500" : "bg-purple-300 dark:bg-purple-800"}`}
+                          className={`h-2 rounded-full transition-all duration-500 ${peak ? "bg-purple-500" : "bg-purple-300 dark:bg-purple-800"}`}
                           style={{
                             width: day.count > 0 ? `${day.pct}%` : "0%",
                           }}

@@ -8,7 +8,11 @@ const PLAN_DURATION_DAYS: Record<string, number> = {
   premium: 30,
 };
 
-function verifySignature(rawBody: string, signatureHeader: string, secret: string): boolean {
+function verifySignature(
+  rawBody: string,
+  signatureHeader: string,
+  secret: string,
+): boolean {
   // PayMongo-Signature format: t=<timestamp>,te=<test_hmac>,li=<live_hmac>
   const parts: Record<string, string> = {};
   for (const part of signatureHeader.split(",")) {
@@ -32,7 +36,10 @@ function verifySignature(rawBody: string, signatureHeader: string, secret: strin
     .digest("hex");
 
   try {
-    return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(hmacToVerify, "hex"));
+    return timingSafeEqual(
+      Buffer.from(expected, "hex"),
+      Buffer.from(hmacToVerify, "hex"),
+    );
   } catch {
     return false;
   }
@@ -45,7 +52,10 @@ export async function POST(request: Request) {
 
   if (!webhookSecret) {
     console.error("PAYMONGO_WEBHOOK_SECRET not set");
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 500 },
+    );
   }
 
   if (!verifySignature(rawBody, signatureHeader, webhookSecret)) {
@@ -59,18 +69,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const eventType = (event.data as Record<string, unknown>)?.attributes &&
-    ((event.data as Record<string, unknown>).attributes as Record<string, unknown>).type;
+  const eventType =
+    (event.data as Record<string, unknown>)?.attributes &&
+    (
+      (event.data as Record<string, unknown>).attributes as Record<
+        string,
+        unknown
+      >
+    ).type;
 
   if (eventType !== "checkout_session.payment.paid") {
     return NextResponse.json({ received: true });
   }
 
   const sessionData = (
-    (event.data as Record<string, unknown>).attributes as Record<string, unknown>
+    (event.data as Record<string, unknown>).attributes as Record<
+      string,
+      unknown
+    >
   )?.data as Record<string, unknown> | undefined;
 
-  const metadata = (sessionData?.attributes as Record<string, unknown>)?.metadata as Record<string, string> | undefined;
+  const metadata = (sessionData?.attributes as Record<string, unknown>)
+    ?.metadata as Record<string, string> | undefined;
   const { worker_id, plan } = metadata ?? {};
 
   if (!worker_id || !plan) {
@@ -92,7 +112,9 @@ export async function POST(request: Request) {
   const { error } = await supabase.from("promoted_listings").insert({
     worker_id,
     plan,
-    paymongo_checkout_id: (sessionData as Record<string, unknown>)?.id as string | undefined,
+    paymongo_checkout_id: (sessionData as Record<string, unknown>)?.id as
+      | string
+      | undefined,
     expires_at: expiresAt.toISOString(),
   });
 

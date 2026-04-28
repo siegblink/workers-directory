@@ -63,7 +63,9 @@ export function WorkerCard({
         {worker.isPromoted && (
           <div className="flex items-center gap-1.5 mb-3 text-yellow-700 dark:text-yellow-400">
             <Crown className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Sponsored</span>
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              Sponsored
+            </span>
           </div>
         )}
         <div className="flex gap-4">

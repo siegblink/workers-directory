@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { StarRating } from "@/components/ui/star-rating";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -85,17 +85,7 @@ export function TestimonialsSection() {
                     <p className="text-xs text-muted-foreground truncate">
                       {testimonial.role}
                     </p>
-                    {/* Star rating */}
-                    <div className="flex gap-0.5 mt-1">
-                      {Array.from({ length: testimonial.rating }).map(
-                        (_, i) => (
-                          <Star
-                            key={`star-${testimonial.name}-${i}`}
-                            className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                          />
-                        ),
-                      )}
-                    </div>
+                    <StarRating rating={testimonial.rating} className="mt-1" />
                   </div>
                 </div>
               </CardContent>

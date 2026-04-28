@@ -70,13 +70,17 @@ async function buildCatMap(
   supabase: ReturnType<typeof createClient>,
   posts: { category_id: string | null }[],
 ): Promise<Map<string, string>> {
-  const ids = [...new Set(posts.map((p) => p.category_id).filter(Boolean))] as string[];
+  const ids = [
+    ...new Set(posts.map((p) => p.category_id).filter(Boolean)),
+  ] as string[];
   if (!ids.length) return new Map();
   const { data } = await supabase
     .from("categories")
     .select("id, name")
     .in("id", ids);
-  return new Map((data ?? []).map((c: { id: string; name: string }) => [c.id, c.name]));
+  return new Map(
+    (data ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
+  );
 }
 
 async function buildCountMap(
@@ -113,7 +117,10 @@ export async function getOpenJobs(categoryId?: number): Promise<JobPost[]> {
 
   const [catMap, countMap] = await Promise.all([
     buildCatMap(supabase, posts),
-    buildCountMap(supabase, posts.map((p) => p.id)),
+    buildCountMap(
+      supabase,
+      posts.map((p) => p.id),
+    ),
   ]);
 
   return posts.map((p) => toJobPost(p, catMap, countMap));
@@ -159,7 +166,10 @@ export async function getMyJobPosts(): Promise<JobPost[]> {
 
   const [catMap, countMap] = await Promise.all([
     buildCatMap(supabase, posts),
-    buildCountMap(supabase, posts.map((p) => p.id)),
+    buildCountMap(
+      supabase,
+      posts.map((p) => p.id),
+    ),
   ]);
 
   return posts.map((p) => toJobPost(p, catMap, countMap));
@@ -327,25 +337,55 @@ export async function getJobApplicants(jobId: string): Promise<JobApplicant[]> {
     : { data: [] };
 
   const workerMap = new Map(
-    (workers ?? []).map((w: { id: string; profession: string | null; user_id: string }) => [w.id, w]),
+    (workers ?? []).map(
+      (w: { id: string; profession: string | null; user_id: string }) => [
+        w.id,
+        w,
+      ],
+    ),
   );
   const userMap = new Map(
-    (users ?? []).map((u: { id: string; firstname: string; lastname: string; profile_pic_url: string | null }) => [u.id, u]),
+    (users ?? []).map(
+      (u: {
+        id: string;
+        firstname: string;
+        lastname: string;
+        profile_pic_url: string | null;
+      }) => [u.id, u],
+    ),
   );
 
-  return apps.map((a: { id: string; worker_id: string; cover_note: string | null; created_at: string }) => {
-    const w = workerMap.get(a.worker_id) as { id: string; profession: string | null; user_id: string } | undefined;
-    const u = w ? userMap.get(w.user_id) as { id: string; firstname: string; lastname: string; profile_pic_url: string | null } | undefined : undefined;
-    return {
-      id: a.id,
-      workerId: a.worker_id,
-      workerName: u ? `${u.firstname} ${u.lastname}` : "Unknown Worker",
-      workerProfession: w?.profession ?? "Service Provider",
-      workerAvatar: u?.profile_pic_url ?? null,
-      coverNote: a.cover_note,
-      appliedAt: a.created_at,
-    };
-  });
+  return apps.map(
+    (a: {
+      id: string;
+      worker_id: string;
+      cover_note: string | null;
+      created_at: string;
+    }) => {
+      const w = workerMap.get(a.worker_id) as
+        | { id: string; profession: string | null; user_id: string }
+        | undefined;
+      const u = w
+        ? (userMap.get(w.user_id) as
+            | {
+                id: string;
+                firstname: string;
+                lastname: string;
+                profile_pic_url: string | null;
+              }
+            | undefined)
+        : undefined;
+      return {
+        id: a.id,
+        workerId: a.worker_id,
+        workerName: u ? `${u.firstname} ${u.lastname}` : "Unknown Worker",
+        workerProfession: w?.profession ?? "Service Provider",
+        workerAvatar: u?.profile_pic_url ?? null,
+        coverNote: a.cover_note,
+        appliedAt: a.created_at,
+      };
+    },
+  );
 }
 
 export async function closeJobPost(jobId: string): Promise<boolean> {

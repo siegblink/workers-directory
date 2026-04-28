@@ -36,17 +36,19 @@ type ReviewRow = {
     | null;
 };
 
-const fetchWorkerSeoData = cache(async (id: string): Promise<WorkerSeoRow | null> => {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("workers_with_details")
-    .select(
-      "profession, location, average_rating, review_count, jobs_completed, hourly_rate_min, hourly_rate_max, user_data",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  return data as WorkerSeoRow | null;
-});
+const fetchWorkerSeoData = cache(
+  async (id: string): Promise<WorkerSeoRow | null> => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("workers_with_details")
+      .select(
+        "profession, location, average_rating, review_count, jobs_completed, hourly_rate_min, hourly_rate_max, user_data",
+      )
+      .eq("id", id)
+      .maybeSingle();
+    return data as WorkerSeoRow | null;
+  },
+);
 
 async function fetchTopReviews(id: string): Promise<ReviewRow[]> {
   const supabase = await createClient();

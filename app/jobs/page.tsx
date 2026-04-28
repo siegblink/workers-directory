@@ -33,8 +33,7 @@ type Category = { id: string; name: string };
 
 function formatBudget(min: number | null, max: number | null): string {
   if (!min && !max) return "Budget open";
-  if (min && max)
-    return `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
+  if (min && max) return `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
   if (min) return `From ₱${min.toLocaleString()}`;
   return `Up to ₱${max!.toLocaleString()}`;
 }
@@ -188,10 +187,7 @@ export default function JobsPage() {
         ) : (
           <div className="space-y-4">
             {filteredJobs.map((job) => (
-              <Card
-                key={job.id}
-                className="hover:shadow-lg transition-shadow"
-              >
+              <Card key={job.id} className="hover:shadow-lg transition-shadow">
                 <CardContent>
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 min-w-0">

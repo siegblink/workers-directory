@@ -1,6 +1,7 @@
 "use client";
 
 import { Star } from "lucide-react";
+import { StarRating } from "@/components/ui/star-rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -80,14 +81,7 @@ export function ProfileTestimonials({
                           {review.date}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star
-                            key={`${review.id}-star-${i}`}
-                            className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                          />
-                        ))}
-                      </div>
+                      <StarRating rating={review.rating} />
                     </div>
                     <p className="text-foreground leading-relaxed line-clamp-1">
                       {review.comment}
