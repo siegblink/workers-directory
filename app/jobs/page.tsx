@@ -126,26 +126,28 @@ export default function JobsPage() {
         </div>
 
         {/* Category filter */}
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {filteredJobs.length > 0 && (
-            <span className="text-sm text-muted-foreground">
-              {filteredJobs.length} open job
-              {filteredJobs.length !== 1 ? "s" : ""}
-            </span>
-          )}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filteredJobs.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                {filteredJobs.length} open job
+                {filteredJobs.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Not seeing the job category you want?{" "}
             <Link
