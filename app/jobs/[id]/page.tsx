@@ -44,8 +44,7 @@ import {
 
 function formatBudget(min: number | null, max: number | null): string {
   if (!min && !max) return "Budget open";
-  if (min && max)
-    return `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
+  if (min && max) return `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
   if (min) return `From ₱${min.toLocaleString()}`;
   return `Up to ₱${max!.toLocaleString()}`;
 }
@@ -334,7 +333,7 @@ export default function JobDetailPage() {
             <CardContent>
               {alreadyApplied ? (
                 <div className="flex items-start gap-3 py-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
+                  <CheckCircle2 className="relative top-1 w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground">
                       Application Submitted
@@ -426,8 +425,9 @@ export default function JobDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Close this job?</AlertDialogTitle>
             <AlertDialogDescription>
-              Workers will no longer be able to apply. You can still see existing
-              applicants and contact them directly. This cannot be undone.
+              Workers will no longer be able to apply. You can still see
+              existing applicants and contact them directly. This cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

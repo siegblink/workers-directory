@@ -140,6 +140,12 @@ export default function JobsPage() {
               ))}
             </SelectContent>
           </Select>
+          {filteredJobs.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {filteredJobs.length} open job
+              {filteredJobs.length !== 1 ? "s" : ""}
+            </span>
+          )}
           <p className="text-muted-foreground">
             Not seeing the job category you want?{" "}
             <Link
