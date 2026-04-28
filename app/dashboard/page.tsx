@@ -38,6 +38,10 @@ import {
   getMyJobPosts,
   type JobPost,
 } from "@/lib/database/queries/jobs";
+import EarningsAnalytics, {
+  type CompletedBooking,
+  type InvoiceRecord,
+} from "@/components/worker/earnings-analytics";
 
 type DashboardStats = {
   totalBookings: number;
@@ -178,6 +182,16 @@ export default function WorkerDashboardPage() {
   );
   const [activeBookings, setActiveBookings] = useState<DashboardBooking[]>([]);
   const [recentReviews, setRecentReviews] = useState<DashboardReview[]>([]);
+
+  const [analyticsBookings, setAnalyticsBookings] = useState<
+    CompletedBooking[]
+  >([]);
+  const [analyticsInvoices, setAnalyticsInvoices] = useState<InvoiceRecord[]>(
+    [],
+  );
+  const [analyticsCategoryNames, setAnalyticsCategoryNames] = useState<
+    Record<string, string>
+  >({});
 
   const [customerStats, setCustomerStats] =
     useState<CustomerDashboardStats | null>(null);
@@ -339,10 +353,11 @@ export default function WorkerDashboardPage() {
       upcomingResult,
       activeResult,
       reviewsResult,
+      invoicesResult,
     ] = await Promise.all([
       supabase
         .from("bookings")
-        .select("id, status, requested_at")
+        .select("id, status, requested_at, completed_at, category_id")
         .eq("worker_id", wid),
       supabase
         .from("workers_with_details")
@@ -379,10 +394,24 @@ export default function WorkerDashboardPage() {
         .eq("worker_id", wid)
         .order("created_at", { ascending: false })
         .limit(5),
+      supabase
+        .from("invoices")
+        .select("booking_id, amount, created_at")
+        .eq("worker_id", wid),
     ]);
 
     // Compute stats
     const allBookings = allBookingsResult.data ?? [];
+
+    const analyticsBookingsData: CompletedBooking[] = allBookings
+      .filter((b) => b.status === "completed")
+      .map((b) => ({
+        id: String(b.id),
+        completedAt: (b as { completed_at?: string | null }).completed_at ?? null,
+        categoryId: (b as { category_id?: string | null }).category_id
+          ? String((b as { category_id?: string | null }).category_id)
+          : null,
+      }));
     const now = new Date();
     const monthStart = new Date(
       now.getFullYear(),
@@ -446,6 +475,7 @@ export default function WorkerDashboardPage() {
           ...pendingData.map((b) => b.category_id),
           ...upcomingData.map((b) => b.category_id),
           ...activeData.map((b) => b.category_id),
+          ...analyticsBookingsData.map((b) => b.categoryId),
         ].filter(Boolean),
       ),
     ];
@@ -466,6 +496,23 @@ export default function WorkerDashboardPage() {
     const categoryMap = new Map(
       (categoriesResult.data ?? []).map((c) => [c.id, c]),
     );
+
+    const analyticsCatNames: Record<string, string> = Object.fromEntries(
+      [...categoryMap.entries()].map(([id, cat]) => [
+        String(id),
+        cat.name ?? "Unknown",
+      ]),
+    );
+    const analyticsInvoicesData: InvoiceRecord[] = (
+      invoicesResult.data ?? []
+    ).map((inv) => ({
+      bookingId: inv.booking_id ? String(inv.booking_id) : null,
+      amount: Number(inv.amount),
+      createdAt: inv.created_at,
+    }));
+    setAnalyticsBookings(analyticsBookingsData);
+    setAnalyticsInvoices(analyticsInvoicesData);
+    setAnalyticsCategoryNames(analyticsCatNames);
 
     function toBookingItem(b: {
       id: string | number;
@@ -1476,6 +1523,11 @@ export default function WorkerDashboardPage() {
               {/* Performance Tab */}
               <TabsContent value="performance">
                 <div className="grid gap-6">
+                  <EarningsAnalytics
+                    completedBookings={analyticsBookings}
+                    invoices={analyticsInvoices}
+                    categoryNames={analyticsCategoryNames}
+                  />
                   <Card>
                     <CardHeader>
                       <CardTitle>Performance Metrics</CardTitle>
