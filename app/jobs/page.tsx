@@ -126,29 +126,21 @@ export default function JobsPage() {
         </div>
 
         {/* Category filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-56">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {filteredJobs.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {filteredJobs.length} open job
-                {filteredJobs.length !== 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground">
             Not seeing the job category you want?{" "}
             <Link
               href="/suggest-jobs"
