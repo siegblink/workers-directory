@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Lightbulb, MapPin, PlusCircle } from "lucide-react";
+import { Briefcase, MapPin, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -117,44 +117,46 @@ export default function JobsPage() {
               Open jobs posted by customers looking for skilled workers.
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <Button asChild>
-              <Link href="/post-job">
-                <PlusCircle />
-                Post a Job
-              </Link>
-            </Button>
-            <Link
-              href="/suggest-jobs"
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Lightbulb className="w-3 h-3" />
-              Suggest a category
+          <Button asChild>
+            <Link href="/post-job">
+              <PlusCircle />
+              Post a Job
             </Link>
-          </div>
+          </Button>
         </div>
 
         {/* Category filter */}
-        <div className="flex items-center gap-3 mb-6">
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {filteredJobs.length > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {filteredJobs.length} open job
-              {filteredJobs.length !== 1 ? "s" : ""}
-            </p>
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filteredJobs.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {filteredJobs.length} open job
+                {filteredJobs.length !== 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Not seeing the job category you want?{" "}
+            <Link
+              href="/suggest-jobs"
+              className="underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              Suggest a category
+            </Link>
+          </p>
         </div>
 
         {/* Content */}
