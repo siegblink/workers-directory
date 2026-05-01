@@ -4,12 +4,22 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export function GET() {
   const secret = process.env.PAYMONGO_WEBHOOK_SECRET ?? "";
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY ?? "";
+
+  let supabaseKeyRole = "unreadable";
+  try {
+    const payload = supabaseKey.split(".")[1] ?? "";
+    const decoded = JSON.parse(Buffer.from(payload, "base64").toString());
+    supabaseKeyRole = decoded.role ?? "no_role_claim";
+  } catch {
+    supabaseKeyRole = "decode_failed";
+  }
+
   return NextResponse.json({
     ok: true,
     webhook_secret_set: !!secret,
     secret_prefix: secret ? secret.slice(0, 15) + "…" : null,
-    supabase_url_set: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabase_secret_key_set: !!process.env.SUPABASE_SECRET_KEY,
+    supabase_key_role: supabaseKeyRole,
   });
 }
 
