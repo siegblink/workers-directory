@@ -2,6 +2,20 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export function GET() {
+  const hasSecret = !!process.env.PAYMONGO_WEBHOOK_SECRET;
+  const secretPrefix = process.env.PAYMONGO_WEBHOOK_SECRET?.slice(0, 10) ?? "";
+  return NextResponse.json({
+    ok: true,
+    webhook_secret_set: hasSecret,
+    secret_mode: secretPrefix.startsWith("whsk_test")
+      ? "test"
+      : secretPrefix.startsWith("whsk_live")
+        ? "live"
+        : "unknown",
+  });
+}
+
 const PLAN_DURATION_DAYS: Record<string, number> = {
   basic: 7,
   pro: 14,

@@ -80,7 +80,9 @@ export default function CreditsPage() {
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadData() {
+    let cancelled = false;
+
+    async function loadData(previousBalance?: number) {
       const supabase = createClient();
       const {
         data: { user },
@@ -105,12 +107,41 @@ export default function CreditsPage() {
           .limit(20),
       ]);
 
-      setBalance(creditsResult.data?.balance ?? 0);
+      if (cancelled) return;
+
+      const newBalance = creditsResult.data?.balance ?? 0;
+      setBalance(newBalance);
       setTransactions(txResult.data ?? []);
       setLoading(false);
+
+      return newBalance;
     }
 
-    loadData();
+    async function loadWithPolling() {
+      const initialBalance = await loadData();
+      if (cancelled) return;
+
+      // After a successful payment redirect, the webhook fires async.
+      // Poll for up to 15 s until the balance increases.
+      if (justPaid && initialBalance === 0) {
+        let attempts = 0;
+        const poll = async () => {
+          if (cancelled || attempts >= 5) return;
+          attempts++;
+          await new Promise((r) => setTimeout(r, 3000));
+          if (cancelled) return;
+          const updated = await loadData(initialBalance);
+          if (updated === 0) poll();
+        };
+        poll();
+      }
+    }
+
+    loadWithPolling();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router, justPaid]);
 
   async function handlePurchase() {
@@ -168,8 +199,15 @@ export default function CreditsPage() {
                 <p className="text-blue-100 dark:text-blue-200 mb-2">
                   Your Current Balance
                 </p>
-                {loading ? (
-                  <Spinner className="size-8 text-white" />
+                {loading || (justPaid && balance === 0) ? (
+                  <div className="flex items-center gap-3">
+                    <Spinner className="size-8 text-white" />
+                    {justPaid && !loading && (
+                      <span className="text-blue-100 text-sm">
+                        Confirming payment…
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-bold">
