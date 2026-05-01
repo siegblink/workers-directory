@@ -8,6 +8,8 @@ export function GET() {
     ok: true,
     webhook_secret_set: !!secret,
     secret_prefix: secret ? secret.slice(0, 15) + "…" : null,
+    supabase_url_set: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabase_secret_key_set: !!process.env.SUPABASE_SECRET_KEY,
   });
 }
 
@@ -109,7 +111,16 @@ export async function POST(request: Request) {
     | string
     | undefined;
 
-  const supabase = createAdminClient();
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch (e) {
+    console.error("PayMongo webhook: failed to init admin client:", e);
+    return NextResponse.json(
+      { error: "Server misconfiguration" },
+      { status: 500 },
+    );
+  }
 
   // Credit pack purchase
   if (metadata?.type === "credits") {
