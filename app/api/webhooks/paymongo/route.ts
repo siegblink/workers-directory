@@ -122,7 +122,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Credit pack purchase
+  // Credit pack purchase — write directly to tables so we don't depend on
+  // EXECUTE privilege on the add_user_credits function (service_role bypasses RLS).
   if (metadata?.type === "credits") {
     const { user_id, credits_to_add, package: pkg } = metadata;
 
@@ -140,16 +141,52 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error } = await supabase.rpc("add_user_credits", {
-      p_user_id: user_id,
-      p_amount: amount,
-      p_type: "purchase",
-      p_description: `${pkg ? pkg.charAt(0).toUpperCase() + pkg.slice(1) : "Credit"} pack — ${amount} credits`,
-      p_reference_id: checkoutId ?? null,
-    });
+    const description = `${pkg ? pkg.charAt(0).toUpperCase() + pkg.slice(1) : "Credit"} pack — ${amount} credits`;
 
-    if (error) {
-      console.error("PayMongo webhook: add_user_credits error:", error);
+    // Upsert balance row
+    const { data: existing } = await supabase
+      .from("user_credits")
+      .select("balance")
+      .eq("user_id", user_id)
+      .maybeSingle();
+
+    const balanceError = existing
+      ? (
+          await supabase
+            .from("user_credits")
+            .update({
+              balance: existing.balance + amount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", user_id)
+        ).error
+      : (
+          await supabase
+            .from("user_credits")
+            .insert({ user_id, balance: amount })
+        ).error;
+
+    if (balanceError) {
+      console.error(
+        "PayMongo webhook: user_credits upsert error:",
+        balanceError,
+      );
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+
+    // Append transaction log
+    const { error: txError } = await supabase
+      .from("user_credit_transactions")
+      .insert({
+        user_id,
+        amount,
+        type: "purchase",
+        description,
+        reference_id: checkoutId ?? null,
+      });
+
+    if (txError) {
+      console.error("PayMongo webhook: transaction insert error:", txError);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
