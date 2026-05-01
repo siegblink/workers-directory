@@ -7,13 +7,7 @@ export function GET() {
   return NextResponse.json({
     ok: true,
     webhook_secret_set: !!secret,
-    // Shows first 15 chars only — enough to identify format without exposing the key
     secret_prefix: secret ? secret.slice(0, 15) + "…" : null,
-    secret_mode: secret.startsWith("whsk_test_")
-      ? "test"
-      : secret.startsWith("whsk_live_")
-        ? "live"
-        : "unknown",
   });
 }
 
@@ -29,6 +23,7 @@ function verifySignature(
   secret: string,
 ): boolean {
   // PayMongo-Signature format: t=<timestamp>,te=<test_hmac>,li=<live_hmac>
+  // PayMongo webhook secrets don't carry a test/live prefix — try both slots.
   const parts: Record<string, string> = {};
   for (const part of signatureHeader.split(",")) {
     const eqIdx = part.indexOf("=");
@@ -38,24 +33,29 @@ function verifySignature(
   }
 
   const timestamp = parts["t"];
-  // Test secrets start with "whsk_test_", live secrets with "whsk_live_".
-  const isTestSecret = secret.startsWith("whsk_test_");
-  const hmacToVerify = isTestSecret ? parts["te"] : parts["li"];
-
-  if (!timestamp || !hmacToVerify) return false;
+  if (!timestamp) return false;
 
   const expected = createHmac("sha256", secret)
     .update(`${timestamp}.${rawBody}`)
     .digest("hex");
 
-  try {
-    return timingSafeEqual(
-      Buffer.from(expected, "hex"),
-      Buffer.from(hmacToVerify, "hex"),
-    );
-  } catch {
-    return false;
+  for (const slot of ["te", "li"]) {
+    const candidate = parts[slot];
+    if (!candidate) continue;
+    try {
+      if (
+        timingSafeEqual(
+          Buffer.from(expected, "hex"),
+          Buffer.from(candidate, "hex"),
+        )
+      ) {
+        return true;
+      }
+    } catch {
+      // buffer length mismatch — not a match
+    }
   }
+  return false;
 }
 
 export async function POST(request: Request) {
