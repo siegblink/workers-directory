@@ -55,6 +55,7 @@ export async function updateSession(request: NextRequest) {
     "/verification-pending",
     "/saved-workers",
     "/post-job",
+    "/credits",
   ];
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path),

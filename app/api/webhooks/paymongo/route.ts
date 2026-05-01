@@ -24,8 +24,6 @@ function verifySignature(
 
   const timestamp = parts["t"];
   // Test secrets start with "whsk_test_", live secrets with "whsk_live_".
-  // PayMongo always sends both te and li in the header; pick the one that
-  // matches the type of secret we actually have.
   const isTestSecret = secret.startsWith("whsk_test_");
   const hmacToVerify = isTestSecret ? parts["te"] : parts["li"];
 
@@ -91,6 +89,48 @@ export async function POST(request: Request) {
 
   const metadata = (sessionData?.attributes as Record<string, unknown>)
     ?.metadata as Record<string, string> | undefined;
+
+  const checkoutId = (sessionData as Record<string, unknown>)?.id as
+    | string
+    | undefined;
+
+  const supabase = createAdminClient();
+
+  // Credit pack purchase
+  if (metadata?.type === "credits") {
+    const { user_id, credits_to_add, package: pkg } = metadata;
+
+    if (!user_id || !credits_to_add) {
+      console.error("PayMongo webhook: missing credits metadata", metadata);
+      return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
+    }
+
+    const amount = parseInt(credits_to_add, 10);
+    if (!amount || amount <= 0) {
+      console.error("PayMongo webhook: invalid credits_to_add", credits_to_add);
+      return NextResponse.json(
+        { error: "Invalid credits amount" },
+        { status: 400 },
+      );
+    }
+
+    const { error } = await supabase.rpc("add_user_credits", {
+      p_user_id: user_id,
+      p_amount: amount,
+      p_type: "purchase",
+      p_description: `${pkg ? pkg.charAt(0).toUpperCase() + pkg.slice(1) : "Credit"} pack — ${amount} credits`,
+      p_reference_id: checkoutId ?? null,
+    });
+
+    if (error) {
+      console.error("PayMongo webhook: add_user_credits error:", error);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+
+    return NextResponse.json({ received: true });
+  }
+
+  // Promoted listing purchase (default / legacy payloads with no type field)
   const { worker_id, plan } = metadata ?? {};
 
   if (!worker_id || !plan) {
@@ -107,14 +147,10 @@ export async function POST(request: Request) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + durationDays);
 
-  const supabase = createAdminClient();
-
   const { error } = await supabase.from("promoted_listings").insert({
     worker_id,
     plan,
-    paymongo_checkout_id: (sessionData as Record<string, unknown>)?.id as
-      | string
-      | undefined,
+    paymongo_checkout_id: checkoutId,
     expires_at: expiresAt.toISOString(),
   });
 

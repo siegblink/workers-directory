@@ -48,31 +48,35 @@ export function Navigation() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [_isLoading, setIsLoading] = useState(true);
+  const [creditsBalance, setCreditsBalance] = useState<number>(0);
   const router = useRouter();
-  const creditsBalance = 1000;
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("users")
-        .select("firstname, lastname, profile_pic_url")
-        .eq("id", userId)
-        .single();
+      const [profileResult, creditsResult] = await Promise.all([
+        supabase
+          .from("users")
+          .select("firstname, lastname, profile_pic_url")
+          .eq("id", userId)
+          .single(),
+        supabase
+          .from("user_credits")
+          .select("balance")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
 
-      // Silently handle errors - will fall back to user_metadata
-      if (error) {
-        // Database might not have profile data yet (before migration is applied)
-        return;
+      if (
+        !profileResult.error &&
+        profileResult.data?.firstname &&
+        profileResult.data.lastname
+      ) {
+        setProfile(profileResult.data);
       }
-
-      // Only set profile if we have valid name data
-      if (data?.firstname && data.lastname) {
-        setProfile(data);
-      }
-      // If firstname/lastname are empty, component will fall back to user_metadata
+      setCreditsBalance(creditsResult.data?.balance ?? 0);
     } catch {
-      // Silently catch any errors - graceful degradation to user_metadata
+      // Silently catch any errors - graceful degradation
       return;
     }
   }, []);
