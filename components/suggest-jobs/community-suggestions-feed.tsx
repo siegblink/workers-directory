@@ -37,9 +37,10 @@ import {
 } from "@/components/ui/input-group";
 import type { JobSuggestionWithUser } from "@/lib/database/types";
 
-interface CommunitySuggestionsFeedProps {
+type CommunitySuggestionsFeedProps = {
   suggestions: JobSuggestionWithUser[];
-}
+  onUpvote?: (id: string) => void;
+};
 
 function formatTimeAgo(dateString: string) {
   const date = new Date(dateString);
@@ -55,6 +56,7 @@ function formatTimeAgo(dateString: string) {
 
 export function CommunitySuggestionsFeed({
   suggestions,
+  onUpvote,
 }: CommunitySuggestionsFeedProps) {
   // Search & filter state
   const [searchTerm, setSearchTerm] = useState("");
@@ -294,7 +296,10 @@ export function CommunitySuggestionsFeed({
                           ? `${suggestion.user.firstname} ${suggestion.user.lastname}`
                           : "Anonymous"}
                       </span>
-                      <span className="text-muted-foreground text-sm">
+                      <span
+                        className="text-muted-foreground text-sm"
+                        suppressHydrationWarning
+                      >
                         {formatTimeAgo(suggestion.created_at)}
                       </span>
                     </div>
@@ -322,6 +327,7 @@ export function CommunitySuggestionsFeed({
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-1 text-muted-foreground hover:text-primary"
+                    onClick={() => onUpvote?.(suggestion.id)}
                   >
                     <ThumbsUp />
                     {suggestion.upvotes}

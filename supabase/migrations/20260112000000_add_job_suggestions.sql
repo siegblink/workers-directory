@@ -1,39 +1,61 @@
--- =====================================================
--- Job Suggestions Table
--- Allows users (including anonymous) to suggest new job categories
--- =====================================================
+-- Job suggestions: users (or anonymous visitors) suggest new job categories.
+-- Upvotes use a SECURITY DEFINER function so any visitor can increment the
+-- counter without needing a broad UPDATE policy on the table.
 
 CREATE TABLE job_suggestions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  job_title VARCHAR(255) NOT NULL,
+  id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_title   VARCHAR(255) NOT NULL,
   description TEXT,
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  upvotes INTEGER DEFAULT 0,
-  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'implemented')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  location    VARCHAR(255),
+  user_id     UUID         REFERENCES public.users(id) ON DELETE SET NULL,
+  upvotes     INTEGER      NOT NULL DEFAULT 0,
+  status      VARCHAR(50)  NOT NULL DEFAULT 'pending'
+              CHECK (status IN ('pending', 'approved', 'rejected', 'implemented')),
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- Index for autocomplete search performance
-CREATE INDEX idx_job_suggestions_title ON job_suggestions USING gin(to_tsvector('english', job_title));
+-- GIN index for full-text search on job_title
+CREATE INDEX idx_job_suggestions_title
+  ON job_suggestions USING gin(to_tsvector('english', job_title));
 
--- Index for sorting by created_at (newest first)
-CREATE INDEX idx_job_suggestions_created_at ON job_suggestions(created_at DESC);
+-- Newest-first ordering
+CREATE INDEX idx_job_suggestions_created_at
+  ON job_suggestions(created_at DESC);
 
--- Index for filtering by status
-CREATE INDEX idx_job_suggestions_status ON job_suggestions(status);
+-- Status filtering
+CREATE INDEX idx_job_suggestions_status
+  ON job_suggestions(status);
 
--- Enable Row Level Security
 ALTER TABLE job_suggestions ENABLE ROW LEVEL SECURITY;
 
--- Public read access (anyone can view all suggestions)
-CREATE POLICY "Anyone can view job suggestions" ON job_suggestions
+-- Anyone (including anonymous visitors) can read all suggestions
+CREATE POLICY "job_suggestions_read" ON job_suggestions
   FOR SELECT USING (true);
 
--- Public insert access (anonymous submissions allowed)
-CREATE POLICY "Anyone can create job suggestions" ON job_suggestions
+-- Anyone (including anonymous visitors) can submit — the form says "No login required"
+CREATE POLICY "job_suggestions_insert" ON job_suggestions
   FOR INSERT WITH CHECK (true);
 
--- Users can update their own suggestions
-CREATE POLICY "Users can update own suggestions" ON job_suggestions
-  FOR UPDATE USING (user_id = auth.uid());
+-- Only the suggestion owner can edit their own row.
+-- public.users.id = auth.uid() (consistent with all other tables in this project)
+CREATE POLICY "job_suggestions_owner_update" ON job_suggestions
+  FOR UPDATE
+  USING (user_id = auth.uid());
+
+-- Atomic increment — SECURITY DEFINER lets any visitor call this without
+-- owning the row, while preventing arbitrary column edits via UPDATE policy.
+CREATE OR REPLACE FUNCTION increment_suggestion_upvotes(suggestion_id uuid)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  UPDATE job_suggestions
+  SET upvotes    = upvotes + 1,
+      updated_at = NOW()
+  WHERE id = suggestion_id;
+$$;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON job_suggestions TO authenticated;
+GRANT SELECT, INSERT                  ON job_suggestions TO anon;

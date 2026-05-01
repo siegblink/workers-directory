@@ -1,7 +1,3 @@
-// =====================================================
-// Job Suggestions Queries
-// =====================================================
-
 import {
   applySorting,
   executePaginatedQuery,
@@ -16,10 +12,6 @@ import type {
   PaginatedResponse,
 } from "../types";
 
-/**
- * Get all job suggestions (public feed)
- * Returns paginated list with user info joined
- */
 export async function getAllJobSuggestions(
   filters: JobSuggestionFilters = {},
 ): Promise<PaginatedResponse<JobSuggestionWithUser>> {
@@ -34,17 +26,14 @@ export async function getAllJobSuggestions(
       { count: "exact" },
     );
 
-    // Apply status filter if provided
     if (filters.status) {
       query = query.eq("status", filters.status);
     }
 
-    // Apply search filter if provided
     if (filters.search) {
       query = query.ilike("job_title", `%${filters.search}%`);
     }
 
-    // Apply sorting (default: newest first)
     query = applySorting(
       query,
       filters.sort || { column: "created_at", ascending: false },
@@ -58,10 +47,6 @@ export async function getAllJobSuggestions(
   }, filters);
 }
 
-/**
- * Autocomplete job titles from existing suggestions
- * Returns distinct job titles for autocomplete dropdown
- */
 export async function autocompleteJobTitles(
   searchText: string,
   limit: number = 10,
@@ -69,7 +54,6 @@ export async function autocompleteJobTitles(
   const supabase = getSupabaseClient();
 
   return executeQuery(async () => {
-    // Return popular titles if search is empty
     if (!searchText || searchText.trim() === "") {
       const { data, error } = await supabase
         .from("job_suggestions")
@@ -81,15 +65,13 @@ export async function autocompleteJobTitles(
       return { data: titles, error };
     }
 
-    // Search by title (case-insensitive)
     const { data, error } = await supabase
       .from("job_suggestions")
       .select("job_title")
       .ilike("job_title", `%${searchText.trim()}%`)
       .order("upvotes", { ascending: false })
-      .limit(limit * 2); // Get more to ensure uniqueness after filtering
+      .limit(limit * 2);
 
-    // Return distinct titles
     const titles = [...new Set(data?.map((d) => d.job_title) || [])].slice(
       0,
       limit,
@@ -98,21 +80,19 @@ export async function autocompleteJobTitles(
   });
 }
 
-/**
- * Create a new job suggestion
- * Works for both authenticated and anonymous users
- */
 export async function createJobSuggestion(
   jobTitle: string,
   description?: string,
+  location?: string,
 ): Promise<ApiResponse<JobSuggestion>> {
   const supabase = getSupabaseClient();
 
-  // Get current auth user ID if authenticated (null for anonymous)
+  // public.users.id = auth.uid() across this entire project, so user.id
+  // from getUser() is the correct value for user_id.
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const userId = user?.id || null;
+  const userId = user?.id ?? null;
 
   return executeQuery(async () => {
     const { data, error } = await supabase
@@ -120,6 +100,7 @@ export async function createJobSuggestion(
       .insert({
         job_title: jobTitle.trim(),
         description: description?.trim() || null,
+        location: location?.trim() || null,
         user_id: userId,
         status: "pending",
         upvotes: 0,
@@ -131,46 +112,20 @@ export async function createJobSuggestion(
   });
 }
 
-/**
- * Upvote a job suggestion
- * Increments the upvote count by 1
- */
 export async function upvoteJobSuggestion(
   suggestionId: string,
-): Promise<ApiResponse<JobSuggestion>> {
+): Promise<ApiResponse<null>> {
   const supabase = getSupabaseClient();
 
   return executeQuery(async () => {
-    // First get current upvotes
-    const { data: current, error: fetchError } = await supabase
-      .from("job_suggestions")
-      .select("upvotes")
-      .eq("id", suggestionId)
-      .single();
-
-    if (fetchError || !current) {
-      return { data: null, error: fetchError };
-    }
-
-    // Update with incremented value
-    const { data, error } = await supabase
-      .from("job_suggestions")
-      .update({
-        upvotes: (current.upvotes || 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", suggestionId)
-      .select()
-      .single();
-
-    return { data, error };
+    const { error } = await supabase.rpc("increment_suggestion_upvotes", {
+      suggestion_id: suggestionId,
+    });
+    // Return null data — callers rely on error being null to confirm success.
+    return { data: null, error };
   });
 }
 
-/**
- * Get job suggestion by ID
- * Includes user info
- */
 export async function getJobSuggestionById(
   id: string,
 ): Promise<ApiResponse<JobSuggestionWithUser>> {
@@ -192,9 +147,6 @@ export async function getJobSuggestionById(
   });
 }
 
-/**
- * Update job suggestion status (admin only)
- */
 export async function updateJobSuggestionStatus(
   id: string,
   status: "pending" | "approved" | "rejected" | "implemented",
