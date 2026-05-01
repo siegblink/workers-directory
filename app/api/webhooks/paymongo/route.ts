@@ -20,6 +20,9 @@ export function GET() {
     webhook_secret_set: !!secret,
     secret_prefix: secret ? secret.slice(0, 15) + "…" : null,
     supabase_key_role: supabaseKeyRole,
+    supabase_key_length: supabaseKey.length,
+    supabase_key_segments: supabaseKey.split(".").length,
+    supabase_key_prefix: supabaseKey.slice(0, 10) + "…",
   });
 }
 
