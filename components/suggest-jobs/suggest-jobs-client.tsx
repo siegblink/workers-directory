@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Check, Lightbulb, MapPin, Send } from "lucide-react";
+import { toast } from "sonner";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
@@ -141,6 +142,10 @@ export function SuggestJobsClient({ initialSuggestions, currentUser }: Props) {
   }
 
   function handleUpvote(id: string) {
+    if (!currentUser) {
+      toast.error("Sign in to upvote suggestions");
+      return;
+    }
     startUpvoteTransition(async () => {
       addOptimisticUpvote(id);
       const { error } = await upvoteJobSuggestion(id);
