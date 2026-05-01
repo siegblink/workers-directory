@@ -18,6 +18,11 @@ import {
   toggleSavedWorker,
 } from "@/lib/database/queries/saved-workers";
 import type { WorkerWithDetails } from "@/lib/database/types";
+import {
+  formatJoinedDate,
+  formatRelativeDate,
+  formatResponseTime,
+} from "@/lib/formatters";
 
 type PortfolioItem = {
   id: number;
@@ -35,35 +40,6 @@ type ReviewItem = {
   comment: string;
   avatar: string | null | undefined;
 };
-
-function formatResponseTime(minutes: number | null): string {
-  if (!minutes) return "Not specified";
-  if (minutes < 60) return `Within ${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  return `Within ${hours} hour${hours > 1 ? "s" : ""}`;
-}
-
-function formatJoinedDate(createdAt: string): string {
-  return new Date(createdAt).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatRelativeDate(dateString: string): string {
-  const diffDays = Math.floor(
-    (Date.now() - new Date(dateString).getTime()) / 86_400_000,
-  );
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  const weeks = Math.floor(diffDays / 7);
-  if (diffDays < 30) return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
-  const months = Math.floor(diffDays / 30);
-  if (diffDays < 365) return `${months} month${months > 1 ? "s" : ""} ago`;
-  const years = Math.floor(diffDays / 365);
-  return `${years} year${years > 1 ? "s" : ""} ago`;
-}
 
 export default function WorkerProfilePage({
   params,
@@ -233,7 +209,9 @@ export default function WorkerProfilePage({
     verified: worker.is_verified ?? false,
     joinedDate: formatJoinedDate(worker.created_at),
     completedJobs: worker.jobs_completed ?? 0,
-    responseTime: formatResponseTime(worker.response_time_minutes ?? null),
+    responseTime:
+      formatResponseTime(worker.response_time_minutes ?? null) ||
+      "Not specified",
   };
 
   return (

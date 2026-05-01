@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { getErrorMessage } from "@/lib/error";
 
 const resetPasswordSchema = z
   .object({
@@ -67,9 +68,10 @@ export default function ResetPasswordPage() {
       router.push("/login");
     } catch (error: unknown) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while resetting your password",
+        getErrorMessage(
+          error,
+          "An error occurred while resetting your password",
+        ),
       );
     }
   };

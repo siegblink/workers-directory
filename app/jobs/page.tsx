@@ -28,25 +28,9 @@ import {
   getOpenJobs,
   type JobPost,
 } from "@/lib/database/queries/jobs";
+import { formatBudget, timeAgo } from "@/lib/formatters";
 
 type Category = { id: string; name: string };
-
-function formatBudget(min: number | null, max: number | null): string {
-  if (!min && !max) return "Budget open";
-  if (min && max) return `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
-  if (min) return `From ₱${min.toLocaleString()}`;
-  return `Up to ₱${max!.toLocaleString()}`;
-}
-
-function timeAgo(dateString: string): string {
-  const diff = Date.now() - new Date(dateString).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobPost[]>([]);

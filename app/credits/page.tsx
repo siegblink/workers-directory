@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { formatShortDate } from "@/lib/formatters";
 
 type CreditPackageId = "starter" | "popular" | "premium";
 
@@ -63,14 +64,6 @@ type Transaction = {
   description: string;
   created_at: string;
 };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-PH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export default function CreditsPage() {
   const router = useRouter();
@@ -406,7 +399,7 @@ export default function CreditsPage() {
                           {tx.description}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {formatDate(tx.created_at)}
+                          {formatShortDate(tx.created_at)}
                         </p>
                       </div>
                     </div>

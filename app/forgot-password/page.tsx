@@ -19,6 +19,7 @@ import {
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { getErrorMessage } from "@/lib/error";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -52,9 +53,10 @@ export default function ForgotPasswordPage() {
       setEmailSent(true);
     } catch (error: unknown) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while sending the reset link",
+        getErrorMessage(
+          error,
+          "An error occurred while sending the reset link",
+        ),
       );
     }
   };

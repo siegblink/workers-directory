@@ -28,7 +28,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
+import { formatBookingDate, formatBookingTime } from "@/lib/formatters";
 import { fireNotificationEmail } from "@/lib/notify";
+import { getStatusColor, getStatusLabel } from "@/lib/status-utils";
 import {
   getSavedWorkersWithDetails,
   toggleSavedWorker,
@@ -99,50 +101,6 @@ type CustomerSavedWorker = {
   hourlyRate: number;
   avatar: string;
 };
-
-function formatBookingDate(dateString: string | null): string {
-  if (!dateString) return "Date TBD";
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatBookingTime(dateString: string | null): string {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    pending: "Pending",
-    accepted: "Upcoming",
-    in_progress: "In Progress",
-    completed: "Completed",
-    canceled: "Cancelled",
-  };
-  return labels[status] ?? status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    pending:
-      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    accepted:
-      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    in_progress:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-    completed:
-      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    canceled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  };
-  return colors[status] ?? "bg-secondary text-foreground";
-}
 
 const VALID_TABS = ["pending", "upcoming", "active"] as const;
 type TabValue = (typeof VALID_TABS)[number];

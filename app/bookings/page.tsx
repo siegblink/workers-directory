@@ -36,7 +36,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSupabaseClient } from "@/lib/database/base-query";
+import { formatBookingDate, formatBookingTime } from "@/lib/formatters";
 import { fireNotificationEmail } from "@/lib/notify";
+import { getStatusColor, getStatusLabel } from "@/lib/status-utils";
 
 type BookingItem = {
   id: string;
@@ -52,58 +54,6 @@ type BookingItem = {
   description: string | null;
   category: string | null;
 };
-
-function getStatusLabel(status: string): string {
-  switch (status) {
-    case "pending":
-      return "Pending";
-    case "accepted":
-      return "Upcoming";
-    case "in_progress":
-      return "In Progress";
-    case "completed":
-      return "Completed";
-    case "canceled":
-      return "Cancelled";
-    default:
-      return status.charAt(0).toUpperCase() + status.slice(1);
-  }
-}
-
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "pending":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "accepted":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "in_progress":
-      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
-    case "completed":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "canceled":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-    default:
-      return "bg-secondary text-foreground";
-  }
-}
-
-function formatBookingDate(dateString: string | null): string {
-  if (!dateString) return "Date TBD";
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatBookingTime(dateString: string | null): string {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
 
 export default function BookingsPage() {
   const router = useRouter();

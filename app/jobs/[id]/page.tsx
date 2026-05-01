@@ -41,21 +41,7 @@ import {
   type JobApplicant,
   type JobPost,
 } from "@/lib/database/queries/jobs";
-
-function formatBudget(min: number | null, max: number | null): string {
-  if (!min && !max) return "Budget open";
-  if (min && max) return `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
-  if (min) return `From ₱${min.toLocaleString()}`;
-  return `Up to ₱${max!.toLocaleString()}`;
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+import { formatBudget, formatLongDate } from "@/lib/formatters";
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -216,7 +202,7 @@ export default function JobDetailPage() {
                 {job.location}
               </span>
             )}
-            <span>Posted {formatDate(job.createdAt)}</span>
+            <span>Posted {formatLongDate(job.createdAt)}</span>
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               {job.applicantCount} applicant
@@ -294,7 +280,7 @@ export default function JobDetailPage() {
                             {app.workerName}
                           </h4>
                           <span className="text-xs text-muted-foreground shrink-0">
-                            {formatDate(app.appliedAt)}
+                            {formatLongDate(app.appliedAt)}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">

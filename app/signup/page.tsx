@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { getErrorMessage } from "@/lib/error";
 
 const signupSchema = z
   .object({
@@ -93,11 +94,7 @@ export default function SignupPage() {
       if (error) throw error;
       router.push("/signup-success");
     } catch (error: unknown) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "An error occurred during signup",
-      );
+      setError(getErrorMessage(error, "An error occurred during signup"));
     }
   };
 

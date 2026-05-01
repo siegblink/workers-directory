@@ -39,6 +39,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseClient } from "@/lib/database/base-query";
 import { fireNotificationEmail } from "@/lib/notify";
+import { getStatusColor, getStatusLabel } from "@/lib/status-utils";
 
 type BookingDetail = {
   id: string;
@@ -115,40 +116,6 @@ function formatTimestamp(ts: string | null): string {
     minute: "2-digit",
     hour12: true,
   });
-}
-
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "pending":
-      return "bg-yellow-100 text-yellow-700";
-    case "accepted":
-      return "bg-blue-100 text-blue-700";
-    case "in_progress":
-      return "bg-purple-100 text-purple-700";
-    case "completed":
-      return "bg-green-100 text-green-700";
-    case "canceled":
-      return "bg-red-100 text-red-700";
-    default:
-      return "bg-secondary text-foreground";
-  }
-}
-
-function getStatusLabel(status: string): string {
-  switch (status) {
-    case "pending":
-      return "Pending";
-    case "accepted":
-      return "Upcoming";
-    case "in_progress":
-      return "In Progress";
-    case "completed":
-      return "Completed";
-    case "canceled":
-      return "Cancelled";
-    default:
-      return status.charAt(0).toUpperCase() + status.slice(1);
-  }
 }
 
 export default function BookingDetailPage({

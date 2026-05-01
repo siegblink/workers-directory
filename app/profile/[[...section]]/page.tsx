@@ -59,6 +59,11 @@ import type {
   ProfileHeaderFormValues,
 } from "@/lib/schemas/profile";
 import { createClient } from "@/lib/supabase/client";
+import {
+  formatJoinedDate,
+  formatResponseTime,
+  timeAgo,
+} from "@/lib/formatters";
 
 const BOOKING_STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
@@ -96,34 +101,6 @@ const emptyProfile: ProfileData = {
   completedJobs: 0,
   responseTime: "",
 };
-
-function formatJoinedDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatResponseTime(minutes: number | null): string {
-  if (!minutes) return "";
-  if (minutes < 60) return `Within ${minutes} minutes`;
-  const hours = Math.round(minutes / 60);
-  return `Within ${hours} hour${hours > 1 ? "s" : ""}`;
-}
-
-function timeAgo(dateString: string): string {
-  const diff = Date.now() - new Date(dateString).getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
-  if (days === 1) return "1 day ago";
-  if (days < 7) return `${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks === 1) return "1 week ago";
-  if (weeks < 4) return `${weeks} weeks ago`;
-  const months = Math.floor(days / 30);
-  if (months === 1) return "1 month ago";
-  return `${months} months ago`;
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 

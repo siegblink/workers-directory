@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { getErrorMessage } from "@/lib/error";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -64,11 +65,7 @@ export default function LoginPage() {
       router.push("/");
       router.refresh();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "An error occurred during login",
-      );
+      setError(getErrorMessage(error, "An error occurred during login"));
     }
   };
 

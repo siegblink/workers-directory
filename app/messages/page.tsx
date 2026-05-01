@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { formatMessageTime, timeAgo } from "@/lib/formatters";
 
 type ConversationItem = {
   chatId: number;
@@ -44,26 +45,6 @@ type MessageItem = {
   timestamp: string;
   isOwn: boolean;
 };
-
-function formatTimestamp(dateStr: string | null): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMins = Math.floor((now.getTime() - date.getTime()) / 60000);
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${Math.floor(diffHours / 24)}d ago`;
-}
-
-function formatMessageTime(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function MessagesPage() {
   const searchParams = useSearchParams();
@@ -426,7 +407,9 @@ export default function MessagesPage() {
                             {conversation.name}
                           </h3>
                           <span className="text-xs text-muted-foreground">
-                            {formatTimestamp(conversation.lastMessageAt)}
+                            {conversation.lastMessageAt
+                              ? timeAgo(conversation.lastMessageAt)
+                              : ""}
                           </span>
                         </div>
                         {conversation.profession && (
