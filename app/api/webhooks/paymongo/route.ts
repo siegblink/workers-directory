@@ -3,14 +3,15 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export function GET() {
-  const hasSecret = !!process.env.PAYMONGO_WEBHOOK_SECRET;
-  const secretPrefix = process.env.PAYMONGO_WEBHOOK_SECRET?.slice(0, 10) ?? "";
+  const secret = process.env.PAYMONGO_WEBHOOK_SECRET ?? "";
   return NextResponse.json({
     ok: true,
-    webhook_secret_set: hasSecret,
-    secret_mode: secretPrefix.startsWith("whsk_test")
+    webhook_secret_set: !!secret,
+    // Shows first 15 chars only — enough to identify format without exposing the key
+    secret_prefix: secret ? secret.slice(0, 15) + "…" : null,
+    secret_mode: secret.startsWith("whsk_test_")
       ? "test"
-      : secretPrefix.startsWith("whsk_live")
+      : secret.startsWith("whsk_live_")
         ? "live"
         : "unknown",
   });
