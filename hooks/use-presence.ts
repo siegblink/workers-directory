@@ -26,12 +26,10 @@ export function usePresence() {
     setPresence(true);
     interval = setInterval(() => setPresence(true), HEARTBEAT_INTERVAL_MS);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", () => setPresence(false));
 
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      setPresence(false);
     };
   }, []);
 }
